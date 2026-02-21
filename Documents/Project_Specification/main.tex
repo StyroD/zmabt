@@ -1,0 +1,93 @@
+\documentclass[12pt, a4paper]{report}
+
+% ----- Packages -----
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[slovak]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{tabularx}
+
+\geometry{
+  top=2.5cm,
+  bottom=2.5cm,
+  left=3cm,
+  right=2.5cm
+}
+
+% ----- Hyperref setup -----
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!70!black,
+  citecolor=blue!70!black
+}
+
+% ----- Header / Footer -----
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small WorkFlow — Field Team Coordination App}
+\lhead{\small MTAA LS 2026}
+\cfoot{\thepage}
+
+% ----- Listings (code) -----
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!10}
+}
+
+% ============================================================
+\begin{document}
+
+% ----- Title page -----
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+  {\LARGE\bfseries Základy mobilných a bezdrôtových technológií\par}
+  \vspace{0.5cm}
+  {\large Letný semester 2026\par}
+  \vspace{2cm}
+  {\Huge\bfseries WorkFlow\par}
+  \vspace{0.3cm}
+  {\Large Field Team Coordination App\par}
+  \vspace{0.5cm}
+  {\large Projektová dokumentácia\par}
+  \vspace{3cm}
+  \begin{tabular}{ll}
+    \textbf{Autor 1:} & Adam Strelec \\[4pt]
+    \textbf{Autor 2:} & Damián Štyrák \\[4pt]
+    \textbf{Cvičiaci:} & Ing. Dominik Šalgovič \\[4pt]
+    \textbf{Skupina:} & XY \\
+  \end{tabular}
+  \vfill
+  {\large \today}
+\end{titlepage}
+
+% ----- Table of contents -----
+\tableofcontents
+\clearpage
+
+% ----- Chapters -----
+\input{sections/01_overview}
+\input{sections/02_roles_usecases}
+\input{sections/03_functional_requirements}
+\input{sections/04_architecture}
+\input{sections/05_database}
+\input{sections/06_api}
+\input{sections/07_device_integrations}
+\input{sections/08_uat}
+
+\end{document}

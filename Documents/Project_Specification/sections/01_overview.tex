@@ -1,0 +1,38 @@
+\chapter{Prehľad projektu}
+
+\section{Účel aplikácie}
+
+WorkFlow je mobilná aplikácia určená na koordináciu terénnych tímov. Umožňuje manažérom vytvárať a prideľovať pracovné úlohy (joby) terénnym pracovníkom, sledovať ich polohu v reálnom čase na mape a komunikovať s nimi prostredníctvom vstavaného chatu. Pracovníci dostávajú push notifikácie o nových úlohách, môžu aktualizovať ich stav a nahrávať fotodokumentáciu priamo z terénu.
+
+Cieľom aplikácie je nahradiť neefektívnu e-mailovú alebo telefonickú koordináciu a poskytnúť manažmentu okamžitý prehľad o stave prác a polohe tímu.
+
+\section{Technologický stack}
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Vrstva} & \textbf{Technológia} \\
+    \midrule
+    Frontend        & React Native (cross-platform iOS / Android) \\
+    Backend         & Node.js (Express) \\
+    Databáza        & PostgreSQL \\
+    Realtime        & WebSockets (Socket.IO) \\
+    Push notifikácie & Firebase Cloud Messaging (FCM) \\
+    Analytika       & Firebase Analytics + Firebase Crashlytics \\
+    Autentifikácia  & JWT + Google SSO (OAuth 2.0) \\
+    Mapy            & React Native Maps (Google Maps) \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Technologický stack projektu WorkFlow}
+\end{table}
+
+\section{Povinné voliteľné požiadavky (PVP)}
+
+V súlade so zadaním sú implementované nasledujúce tri PVP:
+
+\begin{itemize}
+  \item \textbf{PVP4} — Podpora SSO autentifikácie (Google Sign-In)
+  \item \textbf{PVP5} — Integrácia Firebase služieb (Analytics + Crashlytics)
+  \item \textbf{PVP6} — Location based service (GPS sledovanie pracovníkov, geofencing okolo miesta práce)
+\end{itemize}

@@ -1,0 +1,54 @@
+\chapter{Architektúra systému}
+
+\section{Prehľad architektúry}
+
+Systém pozostáva z troch hlavných komponentov:
+
+\begin{enumerate}
+  \item \textbf{Mobilná aplikácia (Flutter)} — cross-platform klient pre iOS a Android
+  \item \textbf{Backend server (Node.js / Express)} — REST API + WebSocket server
+  \item \textbf{Databáza (PostgreSQL)} — perzistentné úložisko dát
+\end{enumerate}
+
+Komunikácia prebieha nasledovne:
+\begin{itemize}
+  \item Mobilná aplikácia $\leftrightarrow$ Backend: \textbf{HTTPS REST API} pre štandardné operácie
+  \item Mobilná aplikácia $\leftrightarrow$ Backend: \textbf{WebSocket (WSS)} pre real-time chat a zdieľanie polohy
+  \item Backend $\rightarrow$ Mobilná aplikácia: \textbf{Firebase Cloud Messaging} pre push notifikácie
+  \item Mobilná aplikácia $\leftrightarrow$ Firebase: \textbf{Firebase Analytics + Crashlytics} SDK
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  % Nahradte skutocnym diagramom
+  \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm}[Tu vložte diagram architektúry]\vspace{2cm}}}
+  \caption{Diagram architektúry systému WorkFlow}
+\end{figure}
+
+\section{Backend}
+
+Backend je implementovaný v \textbf{Node.js} s frameworkom \textbf{Express}. Beží v Docker kontajneri spolu s PostgreSQL databázou (docker-compose).
+
+Hlavné moduly backendu:
+\begin{itemize}
+  \item \texttt{auth} — registrácia, login, Google OAuth, JWT vydávanie a overovanie
+  \item \texttt{jobs} — CRUD endpointy pre joby, priraďovanie workerov
+  \item \texttt{users} — správa používateľov a rolí
+  \item \texttt{media} — nahrávanie a sťahovanie binárneho obsahu (fotografie)
+  \item \texttt{socket} — Socket.IO handlery pre chat a polohu
+  \item \texttt{notifications} — odosielanie FCM správ
+\end{itemize}
+
+Interaktívne testovanie API je zabezpečené cez \textbf{Swagger UI} dostupné na \texttt{/api-docs}.
+
+\section{Mobilná aplikácia}
+
+Aplikácia je postavená na \textbf{React Native} s architektúrou \textbf{Flux/Redux}:
+
+\begin{itemize}
+  \item \texttt{api/} — axios HTTP klient, WebSocket (Socket.IO client)
+  \item \texttt{store/} — Redux slices, async thunky (Redux Toolkit)
+  \item \texttt{db/} — lokálna SQLite databáza cez \texttt{react-native-mmkv} / \texttt{WatermelonDB}
+  \item \texttt{screens/} — React Native obrazovky a navigácia (React Navigation)
+  \item \texttt{components/} — zdieľané UI komponenty
+\end{itemize}

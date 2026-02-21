@@ -1,0 +1,84 @@
+\chapter{Funkcionálne požiadavky}
+
+\section{Obrazovky aplikácie}
+
+Aplikácia obsahuje nasledujúcich 7 funkčných obrazoviek (splash screen a login screen sa do počtu nepočítajú):
+
+\begin{enumerate}
+  \item \textbf{Job List} — zoznam jobov (Manager: všetky; Worker: pridelené)
+  \item \textbf{Job Detail} — detail jobu, stav, popis, fotky, tlačidlo na zmenu stavu
+  \item \textbf{Create / Edit Job} — formulár na vytvorenie alebo úpravu jobu (len Manager)
+  \item \textbf{Map View} — mapa s polohami pracovníkov a pinmi jobov
+  \item \textbf{Chat} — real-time konverzácia (per job alebo globálna)
+  \item \textbf{Worker List} — zoznam pracovníkov a ich aktuálny stav (len Manager)
+  \item \textbf{Profile / Settings} — profil používateľa, odhlásenie, prepínanie dark mode
+\end{enumerate}
+
+\section{CRUD operácie}
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Entita} & \textbf{Operácia} & \textbf{Popis} \\
+    \midrule
+    Job & Create  & Manažér vytvorí nový job cez formulár \\
+    Job & Read    & Zoznam a detail jobov pre obe roly \\
+    Job & Update  & Manažér upraví job; Worker zmení stav \\
+    Job & Delete  & Manažér zmaže job \\
+    \bottomrule
+  \end{tabularx}
+  \caption{CRUD operácie nad entitou Job}
+\end{table}
+
+\section{Offline režim}
+
+Aplikácia podporuje offline fungovanie pomocou lokálnej SQLite databázy (\textbf{WatermelonDB}). Keď zariadenie nemá internetové pripojenie:
+
+\begin{itemize}
+  \item Worker môže zmeniť stav jobu (Create, Update, Delete stavu/poznámky) — zmena sa uloží lokálne s príznakom \texttt{pending\_sync}.
+  \item Po obnovení pripojenia sa zmeny automaticky synchronizujú so serverom na pozadí.
+  \item Konflikt (napr. job bol medzitým zmazaný manažérom) sa rieši politikou \textit{server wins}: server vráti chybu, aplikácia zobrazí používateľovi upozornenie a lokálnu zmenu zahodí.
+\end{itemize}
+
+\section{WebSockets — real-time komunikácia}
+
+Aplikácia využíva WebSocket spojenie (Socket.IO) pre:
+
+\begin{itemize}
+  \item \textbf{Live chat} — obojsmerné zasielanie správ medzi Manažérom a Workerom v rámci jobu.
+  \item \textbf{Zdieľanie polohy} — Worker periodicky (každých 10 s) odosiela svoju GPS polohu; Manažér ju dostáva v reálnom čase a vidí ju na mape.
+\end{itemize}
+
+\section{Push notifikácie}
+
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Trigger} & \textbf{Príjemca} & \textbf{Správanie} \\
+    \midrule
+    Nový job pridelený (server) & Worker & Notifikácia na pozadí; klik presmeruje na Job Detail \\
+    Job dokončený (app)         & Manager & Notifikácia na pozadí; klik presmeruje na Job Detail \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Push notifikácie}
+\end{table}
+
+\section{Permission handling}
+
+Aplikácia si vyžiada nasledujúce systémové oprávnenia:
+
+\begin{itemize}
+  \item \textbf{Kamera} — fotografovanie dokumentácie k jobu
+  \item \textbf{Galéria / Súbory} — výber existujúcej fotografie
+  \item \textbf{Poloha (foreground + background)} — zdieľanie GPS polohy Workera
+  \item \textbf{Push notifikácie} — prijímanie FCM správ
+\end{itemize}
+
+\section{Ďalšie povinné požiadavky}
+
+\begin{itemize}
+  \item \textbf{Dark mode} — aplikácia plne podporuje systémový dark mode aj manuálny prepínač v Settings.
+  \item \textbf{User management} — perzistentná autentifikácia pomocou JWT tokenu uloženého v bezpečnom úložisku (\texttt{react-native-keychain}).
+\end{itemize}

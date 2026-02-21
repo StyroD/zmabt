@@ -1,0 +1,51 @@
+\chapter{Používateľské roly a prípady použitia}
+
+\section{Používateľské roly}
+
+Aplikácia rozlišuje dve hlavné používateľské roly:
+
+\begin{description}
+  \item[Manager (Manažér)] Vytvára, upravuje a zmazáva joby. Prideľuje joby pracovníkom. Sleduje polohu tímu na mape v reálnom čase. Má prístup k prehľadu všetkých jobov a ich stavu. Môže komunikovať s pracovníkmi cez chat.
+  
+  \item[Worker (Pracovník)] Vidí iba joby, ktoré mu boli pridelené. Aktualizuje stav jobu (napr. \textit{In Progress}, \textit{Done}). Nahrával fotodokumentáciu k jobu. Zdieľa svoju GPS polohu s manažérom. Môže komunikovať s manažérom cez chat.
+\end{description}
+
+\section{Prípady použitia}
+
+\subsection{Manager}
+
+\begin{longtable}{p{0.05\textwidth}p{0.3\textwidth}p{0.55\textwidth}}
+  \toprule
+  \textbf{\#} & \textbf{Use case} & \textbf{Popis} \\
+  \midrule
+  \endhead
+  UC-M1 & Prihlásenie & Manažér sa prihlási pomocou Google SSO alebo e-mailom a heslom. \\
+  UC-M2 & Vytvorenie jobu & Manažér vytvorí nový job s názvom, popisom, GPS súradnicami miesta a termínom. \\
+  UC-M3 & Pridelenie jobu & Manažér pridelí job jednému alebo viacerým pracovníkom. \\
+  UC-M4 & Úprava / zmazanie jobu & Manažér upraví alebo zmaže existujúci job. \\
+  UC-M5 & Prehľad jobov & Manažér vidí zoznam všetkých jobov s ich aktuálnym stavom. \\
+  UC-M6 & Mapa tímu & Manažér vidí na mape polohy všetkých aktívnych pracovníkov a piny jobov. \\
+  UC-M7 & Chat & Manažér komunikuje s pracovníkmi cez real-time chat. \\
+  UC-M8 & Push notifikácia & Manažér dostane notifikáciu, keď pracovník zmení stav jobu na \textit{Done}. \\
+  \bottomrule
+  \caption{Prípady použitia — Manažér}
+\end{longtable}
+
+\subsection{Worker}
+
+\begin{longtable}{p{0.05\textwidth}p{0.3\textwidth}p{0.55\textwidth}}
+  \toprule
+  \textbf{\#} & \textbf{Use case} & \textbf{Popis} \\
+  \midrule
+  \endhead
+  UC-W1 & Prihlásenie & Pracovník sa prihlási pomocou Google SSO alebo e-mailom a heslom. \\
+  UC-W2 & Zoznam mojich jobov & Pracovník vidí zoznam jobov, ktoré mu boli pridelené. \\
+  UC-W3 & Detail jobu & Pracovník otvorí detail jobu — popis, mapa, fotky, stav. \\
+  UC-W4 & Aktualizácia stavu & Pracovník zmení stav jobu na \textit{In Progress} alebo \textit{Done}. \\
+  UC-W5 & Nahranie fotky & Pracovník nafotí alebo vyberie fotografiu z galérie a priloží ju k jobu. \\
+  UC-W6 & Offline aktualizácia & Pracovník aktualizuje stav jobu bez internetu; zmena sa synchronizuje po reconnecte. \\
+  UC-W7 & Chat & Pracovník komunikuje s manažérom cez real-time chat. \\
+  UC-W8 & Push notifikácia & Pracovník dostane notifikáciu o novom pridelenom jobe. \\
+  \bottomrule
+  \caption{Prípady použitia — Pracovník}
+\end{longtable}

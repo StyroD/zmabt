@@ -1,0 +1,119 @@
+\chapter{Dátový model}
+
+\section{Entitno-relačný diagram}
+
+\begin{figure}[H]
+  \centering
+  \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm}[Tu vložte ER diagram]\vspace{2cm}}}
+  \caption{Entitno-relačný diagram databázy WorkFlow}
+\end{figure}
+
+\section{Popis entít}
+
+\subsection{users}
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \midrule
+    id            & UUID (PK)     & Primárny kľúč \\
+    email         & VARCHAR(255)  & Unikátny e-mail používateľa \\
+    password\_hash & VARCHAR(255) & Bcrypt hash hesla (null pri SSO) \\
+    name          & VARCHAR(100)  & Zobrazované meno \\
+    role          & ENUM          & \texttt{manager} alebo \texttt{worker} \\
+    fcm\_token    & TEXT          & Firebase token pre push notifikácie \\
+    avatar\_url   & TEXT          & URL profilovej fotografie \\
+    created\_at   & TIMESTAMP     & Čas vytvorenia záznamu \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Tabuľka \texttt{users}}
+\end{table}
+
+\subsection{jobs}
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \midrule
+    id            & UUID (PK)     & Primárny kľúč \\
+    title         & VARCHAR(200)  & Názov jobu \\
+    description   & TEXT          & Popis jobu \\
+    status        & ENUM          & \texttt{pending}, \texttt{in\_progress}, \texttt{done} \\
+    latitude      & FLOAT         & GPS zemepisná šírka miesta jobu \\
+    longitude     & FLOAT         & GPS zemepisná dĺžka miesta jobu \\
+    deadline      & TIMESTAMP     & Termín dokončenia \\
+    created\_by   & UUID (FK)     & Odkaz na \texttt{users.id} (manažér) \\
+    created\_at   & TIMESTAMP     & Čas vytvorenia \\
+    updated\_at   & TIMESTAMP     & Čas poslednej úpravy \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Tabuľka \texttt{jobs}}
+\end{table}
+
+\subsection{job\_assignments}
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \midrule
+    job\_id    & UUID (FK) & Odkaz na \texttt{jobs.id} \\
+    worker\_id & UUID (FK) & Odkaz na \texttt{users.id} \\
+    assigned\_at & TIMESTAMP & Čas pridelenia \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Tabuľka \texttt{job\_assignments} (M:N jobs $\leftrightarrow$ workers)}
+\end{table}
+
+\subsection{job\_photos}
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \midrule
+    id          & UUID (PK)  & Primárny kľúč \\
+    job\_id     & UUID (FK)  & Odkaz na \texttt{jobs.id} \\
+    uploaded\_by & UUID (FK) & Odkaz na \texttt{users.id} \\
+    file\_path  & TEXT       & Cesta k súboru na serveri \\
+    mime\_type  & VARCHAR(50) & Typ súboru (napr. \texttt{image/jpeg}) \\
+    created\_at & TIMESTAMP  & Čas nahratia \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Tabuľka \texttt{job\_photos}}
+\end{table}
+
+\subsection{chat\_messages}
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \midrule
+    id         & UUID (PK)  & Primárny kľúč \\
+    job\_id    & UUID (FK)  & Odkaz na \texttt{jobs.id} \\
+    sender\_id & UUID (FK)  & Odkaz na \texttt{users.id} \\
+    content    & TEXT       & Text správy \\
+    sent\_at   & TIMESTAMP  & Čas odoslania \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Tabuľka \texttt{chat\_messages}}
+\end{table}
+
+\subsection{worker\_locations}
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \midrule
+    worker\_id  & UUID (FK) & Odkaz na \texttt{users.id} \\
+    latitude    & FLOAT     & Aktuálna zemepisná šírka \\
+    longitude   & FLOAT     & Aktuálna zemepisná dĺžka \\
+    recorded\_at & TIMESTAMP & Čas záznamu \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Tabuľka \texttt{worker\_locations} (posledná poloha per worker)}
+\end{table}
