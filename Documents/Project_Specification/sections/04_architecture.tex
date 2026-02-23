@@ -1,54 +1,53 @@
-\chapter{Architektúra systému}
+\chapter{System Architecture}
 
-\section{Prehľad architektúry}
+\section{Architecture Overview}
 
-Systém pozostáva z troch hlavných komponentov:
+The system consists of three main components:
 
 \begin{enumerate}
-  \item \textbf{Mobilná aplikácia (Flutter)} — cross-platform klient pre iOS a Android
-  \item \textbf{Backend server (Node.js / Express)} — REST API + WebSocket server
-  \item \textbf{Databáza (PostgreSQL)} — perzistentné úložisko dát
+  \item \textbf{Mobile application (React Native)} --- cross-platform client for iOS and Android
+  \item \textbf{Backend server (Node.js / Express)} --- REST API + WebSocket server
+  \item \textbf{Database (PostgreSQL)} --- persistent data store
 \end{enumerate}
 
-Komunikácia prebieha nasledovne:
+Communication flows as follows:
 \begin{itemize}
-  \item Mobilná aplikácia $\leftrightarrow$ Backend: \textbf{HTTPS REST API} pre štandardné operácie
-  \item Mobilná aplikácia $\leftrightarrow$ Backend: \textbf{WebSocket (WSS)} pre real-time chat a zdieľanie polohy
-  \item Backend $\rightarrow$ Mobilná aplikácia: \textbf{Firebase Cloud Messaging} pre push notifikácie
-  \item Mobilná aplikácia $\leftrightarrow$ Firebase: \textbf{Firebase Analytics + Crashlytics} SDK
+  \item Mobile app $\leftrightarrow$ Backend: \textbf{HTTPS REST API} for standard operations
+  \item Mobile app $\leftrightarrow$ Backend: \textbf{WebSocket (WSS)} for real-time chat and location sharing
+  \item Backend $\rightarrow$ Mobile app: \textbf{Firebase Cloud Messaging} for push notifications
+  \item Mobile app $\leftrightarrow$ Firebase: \textbf{Firebase Analytics + Crashlytics} SDK
 \end{itemize}
 
 \begin{figure}[H]
   \centering
-  % Nahradte skutocnym diagramom
-  \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm}[Tu vložte diagram architektúry]\vspace{2cm}}}
-  \caption{Diagram architektúry systému WorkFlow}
+  \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm}[Insert architecture diagram here]\vspace{2cm}}}
+  \caption{WorkFlow system architecture diagram}
 \end{figure}
 
 \section{Backend}
 
-Backend je implementovaný v \textbf{Node.js} s frameworkom \textbf{Express}. Beží v Docker kontajneri spolu s PostgreSQL databázou (docker-compose).
+The backend is implemented in \textbf{Node.js} with the \textbf{Express} framework. It runs in a Docker container alongside a PostgreSQL database (docker-compose).
 
-Hlavné moduly backendu:
+Main backend modules:
 \begin{itemize}
-  \item \texttt{auth} — registrácia, login, Google OAuth, JWT vydávanie a overovanie
-  \item \texttt{jobs} — CRUD endpointy pre joby, priraďovanie workerov
-  \item \texttt{users} — správa používateľov a rolí
-  \item \texttt{media} — nahrávanie a sťahovanie binárneho obsahu (fotografie)
-  \item \texttt{socket} — Socket.IO handlery pre chat a polohu
-  \item \texttt{notifications} — odosielanie FCM správ
+  \item \texttt{auth} --- registration, login, Google OAuth, JWT issuance and verification
+  \item \texttt{jobs} --- CRUD endpoints for jobs, worker assignment
+  \item \texttt{users} --- user and role management
+  \item \texttt{media} --- binary content upload and download (photos)
+  \item \texttt{socket} --- Socket.IO handlers for chat and location
+  \item \texttt{notifications} --- FCM message dispatch
 \end{itemize}
 
-Interaktívne testovanie API je zabezpečené cez \textbf{Swagger UI} dostupné na \texttt{/api-docs}.
+Interactive API testing is provided via \textbf{Swagger UI} at \texttt{/api-docs}.
 
-\section{Mobilná aplikácia}
+\section{Mobile Application}
 
-Aplikácia je postavená na \textbf{React Native} s architektúrou \textbf{Flux/Redux}:
+The application is built with \textbf{React Native} using a \textbf{Redux Toolkit} architecture:
 
 \begin{itemize}
-  \item \texttt{api/} — axios HTTP klient, WebSocket (Socket.IO client)
-  \item \texttt{store/} — Redux slices, async thunky (Redux Toolkit)
-  \item \texttt{db/} — lokálna SQLite databáza cez \texttt{react-native-mmkv} / \texttt{WatermelonDB}
-  \item \texttt{screens/} — React Native obrazovky a navigácia (React Navigation)
-  \item \texttt{components/} — zdieľané UI komponenty
+  \item \texttt{api/} --- axios HTTP client, WebSocket (Socket.IO client)
+  \item \texttt{store/} --- Redux slices and async thunks (Redux Toolkit)
+  \item \texttt{db/} --- local SQLite database via WatermelonDB
+  \item \texttt{screens/} --- React Native screens and navigation (React Navigation)
+  \item \texttt{components/} --- shared UI components
 \end{itemize}

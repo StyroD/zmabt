@@ -1,33 +1,33 @@
-\chapter{Integrácie}
+\chapter{Integrations}
 
-\section{Integrácie so zariadením}
+\section{Device Integrations}
 
-\subsection{Kamera a galéria}
-Aplikácia využíva knižnicu \texttt{react-native-image-picker} na prístup ku kamere a galérii. Pred prvým použitím si aplikácia vyžiada príslušné oprávnenia (\texttt{CAMERA}, \texttt{READ\_MEDIA\_IMAGES} na Android; \texttt{NSCameraUsageDescription}, \texttt{NSPhotoLibraryUsageDescription} na iOS). Fotografie sú odoslané na server ako \texttt{multipart/form-data} bez Base64 kódovania.
+\subsection{Camera and Gallery}
+The application uses the \texttt{react-native-image-picker} library to access the camera and photo gallery. Before first use, the app requests the necessary permissions (\texttt{CAMERA}, \texttt{READ\_MEDIA\_IMAGES} on Android; \texttt{NSCameraUsageDescription}, \texttt{NSPhotoLibraryUsageDescription} on iOS). Photos are sent to the server as \texttt{multipart/form-data} without Base64 encoding.
 
-\subsection{GPS / Poloha}
-Knižnica \texttt{react-native-geolocation-service} zabezpečuje prístup k polohe zariadenia. Worker pri aktívnej práci zdieľa svoju polohu každých 10 sekúnd cez WebSocket. Aplikácia si vyžiada oprávnenia \texttt{ACCESS\_FINE\_LOCATION} (Android) a \texttt{NSLocationWhenInUseUsageDescription} / \texttt{NSLocationAlwaysUsageDescription} (iOS). Na mape (\texttt{react-native-maps} s Google Maps providerom) sú zobrazené live piny workerov a statické piny jobov.
+\subsection{GPS / Location}
+The \texttt{react-native-geolocation-service} library provides access to the device's location. While actively working, a Worker shares their position every 10 seconds via WebSocket. The app requests \texttt{ACCESS\_FINE\_LOCATION} (Android) and \texttt{NSLocationWhenInUseUsageDescription} / \texttt{NSLocationAlwaysUsageDescription} (iOS). The map (\texttt{react-native-maps} with Google Maps provider) displays live worker markers and static job site pins.
 
-\subsection{Push notifikácie}
-Push notifikácie sú implementované pomocou \textbf{Firebase Cloud Messaging} cez knižnicu \texttt{@react-native-firebase/messaging}. FCM token zariadenia je uložený na backende (tabuľka \texttt{users.fcm\_token}) a aktualizovaný pri každom prihlásení. Notifikácia o novom jobe (odoslaná serverom) obsahuje \texttt{data} payload s \texttt{job\_id}, čo umožňuje presmerovanie na Job Detail po kliknutí.
+\subsection{Push Notifications}
+Push notifications are implemented using \textbf{Firebase Cloud Messaging} via the \texttt{@react-native-firebase/messaging} library. The device's FCM token is stored on the backend (column \texttt{users.fcm\_token}) and updated on every login. The new-job notification (sent by the server) includes a \texttt{data} payload with \texttt{job\_id}, enabling a direct redirect to Job Detail on tap.
 
-\section{Integrácie s externými službami}
+\section{Third-party Service Integrations}
 
-\subsection{PVP4 — Google SSO}
-Autentifikácia cez Google je implementovaná pomocou \texttt{@react-native-google-signin/google-signin} a Google OAuth 2.0. Po úspešnom Google Sign-In aplikácia odošle \texttt{id\_token} na backend endpoint \texttt{POST /api/auth/google}, kde je token overený a vydaný JWT.
+\subsection{PVP4 --- Google SSO}
+Google authentication is implemented using \texttt{@react-native-google-signin/google-signin} and Google OAuth 2.0. After a successful Google Sign-In, the app sends the \texttt{id\_token} to the backend endpoint \texttt{POST /api/auth/google}, where it is verified and a JWT is issued.
 
-\subsection{PVP5 — Firebase Analytics + Crashlytics}
+\subsection{PVP5 --- Firebase Analytics + Crashlytics}
 \begin{itemize}
-  \item \textbf{Firebase Analytics} (\texttt{@react-native-firebase/analytics}) — sleduje kľúčové udalosti: \texttt{job\_created}, \texttt{job\_status\_changed}, \texttt{photo\_uploaded}, \texttt{chat\_message\_sent}. Výstupy z analytiky sú súčasťou prílohy dokumentácie.
-  \item \textbf{Firebase Crashlytics} (\texttt{@react-native-firebase/crashlytics}) — automaticky zachytáva pády aplikácie a nekritické chyby. Do dokumentácie je priložený report crashov z testovacej fázy.
+  \item \textbf{Firebase Analytics} (\texttt{@react-native-firebase/analytics}) --- tracks key events: \texttt{job\_created}, \texttt{job\_status\_changed}, \texttt{photo\_uploaded}, \texttt{chat\_message\_sent}. Analytics output is included as an appendix to the documentation.
+  \item \textbf{Firebase Crashlytics} (\texttt{@react-native-firebase/crashlytics}) --- automatically captures application crashes and non-fatal errors. A crash report from the testing phase is included in the documentation appendix.
 \end{itemize}
 
-\subsection{PVP6 — Location Based Service}
-Okrem live sledovania polohy je implementovaný \textbf{geofencing}: keď sa Worker vzdiali o viac ako 500\,m od GPS súradníc priradeného jobu, aplikácia zobrazí upozornenie. Geofencing je implementovaný pomocou \texttt{react-native-geofencing}.
+\subsection{PVP6 --- Location Based Service}
+In addition to live location tracking, \textbf{geofencing} is implemented: when a Worker moves more than 500\,m away from the GPS coordinates of their assigned job, the app displays an alert. Geofencing is handled by \texttt{react-native-geofencing}.
 
-\subsection{React Native Maps — Google Maps}
-Mapa je renderovaná pomocou \texttt{react-native-maps} s Google Maps providerom. Zobrazuje:
+\subsection{React Native Maps --- Google Maps}
+The map is rendered using \texttt{react-native-maps} with the Google Maps provider. It displays:
 \begin{itemize}
-  \item farebné markery polohy každého aktívneho Workera (aktualizované cez WebSocket),
-  \item pin miesta každého jobu s farebným rozlíšením podľa stavu (\texttt{pending} = šedá, \texttt{in\_progress} = oranžová, \texttt{done} = zelená).
+  \item colour-coded markers for each active Worker's position (updated via WebSocket),
+  \item pins for each job site, colour-coded by status (\texttt{pending} = grey, \texttt{in\_progress} = orange, \texttt{done} = green).
 \end{itemize}

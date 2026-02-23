@@ -1,33 +1,33 @@
-\chapter{Dátový model}
+\chapter{Data Model}
 
-\section{Entitno-relačný diagram}
+\section{Entity-Relationship Diagram}
 
 \begin{figure}[H]
   \centering
-  \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm}[Tu vložte ER diagram]\vspace{2cm}}}
-  \caption{Entitno-relačný diagram databázy WorkFlow}
+  \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm}[Insert ER diagram here]\vspace{2cm}}}
+  \caption{Entity-relationship diagram of the WorkFlow database}
 \end{figure}
 
-\section{Popis entít}
+\section{Entity Descriptions}
 
 \subsection{users}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{llX}
     \toprule
-    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
     \midrule
-    id            & UUID (PK)     & Primárny kľúč \\
-    email         & VARCHAR(255)  & Unikátny e-mail používateľa \\
-    password\_hash & VARCHAR(255) & Bcrypt hash hesla (null pri SSO) \\
-    name          & VARCHAR(100)  & Zobrazované meno \\
-    role          & ENUM          & \texttt{manager} alebo \texttt{worker} \\
-    fcm\_token    & TEXT          & Firebase token pre push notifikácie \\
-    avatar\_url   & TEXT          & URL profilovej fotografie \\
-    created\_at   & TIMESTAMP     & Čas vytvorenia záznamu \\
+    id            & UUID (PK)     & Primary key \\
+    email         & VARCHAR(255)  & Unique user email \\
+    password\_hash & VARCHAR(255) & Bcrypt hash of password (null for SSO users) \\
+    name          & VARCHAR(100)  & Display name \\
+    role          & ENUM          & \texttt{manager} or \texttt{worker} \\
+    fcm\_token    & TEXT          & Firebase token for push notifications \\
+    avatar\_url   & TEXT          & URL of the profile picture \\
+    created\_at   & TIMESTAMP     & Record creation time \\
     \bottomrule
   \end{tabularx}
-  \caption{Tabuľka \texttt{users}}
+  \caption{Table \texttt{users}}
 \end{table}
 
 \subsection{jobs}
@@ -35,21 +35,21 @@
   \centering
   \begin{tabularx}{\textwidth}{llX}
     \toprule
-    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
     \midrule
-    id            & UUID (PK)     & Primárny kľúč \\
-    title         & VARCHAR(200)  & Názov jobu \\
-    description   & TEXT          & Popis jobu \\
+    id            & UUID (PK)     & Primary key \\
+    title         & VARCHAR(200)  & Job title \\
+    description   & TEXT          & Job description \\
     status        & ENUM          & \texttt{pending}, \texttt{in\_progress}, \texttt{done} \\
-    latitude      & FLOAT         & GPS zemepisná šírka miesta jobu \\
-    longitude     & FLOAT         & GPS zemepisná dĺžka miesta jobu \\
-    deadline      & TIMESTAMP     & Termín dokončenia \\
-    created\_by   & UUID (FK)     & Odkaz na \texttt{users.id} (manažér) \\
-    created\_at   & TIMESTAMP     & Čas vytvorenia \\
-    updated\_at   & TIMESTAMP     & Čas poslednej úpravy \\
+    latitude      & FLOAT         & GPS latitude of the job site \\
+    longitude     & FLOAT         & GPS longitude of the job site \\
+    deadline      & TIMESTAMP     & Completion deadline \\
+    created\_by   & UUID (FK)     & Reference to \texttt{users.id} (manager) \\
+    created\_at   & TIMESTAMP     & Record creation time \\
+    updated\_at   & TIMESTAMP     & Last update time \\
     \bottomrule
   \end{tabularx}
-  \caption{Tabuľka \texttt{jobs}}
+  \caption{Table \texttt{jobs}}
 \end{table}
 
 \subsection{job\_assignments}
@@ -57,14 +57,14 @@
   \centering
   \begin{tabularx}{\textwidth}{llX}
     \toprule
-    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
     \midrule
-    job\_id    & UUID (FK) & Odkaz na \texttt{jobs.id} \\
-    worker\_id & UUID (FK) & Odkaz na \texttt{users.id} \\
-    assigned\_at & TIMESTAMP & Čas pridelenia \\
+    job\_id      & UUID (FK)  & Reference to \texttt{jobs.id} \\
+    worker\_id   & UUID (FK)  & Reference to \texttt{users.id} \\
+    assigned\_at & TIMESTAMP  & Time of assignment \\
     \bottomrule
   \end{tabularx}
-  \caption{Tabuľka \texttt{job\_assignments} (M:N jobs $\leftrightarrow$ workers)}
+  \caption{Table \texttt{job\_assignments} (M:N jobs $\leftrightarrow$ workers)}
 \end{table}
 
 \subsection{job\_photos}
@@ -72,17 +72,17 @@
   \centering
   \begin{tabularx}{\textwidth}{llX}
     \toprule
-    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
     \midrule
-    id          & UUID (PK)  & Primárny kľúč \\
-    job\_id     & UUID (FK)  & Odkaz na \texttt{jobs.id} \\
-    uploaded\_by & UUID (FK) & Odkaz na \texttt{users.id} \\
-    file\_path  & TEXT       & Cesta k súboru na serveri \\
-    mime\_type  & VARCHAR(50) & Typ súboru (napr. \texttt{image/jpeg}) \\
-    created\_at & TIMESTAMP  & Čas nahratia \\
+    id           & UUID (PK)   & Primary key \\
+    job\_id      & UUID (FK)   & Reference to \texttt{jobs.id} \\
+    uploaded\_by & UUID (FK)   & Reference to \texttt{users.id} \\
+    file\_path   & TEXT        & Path to file on the server \\
+    mime\_type   & VARCHAR(50) & File type (e.g.\ \texttt{image/jpeg}) \\
+    created\_at  & TIMESTAMP   & Upload time \\
     \bottomrule
   \end{tabularx}
-  \caption{Tabuľka \texttt{job\_photos}}
+  \caption{Table \texttt{job\_photos}}
 \end{table}
 
 \subsection{chat\_messages}
@@ -90,16 +90,16 @@
   \centering
   \begin{tabularx}{\textwidth}{llX}
     \toprule
-    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
     \midrule
-    id         & UUID (PK)  & Primárny kľúč \\
-    job\_id    & UUID (FK)  & Odkaz na \texttt{jobs.id} \\
-    sender\_id & UUID (FK)  & Odkaz na \texttt{users.id} \\
-    content    & TEXT       & Text správy \\
-    sent\_at   & TIMESTAMP  & Čas odoslania \\
+    id         & UUID (PK)  & Primary key \\
+    job\_id    & UUID (FK)  & Reference to \texttt{jobs.id} \\
+    sender\_id & UUID (FK)  & Reference to \texttt{users.id} \\
+    content    & TEXT       & Message text \\
+    sent\_at   & TIMESTAMP  & Time sent \\
     \bottomrule
   \end{tabularx}
-  \caption{Tabuľka \texttt{chat\_messages}}
+  \caption{Table \texttt{chat\_messages}}
 \end{table}
 
 \subsection{worker\_locations}
@@ -107,13 +107,13 @@
   \centering
   \begin{tabularx}{\textwidth}{llX}
     \toprule
-    \textbf{Stĺpec} & \textbf{Typ} & \textbf{Popis} \\
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
     \midrule
-    worker\_id  & UUID (FK) & Odkaz na \texttt{users.id} \\
-    latitude    & FLOAT     & Aktuálna zemepisná šírka \\
-    longitude   & FLOAT     & Aktuálna zemepisná dĺžka \\
-    recorded\_at & TIMESTAMP & Čas záznamu \\
+    worker\_id   & UUID (FK)  & Reference to \texttt{users.id} \\
+    latitude     & FLOAT      & Current latitude \\
+    longitude    & FLOAT      & Current longitude \\
+    recorded\_at & TIMESTAMP  & Time of the location record \\
     \bottomrule
   \end{tabularx}
-  \caption{Tabuľka \texttt{worker\_locations} (posledná poloha per worker)}
+  \caption{Table \texttt{worker\_locations} (latest position per worker)}
 \end{table}

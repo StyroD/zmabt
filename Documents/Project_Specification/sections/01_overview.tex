@@ -1,38 +1,38 @@
-\chapter{Prehľad projektu}
+\chapter{Project Overview}
 
-\section{Účel aplikácie}
+\section{Purpose of the Application}
 
-WorkFlow je mobilná aplikácia určená na koordináciu terénnych tímov. Umožňuje manažérom vytvárať a prideľovať pracovné úlohy (joby) terénnym pracovníkom, sledovať ich polohu v reálnom čase na mape a komunikovať s nimi prostredníctvom vstavaného chatu. Pracovníci dostávajú push notifikácie o nových úlohách, môžu aktualizovať ich stav a nahrávať fotodokumentáciu priamo z terénu.
+WorkFlow is a mobile application designed for coordinating field teams. It allows managers to create and assign work orders (jobs) to field workers, track their location in real time on a map, and communicate with them through a built-in chat. Workers receive push notifications about new assignments, can update job statuses, and upload photo documentation directly from the field.
 
-Cieľom aplikácie je nahradiť neefektívnu e-mailovú alebo telefonickú koordináciu a poskytnúť manažmentu okamžitý prehľad o stave prác a polohe tímu.
+The goal of the application is to replace inefficient email or phone-based coordination and give management an instant overview of job progress and team location.
 
-\section{Technologický stack}
+\section{Technology Stack}
 
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{lX}
     \toprule
-    \textbf{Vrstva} & \textbf{Technológia} \\
+    \textbf{Layer} & \textbf{Technology} \\
     \midrule
-    Frontend        & React Native (cross-platform iOS / Android) \\
-    Backend         & Node.js (Express) \\
-    Databáza        & PostgreSQL \\
-    Realtime        & WebSockets (Socket.IO) \\
-    Push notifikácie & Firebase Cloud Messaging (FCM) \\
-    Analytika       & Firebase Analytics + Firebase Crashlytics \\
-    Autentifikácia  & JWT + Google SSO (OAuth 2.0) \\
-    Mapy            & React Native Maps (Google Maps) \\
+    Frontend           & React Native (cross-platform iOS / Android) \\
+    Backend            & Node.js (Express) \\
+    Database           & PostgreSQL \\
+    Real-time          & WebSockets (Socket.IO) \\
+    Push notifications & Firebase Cloud Messaging (FCM) \\
+    Analytics          & Firebase Analytics + Firebase Crashlytics \\
+    Authentication     & JWT + Google SSO (OAuth 2.0) \\
+    Maps               & React Native Maps (Google Maps) \\
     \bottomrule
   \end{tabularx}
-  \caption{Technologický stack projektu WorkFlow}
+  \caption{WorkFlow technology stack}
 \end{table}
 
-\section{Povinné voliteľné požiadavky (PVP)}
+\section{Mandatory Optional Requirements (PVP)}
 
-V súlade so zadaním sú implementované nasledujúce tri PVP:
+In accordance with the project specification, the following three PVPs are implemented:
 
 \begin{itemize}
-  \item \textbf{PVP4} — Podpora SSO autentifikácie (Google Sign-In)
-  \item \textbf{PVP5} — Integrácia Firebase služieb (Analytics + Crashlytics)
-  \item \textbf{PVP6} — Location based service (GPS sledovanie pracovníkov, geofencing okolo miesta práce)
+  \item \textbf{PVP4} --- SSO authentication support (Google Sign-In)
+  \item \textbf{PVP5} --- Firebase services integration (Analytics + Crashlytics)
+  \item \textbf{PVP6} --- Location-based service (GPS worker tracking, geofencing around job sites)
 \end{itemize}

@@ -1,51 +1,51 @@
-\chapter{Používateľské roly a prípady použitia}
+\chapter{User Roles and Use Cases}
 
-\section{Používateľské roly}
+\section{User Roles}
 
-Aplikácia rozlišuje dve hlavné používateľské roly:
+The application distinguishes between two main user roles:
 
 \begin{description}
-  \item[Manager (Manažér)] Vytvára, upravuje a zmazáva joby. Prideľuje joby pracovníkom. Sleduje polohu tímu na mape v reálnom čase. Má prístup k prehľadu všetkých jobov a ich stavu. Môže komunikovať s pracovníkmi cez chat.
-  
-  \item[Worker (Pracovník)] Vidí iba joby, ktoré mu boli pridelené. Aktualizuje stav jobu (napr. \textit{In Progress}, \textit{Done}). Nahrával fotodokumentáciu k jobu. Zdieľa svoju GPS polohu s manažérom. Môže komunikovať s manažérom cez chat.
+  \item[Manager] Creates, edits, and deletes jobs. Assigns jobs to workers. Tracks the team's location on the map in real time. Has access to an overview of all jobs and their statuses. Can communicate with workers via chat.
+
+  \item[Worker] Can only see jobs assigned to them. Updates the status of a job (e.g.\ \textit{In Progress}, \textit{Done}). Uploads photo documentation to a job. Shares their GPS location with the manager. Can communicate with the manager via chat.
 \end{description}
 
-\section{Prípady použitia}
+\section{Use Cases}
 
 \subsection{Manager}
 
-\begin{longtable}{p{0.05\textwidth}p{0.3\textwidth}p{0.55\textwidth}}
+\begin{longtable}{p{0.06\textwidth}p{0.3\textwidth}p{0.54\textwidth}}
   \toprule
-  \textbf{\#} & \textbf{Use case} & \textbf{Popis} \\
+  \textbf{\#} & \textbf{Use case} & \textbf{Description} \\
   \midrule
   \endhead
-  UC-M1 & Prihlásenie & Manažér sa prihlási pomocou Google SSO alebo e-mailom a heslom. \\
-  UC-M2 & Vytvorenie jobu & Manažér vytvorí nový job s názvom, popisom, GPS súradnicami miesta a termínom. \\
-  UC-M3 & Pridelenie jobu & Manažér pridelí job jednému alebo viacerým pracovníkom. \\
-  UC-M4 & Úprava / zmazanie jobu & Manažér upraví alebo zmaže existujúci job. \\
-  UC-M5 & Prehľad jobov & Manažér vidí zoznam všetkých jobov s ich aktuálnym stavom. \\
-  UC-M6 & Mapa tímu & Manažér vidí na mape polohy všetkých aktívnych pracovníkov a piny jobov. \\
-  UC-M7 & Chat & Manažér komunikuje s pracovníkmi cez real-time chat. \\
-  UC-M8 & Push notifikácia & Manažér dostane notifikáciu, keď pracovník zmení stav jobu na \textit{Done}. \\
+  UC-M1 & Login           & Manager logs in via Google SSO or email and password. \\
+  UC-M2 & Create job      & Manager creates a new job with a title, description, GPS coordinates, and deadline. \\
+  UC-M3 & Assign job      & Manager assigns a job to one or more workers. \\
+  UC-M4 & Edit / delete job & Manager edits or deletes an existing job. \\
+  UC-M5 & Job overview    & Manager sees a list of all jobs with their current statuses. \\
+  UC-M6 & Team map        & Manager sees live worker locations and job site pins on the map. \\
+  UC-M7 & Chat            & Manager communicates with workers via real-time chat. \\
+  UC-M8 & Push notification & Manager receives a notification when a worker changes a job status to \textit{Done}. \\
   \bottomrule
-  \caption{Prípady použitia — Manažér}
+  \caption{Use cases --- Manager}
 \end{longtable}
 
 \subsection{Worker}
 
-\begin{longtable}{p{0.05\textwidth}p{0.3\textwidth}p{0.55\textwidth}}
+\begin{longtable}{p{0.06\textwidth}p{0.3\textwidth}p{0.54\textwidth}}
   \toprule
-  \textbf{\#} & \textbf{Use case} & \textbf{Popis} \\
+  \textbf{\#} & \textbf{Use case} & \textbf{Description} \\
   \midrule
   \endhead
-  UC-W1 & Prihlásenie & Pracovník sa prihlási pomocou Google SSO alebo e-mailom a heslom. \\
-  UC-W2 & Zoznam mojich jobov & Pracovník vidí zoznam jobov, ktoré mu boli pridelené. \\
-  UC-W3 & Detail jobu & Pracovník otvorí detail jobu — popis, mapa, fotky, stav. \\
-  UC-W4 & Aktualizácia stavu & Pracovník zmení stav jobu na \textit{In Progress} alebo \textit{Done}. \\
-  UC-W5 & Nahranie fotky & Pracovník nafotí alebo vyberie fotografiu z galérie a priloží ju k jobu. \\
-  UC-W6 & Offline aktualizácia & Pracovník aktualizuje stav jobu bez internetu; zmena sa synchronizuje po reconnecte. \\
-  UC-W7 & Chat & Pracovník komunikuje s manažérom cez real-time chat. \\
-  UC-W8 & Push notifikácia & Pracovník dostane notifikáciu o novom pridelenom jobe. \\
+  UC-W1 & Login              & Worker logs in via Google SSO or email and password. \\
+  UC-W2 & My job list        & Worker sees the list of jobs assigned to them. \\
+  UC-W3 & Job detail         & Worker opens a job's detail --- description, map, photos, status. \\
+  UC-W4 & Update status      & Worker changes job status to \textit{In Progress} or \textit{Done}. \\
+  UC-W5 & Upload photo       & Worker takes a photo or picks one from the gallery and attaches it to the job. \\
+  UC-W6 & Offline update     & Worker updates job status without internet; change syncs after reconnection. \\
+  UC-W7 & Chat               & Worker communicates with the manager via real-time chat. \\
+  UC-W8 & Push notification  & Worker receives a notification about a newly assigned job. \\
   \bottomrule
-  \caption{Prípady použitia — Pracovník}
+  \caption{Use cases --- Worker}
 \end{longtable}

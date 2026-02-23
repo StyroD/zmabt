@@ -1,280 +1,259 @@
-\chapter{Akceptačné testy (UAT)}
+\chapter{Acceptance Tests (UAT)}
 
-Každý test pozostáva z minimálne 7 krokov, prechádza cez aspoň dve obrazovky a tvorí logický celok. Registrácia a prihlásenie nie sú súčasťou testov.
-
-% Pomocné makro na opakovane pouzivane hlavicky tabulky
-\newcommand{\uattable}[5]{%
-  \begin{table}[H]
-    \centering
-    \begin{tabularx}{\textwidth}{lX}
-      \toprule
-      \textbf{Vstupné podmienky:} & #2 \\
-      \textbf{Výstupné podmienky:} & #3 \\
-      \midrule
-    \end{tabularx}
-    \begin{tabularx}{\textwidth}{lX}
-      \multicolumn{2}{l}{\textbf{Postup:}} \\
-      #4 \\
-      \midrule
-      \textbf{Výsledok:} & \textbf{PASS \quad/\quad FAIL} \\
-      \bottomrule
-    \end{tabularx}
-    \caption{#1}
-  \end{table}
-}
+Each test consists of at least 7 steps, spans at least two screens, and forms a logical, self-contained scenario. Account creation and login are not included as valid UAT scenarios.
 
 % -------------------------------------------------------
-\section{Kladné testy}
+\section{Positive Tests}
 
-\subsection*{UAT-01: Vytvorenie nového jobu}
+\subsection*{UAT-01: Create a New Job}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{lX}
     \toprule
-    Vstupné podmienky  & Používateľ s rolou Manager je prihlásený. Aplikácia má internetové pripojenie. \\
-    Výstupné podmienky & Nový job sa uloží do databázy a zobrazí sa v zozname jobov. \\
+    Preconditions  & A user with the Manager role is logged in. The app has an internet connection. \\
+    Postconditions & The new job is saved to the database and appears in the job list. \\
     \midrule
   \end{tabularx}
   \begin{tabularx}{\textwidth}{lX}
-    \textbf{Postup:} & \\
-    1. & Používateľ sa nachádza na obrazovke \textbf{Job List}. \\
-    2. & Stlačí tlačidlo \textbf{+} (Create Job). \\
-    3. & Zobrazí sa obrazovka \textbf{Create Job}. \\
-    4. & Vyplní názov, popis, vyberie dátum termínu. \\
-    5. & Na mape klepnutím označí miesto jobu. \\
-    6. & Stlačí tlačidlo \textbf{Save}. \\
-    7. & Aplikácia ho presmeruje na \textbf{Job List}, kde sa nový job zobrazí na vrchu zoznamu. \\
+    \textbf{Steps:} & \\
+    1. & User is on the \textbf{Job List} screen. \\
+    2. & Taps the \textbf{+} button (Create Job). \\
+    3. & The \textbf{Create Job} screen appears. \\
+    4. & Fills in the title, description, and selects a deadline. \\
+    5. & Taps on the map to set the job location. \\
+    6. & Taps the \textbf{Save} button. \\
+    7. & App navigates back to \textbf{Job List}, where the new job appears at the top. \\
     \midrule
-    Výsledok & \textbf{PASS \quad/\quad FAIL} \\
+    Result & \textbf{PASS \quad/\quad FAIL} \\
     \bottomrule
   \end{tabularx}
-  \caption{UAT-01: Vytvorenie nového jobu}
+  \caption{UAT-01: Create a new job}
 \end{table}
 
-\subsection*{UAT-02: Pridelenie workera k jobu}
+\subsection*{UAT-02: Assign a Worker to a Job}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{lX}
     \toprule
-    Vstupné podmienky  & Manager je prihlásený. V systéme existuje aspoň jeden Worker a aspoň jeden job. \\
-    Výstupné podmienky & Worker je priradený k jobu; Worker dostane push notifikáciu. \\
+    Preconditions  & Manager is logged in. At least one Worker and one job exist in the system. \\
+    Postconditions & Worker is assigned to the job; Worker receives a push notification. \\
     \midrule
   \end{tabularx}
   \begin{tabularx}{\textwidth}{lX}
-    \textbf{Postup:} & \\
-    1. & Manager otvorí \textbf{Job List} a klepne na existujúci job. \\
-    2. & Zobrazí sa \textbf{Job Detail}. \\
-    3. & Klepne na \textbf{Assign Worker}. \\
-    4. & Zobrazí sa zoznam workerov; Manager vyberie jedného. \\
-    5. & Potvrdí výber tlačidlom \textbf{Confirm}. \\
-    6. & V Job Detail sa zobrazí meno prideleného workera. \\
-    7. & Worker na svojom zariadení dostane push notifikáciu \textit{„Bol ti pridelený nový job"}. \\
+    \textbf{Steps:} & \\
+    1. & Manager opens \textbf{Job List} and taps an existing job. \\
+    2. & \textbf{Job Detail} screen is displayed. \\
+    3. & Taps \textbf{Assign Worker}. \\
+    4. & A list of workers appears; Manager selects one. \\
+    5. & Confirms the selection with the \textbf{Confirm} button. \\
+    6. & The assigned worker's name appears in Job Detail. \\
+    7. & The Worker's device receives a push notification: \textit{``You have been assigned a new job''}. \\
     \midrule
-    Výsledok & \textbf{PASS \quad/\quad FAIL} \\
+    Result & \textbf{PASS \quad/\quad FAIL} \\
     \bottomrule
   \end{tabularx}
-  \caption{UAT-02: Pridelenie workera k jobu}
+  \caption{UAT-02: Assign a worker to a job}
 \end{table}
 
-\subsection*{UAT-03: Aktualizácia stavu jobu Workerom}
+\subsection*{UAT-03: Worker Updates a Job Status}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{lX}
     \toprule
-    Vstupné podmienky  & Worker je prihlásený a má pridelený job so stavom \textit{Pending}. Aplikácia má internet. \\
-    Výstupné podmienky & Stav jobu sa zmení na \textit{In Progress}; Manager dostane aktualizáciu. \\
+    Preconditions  & Worker is logged in and has an assigned job with status \textit{Pending}. App has internet. \\
+    Postconditions & Job status changes to \textit{In Progress}; Manager sees the update. \\
     \midrule
   \end{tabularx}
   \begin{tabularx}{\textwidth}{lX}
-    \textbf{Postup:} & \\
-    1. & Worker otvorí \textbf{Job List} (Moje joby). \\
-    2. & Klepne na job so stavom \textit{Pending}. \\
-    3. & Zobrazí sa \textbf{Job Detail}. \\
-    4. & Klepne na tlačidlo \textbf{Start Job}. \\
-    5. & Zobrazí sa potvrdzovací dialóg; Worker klepne \textbf{Confirm}. \\
-    6. & Stav jobu sa zmení na \textit{In Progress} a zobrazí sa príslušný badge. \\
-    7. & Na Manažérskom zariadení sa v reálnom čase aktualizuje stav jobu v \textbf{Job List}. \\
+    \textbf{Steps:} & \\
+    1. & Worker opens \textbf{Job List} (My Jobs). \\
+    2. & Taps a job with status \textit{Pending}. \\
+    3. & \textbf{Job Detail} screen is displayed. \\
+    4. & Taps the \textbf{Start Job} button. \\
+    5. & A confirmation dialog appears; Worker taps \textbf{Confirm}. \\
+    6. & Job status changes to \textit{In Progress} with an appropriate badge. \\
+    7. & On the Manager's device, the job status updates in real time in \textbf{Job List}. \\
     \midrule
-    Výsledok & \textbf{PASS \quad/\quad FAIL} \\
+    Result & \textbf{PASS \quad/\quad FAIL} \\
     \bottomrule
   \end{tabularx}
-  \caption{UAT-03: Aktualizácia stavu jobu Workerom}
+  \caption{UAT-03: Worker updates a job status}
 \end{table}
 
-\subsection*{UAT-04: Nahranie fotografie k jobu}
+\subsection*{UAT-04: Upload a Photo to a Job}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{lX}
     \toprule
-    Vstupné podmienky  & Worker je prihlásený, má pridelený job. Aplikácia má internet a oprávnenie na kameru. \\
-    Výstupné podmienky & Fotografia je nahratá na server a zobrazuje sa v Job Detail. \\
+    Preconditions  & Worker is logged in, has an assigned job. App has internet and camera permission. \\
+    Postconditions & Photo is uploaded to the server and visible in Job Detail. \\
     \midrule
   \end{tabularx}
   \begin{tabularx}{\textwidth}{lX}
-    \textbf{Postup:} & \\
-    1. & Worker otvorí \textbf{Job Detail} priradeného jobu. \\
-    2. & Posunie sa do sekcie \textit{Fotodokumentácia} a klepne na \textbf{+}. \\
-    3. & Zobrazí sa výber: \textit{Fotoaparát} alebo \textit{Galéria}; Worker vyberie \textit{Fotoaparát}. \\
-    4. & Otvorí sa kamera; Worker nafotí fotografiu a potvrdí. \\
-    5. & Aplikácia nahrá fotografiu na server. \\
-    6. & Zobrazí sa progress indikátor počas nahrávania. \\
-    7. & Po úspešnom nahratí sa nová fotografia zobrazí v galérii jobu. \\
+    \textbf{Steps:} & \\
+    1. & Worker opens \textbf{Job Detail} of an assigned job. \\
+    2. & Scrolls to the \textit{Photo Documentation} section and taps \textbf{+}. \\
+    3. & A picker appears: \textit{Camera} or \textit{Gallery}; Worker selects \textit{Camera}. \\
+    4. & The camera opens; Worker takes a photo and confirms. \\
+    5. & App uploads the photo to the server. \\
+    6. & A progress indicator is shown during the upload. \\
+    7. & After a successful upload, the new photo appears in the job's gallery. \\
     \midrule
-    Výsledok & \textbf{PASS \quad/\quad FAIL} \\
+    Result & \textbf{PASS \quad/\quad FAIL} \\
     \bottomrule
   \end{tabularx}
-  \caption{UAT-04: Nahranie fotografie k jobu}
+  \caption{UAT-04: Upload a photo to a job}
 \end{table}
 
-\subsection*{UAT-05: Real-time chat medzi Manažérom a Workerom}
+\subsection*{UAT-05: Real-time Chat Between Manager and Worker}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{lX}
     \toprule
-    Vstupné podmienky  & Manager aj Worker sú prihlásení a nachádzajú sa v chat obrazovke toho istého jobu. \\
-    Výstupné podmienky & Správy sa zobrazujú obom stranám v reálnom čase. \\
+    Preconditions  & Both Manager and Worker are logged in and have the chat screen of the same job open. \\
+    Postconditions & Messages appear on both devices in real time. \\
     \midrule
   \end{tabularx}
   \begin{tabularx}{\textwidth}{lX}
-    \textbf{Postup:} & \\
-    1. & Manager otvorí \textbf{Job Detail} a klepne na \textbf{Chat}. \\
-    2. & Worker otvorí rovnaký job a klepne na \textbf{Chat}. \\
-    3. & Manager napíše správu a klepne \textbf{Odoslať}. \\
-    4. & Správa sa okamžite zobrazí na Workerovom zariadení bez obnovenia. \\
-    5. & Worker odpíše správu a klepne \textbf{Odoslať}. \\
-    6. & Správa sa okamžite zobrazí Manažérovi. \\
-    7. & Obe zariadenia zobrazujú celú históriu správ správne zoradenú podľa času. \\
+    \textbf{Steps:} & \\
+    1. & Manager opens \textbf{Job Detail} and taps \textbf{Chat}. \\
+    2. & Worker opens the same job and taps \textbf{Chat}. \\
+    3. & Manager types a message and taps \textbf{Send}. \\
+    4. & The message appears instantly on the Worker's device without refreshing. \\
+    5. & Worker replies with a message and taps \textbf{Send}. \\
+    6. & The message appears instantly on the Manager's device. \\
+    7. & Both devices show the full message history in the correct chronological order. \\
     \midrule
-    Výsledok & \textbf{PASS \quad/\quad FAIL} \\
+    Result & \textbf{PASS \quad/\quad FAIL} \\
     \bottomrule
   \end{tabularx}
   \caption{UAT-05: Real-time chat}
 \end{table}
 
-\subsection*{UAT-06: Sledovanie polohy Workera na mape}
+\subsection*{UAT-06: Track Worker Location on the Map}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{lX}
     \toprule
-    Vstupné podmienky  & Manager je prihlásený na \textbf{Map View}. Worker je prihlásený a má povolené zdieľanie polohy. \\
-    Výstupné podmienky & Manažér vidí aktuálnu polohu Workera na mape. \\
+    Preconditions  & Manager is logged in on the \textbf{Map View} screen. Worker is logged in with location sharing enabled. \\
+    Postconditions & Manager sees the Worker's current location on the map. \\
     \midrule
   \end{tabularx}
   \begin{tabularx}{\textwidth}{lX}
-    \textbf{Postup:} & \\
-    1. & Manager otvorí \textbf{Map View}. \\
-    2. & Na mape sú viditeľné piny jobov. \\
-    3. & Worker sa fyzicky pohne (alebo simulátor zmení polohu). \\
-    4. & Worker otvorí aplikáciu — aplikácia začne odosielať GPS polohu. \\
-    5. & Na Manažérovej mape sa do 15 sekúnd objaví marker Workera. \\
-    6. & Po ďalšom pohybe Workera sa marker presunie na novú polohu. \\
-    7. & Manager klepne na marker Workera — zobrazí sa meno a stav Workera. \\
+    \textbf{Steps:} & \\
+    1. & Manager opens \textbf{Map View}. \\
+    2. & Job site pins are visible on the map. \\
+    3. & Worker moves physically (or the simulator changes the location). \\
+    4. & Worker opens the app --- it begins sending GPS position. \\
+    5. & A Worker marker appears on the Manager's map within 15 seconds. \\
+    6. & After further movement, the marker shifts to the new position. \\
+    7. & Manager taps the Worker's marker --- the Worker's name and status are shown. \\
     \midrule
-    Výsledok & \textbf{PASS \quad/\quad FAIL} \\
+    Result & \textbf{PASS \quad/\quad FAIL} \\
     \bottomrule
   \end{tabularx}
-  \caption{UAT-06: Sledovanie polohy Workera}
+  \caption{UAT-06: Track worker location on the map}
 \end{table}
 
-\subsection*{UAT-07: Offline aktualizácia stavu jobu}
+\subsection*{UAT-07: Offline Job Status Update}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{lX}
     \toprule
-    Vstupné podmienky  & Worker je prihlásený, má pridelený job, zariadenie nemá internet (airplane mode). \\
-    Výstupné podmienky & Po obnovení internetu sa zmena stavu synchronizuje na server. \\
+    Preconditions  & Worker is logged in with an assigned job. Device has no internet (airplane mode on). \\
+    Postconditions & After internet is restored, the status change is synced to the server. \\
     \midrule
   \end{tabularx}
   \begin{tabularx}{\textwidth}{lX}
-    \textbf{Postup:} & \\
-    1. & Worker zapne režim lietadlo na zariadení. \\
-    2. & Otvorí \textbf{Job List} — joby sú stále viditeľné (lokálna cache). \\
-    3. & Otvorí \textbf{Job Detail} a klepne \textbf{Mark as Done}. \\
-    4. & Aplikácia zobrazí stav \textit{Done} s ikonou offline syncu (hodiny). \\
-    5. & Worker vypne režim lietadlo. \\
-    6. & Aplikácia detekuje pripojenie a spustí synchronizáciu na pozadí. \\
-    7. & Ikona hodín zmizne; v \textbf{Job List} je stav jobu aktualizovaný na serveri. \\
+    \textbf{Steps:} & \\
+    1. & Worker enables airplane mode on the device. \\
+    2. & Opens \textbf{Job List} --- jobs are still visible (local cache). \\
+    3. & Opens \textbf{Job Detail} and taps \textbf{Mark as Done}. \\
+    4. & App shows status \textit{Done} with an offline sync icon (clock). \\
+    5. & Worker disables airplane mode. \\
+    6. & App detects connectivity and triggers background sync. \\
+    7. & The clock icon disappears; the job status in \textbf{Job List} is updated on the server. \\
     \midrule
-    Výsledok & \textbf{PASS \quad/\quad FAIL} \\
+    Result & \textbf{PASS \quad/\quad FAIL} \\
     \bottomrule
   \end{tabularx}
-  \caption{UAT-07: Offline aktualizácia stavu jobu}
+  \caption{UAT-07: Offline job status update}
 \end{table}
 
 % -------------------------------------------------------
-\section{Záporné testy}
+\section{Negative Tests}
 
-\subsection*{UAT-08: Pokus Workera o vytvorenie jobu}
+\subsection*{UAT-08: Worker Attempts to Create a Job}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{lX}
     \toprule
-    Vstupné podmienky  & Používateľ s rolou Worker je prihlásený. \\
-    Výstupné podmienky & Aplikácia nedovolí vytvorenie jobu; server vráti chybu 403. \\
+    Preconditions  & A user with the Worker role is logged in. \\
+    Postconditions & App does not allow job creation; server returns a 403 error. \\
     \midrule
   \end{tabularx}
   \begin{tabularx}{\textwidth}{lX}
-    \textbf{Postup:} & \\
-    1. & Worker otvorí \textbf{Job List}. \\
-    2. & Tlačidlo \textbf{+} (Create Job) nie je zobrazené (skrytie na úrovni UI). \\
-    3. & Útočník sa pokúsi zavolať \texttt{POST /api/jobs} priamo s JWT tokenom Workera. \\
-    4. & Server overí rolu používateľa. \\
-    5. & Server vráti odpoveď \texttt{403 Forbidden}. \\
-    6. & V aplikácii sa zobrazí chybová správa \textit{„Na túto akciu nemáte oprávnenie."}. \\
-    7. & Žiadny nový job sa nevytvorí v databáze. \\
+    \textbf{Steps:} & \\
+    1. & Worker opens \textbf{Job List}. \\
+    2. & The \textbf{+} (Create Job) button is not visible (hidden at the UI level). \\
+    3. & An attacker attempts to call \texttt{POST /api/jobs} directly using the Worker's JWT. \\
+    4. & The server verifies the user's role. \\
+    5. & Server returns \texttt{403 Forbidden}. \\
+    6. & App displays an error message: \textit{``You do not have permission for this action.''}. \\
+    7. & No new job is created in the database. \\
     \midrule
-    Výsledok & \textbf{PASS \quad/\quad FAIL} \\
+    Result & \textbf{PASS \quad/\quad FAIL} \\
     \bottomrule
   \end{tabularx}
-  \caption{UAT-08: Neoprávnený pokus o vytvorenie jobu (Worker)}
+  \caption{UAT-08: Unauthorised attempt to create a job (Worker)}
 \end{table}
 
-\subsection*{UAT-09: Odoslanie správy bez internetu (bez offline podpory pre chat)}
+\subsection*{UAT-09: Sending a Chat Message Without Internet}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{lX}
     \toprule
-    Vstupné podmienky  & Používateľ je prihlásený, zariadenie nemá internet (airplane mode). \\
-    Výstupné podmienky & Správa sa neodošle; aplikácia informuje používateľa o chybe spojenia. \\
+    Preconditions  & User is logged in. Device has no internet (airplane mode on). \\
+    Postconditions & Message is not sent; app informs the user of the connection error. \\
     \midrule
   \end{tabularx}
   \begin{tabularx}{\textwidth}{lX}
-    \textbf{Postup:} & \\
-    1. & Používateľ zapne režim lietadlo. \\
-    2. & Otvorí \textbf{Chat} v rámci jobu. \\
-    3. & Napíše správu a klepne \textbf{Odoslať}. \\
-    4. & Aplikácia sa pokúsi nadviazať WebSocket spojenie. \\
-    5. & Spojenie zlyhá — aplikácia zobrazí banner \textit{„Ste offline. Chat nie je dostupný."}. \\
-    6. & Správa sa neodošle ani neuloží do lokálnej cache. \\
-    7. & Po obnovení internetu banner zmizne a chat funguje normálne. \\
+    \textbf{Steps:} & \\
+    1. & User enables airplane mode. \\
+    2. & Opens \textbf{Chat} for a job. \\
+    3. & Types a message and taps \textbf{Send}. \\
+    4. & App attempts to establish a WebSocket connection. \\
+    5. & Connection fails --- app shows a banner: \textit{``You are offline. Chat is unavailable.''}. \\
+    6. & Message is not sent and is not saved to local cache. \\
+    7. & After internet is restored, the banner disappears and chat works normally. \\
     \midrule
-    Výsledok & \textbf{PASS \quad/\quad FAIL} \\
+    Result & \textbf{PASS \quad/\quad FAIL} \\
     \bottomrule
   \end{tabularx}
-  \caption{UAT-09: Pokus o chat bez internetového pripojenia}
+  \caption{UAT-09: Attempt to chat without internet connection}
 \end{table}
 
-\subsection*{UAT-10: Zmazanie jobu, ktorý má aktívneho Workera}
+\subsection*{UAT-10: Delete a Job with an Active Worker}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{lX}
     \toprule
-    Vstupné podmienky  & Manager je prihlásený. Job má stav \textit{In Progress} a priradeného Workera. \\
-    Výstupné podmienky & Aplikácia zobrazí varovanie; po potvrdení sa job zmaže a Worker je o tom informovaný. \\
+    Preconditions  & Manager is logged in. A job with status \textit{In Progress} and an assigned Worker exists. \\
+    Postconditions & App shows a warning; after confirmation the job is deleted and Worker is notified. \\
     \midrule
   \end{tabularx}
   \begin{tabularx}{\textwidth}{lX}
-    \textbf{Postup:} & \\
-    1. & Manager otvorí \textbf{Job Detail} jobu so stavom \textit{In Progress}. \\
-    2. & Klepne na \textbf{Delete Job}. \\
-    3. & Zobrazí sa varovný dialóg: \textit{„Job má priradeného Workera. Naozaj ho chcete zmazať?"}. \\
-    4. & Manager potvrdí zmazanie. \\
-    5. & Server zmaže job a jeho priradeniaň z databázy. \\
-    6. & Manager je presmerovaný na \textbf{Job List}, kde job nie je. \\
-    7. & Worker dostane push notifikáciu \textit{„Job bol zmazaný Manažérom"} a job zmizne z jeho zoznamu. \\
+    \textbf{Steps:} & \\
+    1. & Manager opens \textbf{Job Detail} of an \textit{In Progress} job. \\
+    2. & Taps \textbf{Delete Job}. \\
+    3. & A warning dialog appears: \textit{``This job has an assigned worker. Are you sure you want to delete it?''}. \\
+    4. & Manager confirms the deletion. \\
+    5. & Server deletes the job and its assignments from the database. \\
+    6. & Manager is redirected to \textbf{Job List} where the job is gone. \\
+    7. & Worker receives a push notification: \textit{``A job was deleted by the Manager''} and it disappears from their list. \\
     \midrule
-    Výsledok & \textbf{PASS \quad/\quad FAIL} \\
+    Result & \textbf{PASS \quad/\quad FAIL} \\
     \bottomrule
   \end{tabularx}
-  \caption{UAT-10: Zmazanie aktívneho jobu}
+  \caption{UAT-10: Delete an active job}
 \end{table}

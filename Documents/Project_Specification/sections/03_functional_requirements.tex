@@ -1,84 +1,84 @@
-\chapter{Funkcionálne požiadavky}
+\chapter{Functional Requirements}
 
-\section{Obrazovky aplikácie}
+\section{Application Screens}
 
-Aplikácia obsahuje nasledujúcich 7 funkčných obrazoviek (splash screen a login screen sa do počtu nepočítajú):
+The application includes the following 7 functional screens (splash screen and login screen are not counted):
 
 \begin{enumerate}
-  \item \textbf{Job List} — zoznam jobov (Manager: všetky; Worker: pridelené)
-  \item \textbf{Job Detail} — detail jobu, stav, popis, fotky, tlačidlo na zmenu stavu
-  \item \textbf{Create / Edit Job} — formulár na vytvorenie alebo úpravu jobu (len Manager)
-  \item \textbf{Map View} — mapa s polohami pracovníkov a pinmi jobov
-  \item \textbf{Chat} — real-time konverzácia (per job alebo globálna)
-  \item \textbf{Worker List} — zoznam pracovníkov a ich aktuálny stav (len Manager)
-  \item \textbf{Profile / Settings} — profil používateľa, odhlásenie, prepínanie dark mode
+  \item \textbf{Job List} --- list of jobs (Manager: all jobs; Worker: assigned jobs only)
+  \item \textbf{Job Detail} --- job detail view with status, description, photos, and status-change button
+  \item \textbf{Create / Edit Job} --- form for creating or editing a job (Manager only)
+  \item \textbf{Map View} --- map with live worker locations and job site pins
+  \item \textbf{Chat} --- real-time conversation per job
+  \item \textbf{Worker List} --- list of workers and their current status (Manager only)
+  \item \textbf{Profile / Settings} --- user profile, logout, dark mode toggle
 \end{enumerate}
 
-\section{CRUD operácie}
+\section{CRUD Operations}
 
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{llX}
     \toprule
-    \textbf{Entita} & \textbf{Operácia} & \textbf{Popis} \\
+    \textbf{Entity} & \textbf{Operation} & \textbf{Description} \\
     \midrule
-    Job & Create  & Manažér vytvorí nový job cez formulár \\
-    Job & Read    & Zoznam a detail jobov pre obe roly \\
-    Job & Update  & Manažér upraví job; Worker zmení stav \\
-    Job & Delete  & Manažér zmaže job \\
+    Job & Create & Manager creates a new job via the form \\
+    Job & Read   & Job list and detail view for both roles \\
+    Job & Update & Manager edits the job; Worker changes the status \\
+    Job & Delete & Manager deletes a job \\
     \bottomrule
   \end{tabularx}
-  \caption{CRUD operácie nad entitou Job}
+  \caption{CRUD operations on the Job entity}
 \end{table}
 
-\section{Offline režim}
+\section{Offline Mode}
 
-Aplikácia podporuje offline fungovanie pomocou lokálnej SQLite databázy (\textbf{WatermelonDB}). Keď zariadenie nemá internetové pripojenie:
-
-\begin{itemize}
-  \item Worker môže zmeniť stav jobu (Create, Update, Delete stavu/poznámky) — zmena sa uloží lokálne s príznakom \texttt{pending\_sync}.
-  \item Po obnovení pripojenia sa zmeny automaticky synchronizujú so serverom na pozadí.
-  \item Konflikt (napr. job bol medzitým zmazaný manažérom) sa rieši politikou \textit{server wins}: server vráti chybu, aplikácia zobrazí používateľovi upozornenie a lokálnu zmenu zahodí.
-\end{itemize}
-
-\section{WebSockets — real-time komunikácia}
-
-Aplikácia využíva WebSocket spojenie (Socket.IO) pre:
+The application supports offline functionality using a local SQLite database (\textbf{WatermelonDB}). When the device has no internet connection:
 
 \begin{itemize}
-  \item \textbf{Live chat} — obojsmerné zasielanie správ medzi Manažérom a Workerom v rámci jobu.
-  \item \textbf{Zdieľanie polohy} — Worker periodicky (každých 10 s) odosiela svoju GPS polohu; Manažér ju dostáva v reálnom čase a vidí ju na mape.
+  \item A Worker can change a job's status or add notes --- the change is saved locally with a \texttt{pending\_sync} flag.
+  \item Once the connection is restored, changes are automatically synchronized with the server in the background.
+  \item Conflicts (e.g.\ the job was deleted by the manager in the meantime) are resolved with a \textit{server wins} policy: the server returns an error, the application notifies the user, and the local change is discarded.
 \end{itemize}
 
-\section{Push notifikácie}
+\section{WebSockets --- Real-time Communication}
+
+The application uses a WebSocket connection (Socket.IO) for:
+
+\begin{itemize}
+  \item \textbf{Live chat} --- bidirectional messaging between Manager and Worker within a job.
+  \item \textbf{Location sharing} --- Worker periodically (every 10\,s) sends their GPS position; Manager receives it in real time and sees it on the map.
+\end{itemize}
+
+\section{Push Notifications}
 
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{llX}
     \toprule
-    \textbf{Trigger} & \textbf{Príjemca} & \textbf{Správanie} \\
+    \textbf{Trigger} & \textbf{Recipient} & \textbf{Behaviour} \\
     \midrule
-    Nový job pridelený (server) & Worker & Notifikácia na pozadí; klik presmeruje na Job Detail \\
-    Job dokončený (app)         & Manager & Notifikácia na pozadí; klik presmeruje na Job Detail \\
+    New job assigned (server) & Worker  & Background notification; tap redirects to Job Detail \\
+    Job completed (app)       & Manager & Background notification; tap redirects to Job Detail \\
     \bottomrule
   \end{tabularx}
-  \caption{Push notifikácie}
+  \caption{Push notifications}
 \end{table}
 
-\section{Permission handling}
+\section{Permission Handling}
 
-Aplikácia si vyžiada nasledujúce systémové oprávnenia:
+The application requests the following system permissions:
 
 \begin{itemize}
-  \item \textbf{Kamera} — fotografovanie dokumentácie k jobu
-  \item \textbf{Galéria / Súbory} — výber existujúcej fotografie
-  \item \textbf{Poloha (foreground + background)} — zdieľanie GPS polohy Workera
-  \item \textbf{Push notifikácie} — prijímanie FCM správ
+  \item \textbf{Camera} --- taking job photo documentation
+  \item \textbf{Gallery / Files} --- selecting an existing photo
+  \item \textbf{Location (foreground + background)} --- sharing the Worker's GPS position
+  \item \textbf{Push notifications} --- receiving FCM messages
 \end{itemize}
 
-\section{Ďalšie povinné požiadavky}
+\section{Other Mandatory Requirements}
 
 \begin{itemize}
-  \item \textbf{Dark mode} — aplikácia plne podporuje systémový dark mode aj manuálny prepínač v Settings.
-  \item \textbf{User management} — perzistentná autentifikácia pomocou JWT tokenu uloženého v bezpečnom úložisku (\texttt{react-native-keychain}).
+  \item \textbf{Dark mode} --- the application fully supports the system dark mode as well as a manual toggle in Settings.
+  \item \textbf{User management} --- persistent authentication via a JWT token stored in secure storage (\texttt{react-native-keychain}).
 \end{itemize}

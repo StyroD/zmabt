@@ -1,106 +1,119 @@
-\chapter{API dokumentácia}
+\chapter{Data Model}
 
-Kompletná interaktívna dokumentácia API je dostupná cez \textbf{Swagger UI} na adrese \texttt{http://localhost:3000/api-docs}. Táto kapitola poskytuje prehľad endpointov.
+\section{Entity-Relationship Diagram}
 
-Všetky zabezpečené endpointy vyžadujú hlavičku:
-\begin{lstlisting}
-Authorization: Bearer <jwt_token>
-\end{lstlisting}
+\begin{figure}[H]
+  \centering
+  \fbox{\parbox{0.8\textwidth}{\centering\vspace{2cm}[Insert ER diagram here]\vspace{2cm}}}
+  \caption{Entity-relationship diagram of the WorkFlow database}
+\end{figure}
 
-\section{Autentifikácia (\texttt{/api/auth})}
+\section{Entity Descriptions}
 
-\begin{longtable}{p{0.08\textwidth}p{0.3\textwidth}p{0.1\textwidth}p{0.42\textwidth}}
-  \toprule
-  \textbf{Met.} & \textbf{Endpoint} & \textbf{Auth} & \textbf{Popis} \\
-  \midrule
-  \endhead
-  POST & \texttt{/api/auth/register}     & nie & Registrácia nového používateľa \\
-  POST & \texttt{/api/auth/login}        & nie & Prihlásenie, vracia JWT token \\
-  POST & \texttt{/api/auth/google}       & nie & Google OAuth — výmena kódu za JWT \\
-  POST & \texttt{/api/auth/refresh}      & áno & Obnovenie JWT tokenu \\
-  POST & \texttt{/api/auth/logout}       & áno & Odhlásenie (zmazanie FCM tokenu) \\
-  \bottomrule
-  \caption{Endpointy — autentifikácia}
-\end{longtable}
-
-\section{Joby (\texttt{/api/jobs})}
-
-\begin{longtable}{p{0.08\textwidth}p{0.32\textwidth}p{0.1\textwidth}p{0.4\textwidth}}
-  \toprule
-  \textbf{Met.} & \textbf{Endpoint} & \textbf{Auth} & \textbf{Popis} \\
-  \midrule
-  \endhead
-  GET    & \texttt{/api/jobs}              & áno & Zoznam jobov (Manager: všetky, Worker: pridelené) \\
-  POST   & \texttt{/api/jobs}              & áno & Vytvorenie nového jobu (len Manager) \\
-  GET    & \texttt{/api/jobs/:id}          & áno & Detail jobu \\
-  PUT    & \texttt{/api/jobs/:id}          & áno & Úprava jobu (Manager: všetko, Worker: iba stav) \\
-  DELETE & \texttt{/api/jobs/:id}          & áno & Zmazanie jobu (len Manager) \\
-  POST   & \texttt{/api/jobs/:id/assign}   & áno & Pridelenie workera k jobu (len Manager) \\
-  DELETE & \texttt{/api/jobs/:id/assign/:workerId} & áno & Odvolanie workera z jobu \\
-  \bottomrule
-  \caption{Endpointy — joby}
-\end{longtable}
-
-\section{Médiá — binárny obsah (\texttt{/api/jobs/:id/photos})}
-
-\begin{longtable}{p{0.08\textwidth}p{0.38\textwidth}p{0.1\textwidth}p{0.34\textwidth}}
-  \toprule
-  \textbf{Met.} & \textbf{Endpoint} & \textbf{Auth} & \textbf{Popis} \\
-  \midrule
-  \endhead
-  POST & \texttt{/api/jobs/:id/photos}       & áno & Nahranie fotografie (\texttt{multipart/form-data}) \\
-  GET  & \texttt{/api/jobs/:id/photos}       & áno & Zoznam fotografií jobu \\
-  GET  & \texttt{/api/jobs/:id/photos/:photoId} & áno & Stiahnutie fotografie (binárne) \\
-  DELETE & \texttt{/api/jobs/:id/photos/:photoId} & áno & Zmazanie fotografie \\
-  \bottomrule
-  \caption{Endpointy — fotografie (binárny obsah)}
-\end{longtable}
-
-\textit{Poznámka:} Binárny obsah sa prenáša ako \texttt{multipart/form-data} pri nahrávaní a ako surové bajty (\texttt{Content-Type: image/jpeg} a pod.) pri sťahovaní. Base64 kódovanie nie je použité.
-
-\section{Používatelia (\texttt{/api/users})}
-
-\begin{longtable}{p{0.08\textwidth}p{0.32\textwidth}p{0.1\textwidth}p{0.4\textwidth}}
-  \toprule
-  \textbf{Met.} & \textbf{Endpoint} & \textbf{Auth} & \textbf{Popis} \\
-  \midrule
-  \endhead
-  GET  & \texttt{/api/users}        & áno & Zoznam workerov (len Manager) \\
-  GET  & \texttt{/api/users/me}     & áno & Profil aktuálneho používateľa \\
-  PUT  & \texttt{/api/users/me}     & áno & Úprava profilu (meno, avatar) \\
-  PUT  & \texttt{/api/users/me/fcm} & áno & Aktualizácia FCM tokenu zariadenia \\
-  \bottomrule
-  \caption{Endpointy — používatelia}
-\end{longtable}
-
-\section{Chat (\texttt{/api/jobs/:id/messages})}
-
-\begin{longtable}{p{0.08\textwidth}p{0.38\textwidth}p{0.1\textwidth}p{0.34\textwidth}}
-  \toprule
-  \textbf{Met.} & \textbf{Endpoint} & \textbf{Auth} & \textbf{Popis} \\
-  \midrule
-  \endhead
-  GET & \texttt{/api/jobs/:id/messages} & áno & História správ pre daný job \\
-  \bottomrule
-  \caption{Endpointy — chat história (real-time cez WebSocket)}
-\end{longtable}
-
-\section{WebSocket udalosti}
-
-WebSocket spojenie sa nadväzuje na \texttt{wss://server/socket.io} s JWT tokenom v query parametri \texttt{?token=<jwt>}.
-
+\subsection{users}
 \begin{table}[H]
   \centering
   \begin{tabularx}{\textwidth}{llX}
     \toprule
-    \textbf{Udalosť} & \textbf{Smer} & \textbf{Popis} \\
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
     \midrule
-    \texttt{join\_job}          & Client $\to$ Server & Prihlásenie do miestnosti jobu \\
-    \texttt{chat\_message}      & Obojsmerný          & Odoslanie / prijatie správy v chate \\
-    \texttt{location\_update}   & Client $\to$ Server & Worker odosiela GPS polohu \\
-    \texttt{location\_broadcast} & Server $\to$ Client & Server odosiela polohu Manažérovi \\
-    \texttt{job\_status\_changed} & Server $\to$ Client & Notifikácia o zmene stavu jobu \\
+    id            & UUID (PK)     & Primary key \\
+    email         & VARCHAR(255)  & Unique user email \\
+    password\_hash & VARCHAR(255) & Bcrypt hash of password (null for SSO users) \\
+    name          & VARCHAR(100)  & Display name \\
+    role          & ENUM          & \texttt{manager} or \texttt{worker} \\
+    fcm\_token    & TEXT          & Firebase token for push notifications \\
+    avatar\_url   & TEXT          & URL of the profile picture \\
+    created\_at   & TIMESTAMP     & Record creation time \\
     \bottomrule
   \end{tabularx}
-  \caption{WebSocket udalosti}
+  \caption{Table \texttt{users}}
+\end{table}
+
+\subsection{jobs}
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
+    \midrule
+    id            & UUID (PK)     & Primary key \\
+    title         & VARCHAR(200)  & Job title \\
+    description   & TEXT          & Job description \\
+    status        & ENUM          & \texttt{pending}, \texttt{in\_progress}, \texttt{done} \\
+    latitude      & FLOAT         & GPS latitude of the job site \\
+    longitude     & FLOAT         & GPS longitude of the job site \\
+    deadline      & TIMESTAMP     & Completion deadline \\
+    created\_by   & UUID (FK)     & Reference to \texttt{users.id} (manager) \\
+    created\_at   & TIMESTAMP     & Record creation time \\
+    updated\_at   & TIMESTAMP     & Last update time \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Table \texttt{jobs}}
+\end{table}
+
+\subsection{job\_assignments}
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
+    \midrule
+    job\_id      & UUID (FK)  & Reference to \texttt{jobs.id} \\
+    worker\_id   & UUID (FK)  & Reference to \texttt{users.id} \\
+    assigned\_at & TIMESTAMP  & Time of assignment \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Table \texttt{job\_assignments} (M:N jobs $\leftrightarrow$ workers)}
+\end{table}
+
+\subsection{job\_photos}
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
+    \midrule
+    id           & UUID (PK)   & Primary key \\
+    job\_id      & UUID (FK)   & Reference to \texttt{jobs.id} \\
+    uploaded\_by & UUID (FK)   & Reference to \texttt{users.id} \\
+    file\_path   & TEXT        & Path to file on the server \\
+    mime\_type   & VARCHAR(50) & File type (e.g.\ \texttt{image/jpeg}) \\
+    created\_at  & TIMESTAMP   & Upload time \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Table \texttt{job\_photos}}
+\end{table}
+
+\subsection{chat\_messages}
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
+    \midrule
+    id         & UUID (PK)  & Primary key \\
+    job\_id    & UUID (FK)  & Reference to \texttt{jobs.id} \\
+    sender\_id & UUID (FK)  & Reference to \texttt{users.id} \\
+    content    & TEXT       & Message text \\
+    sent\_at   & TIMESTAMP  & Time sent \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Table \texttt{chat\_messages}}
+\end{table}
+
+\subsection{worker\_locations}
+\begin{table}[H]
+  \centering
+  \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Column} & \textbf{Type} & \textbf{Description} \\
+    \midrule
+    worker\_id   & UUID (FK)  & Reference to \texttt{users.id} \\
+    latitude     & FLOAT      & Current latitude \\
+    longitude    & FLOAT      & Current longitude \\
+    recorded\_at & TIMESTAMP  & Time of the location record \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Table \texttt{worker\_locations} (latest position per worker)}
 \end{table}
