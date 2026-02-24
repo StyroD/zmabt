@@ -1,0 +1,171 @@
+\documentclass[12pt, a4paper]{report}
+
+% ----- Packages -----
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{tabularx}
+
+\geometry{
+  top=2.5cm,
+  bottom=2.5cm,
+  left=3cm,
+  right=2.5cm,
+  headheight=14pt
+}
+
+% ----- Hyperref setup -----
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!70!black,
+  citecolor=blue!70!black
+}
+
+% ----- Header / Footer -----
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small WorkFlow — Field Team Coordination App}
+\lhead{\small MTAA LS 2026}
+\cfoot{\thepage}
+
+% ----- Listings (code) -----
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!10}
+}
+
+\begin{document}
+
+% ---------- UAT 1 ----------
+\begin{table}[h]
+\centering
+\caption{UAT 1+ Assign Job to Worker}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
+Test Case ID & UAT 1+ \\
+Description & Manager assigns a job to his worker. \\
+Preconditions &
+\begin{itemize}
+    \item Manager must be logged in
+    \item Manager must have at least one project with at least one worker
+    \item Manager must be connected to internet
+\end{itemize} \\
+Test Scenario &
+\begin{enumerate}
+    \item Manager opens Project List and taps an existing project 
+    \item There is displayed list of possible jobs in the project
+    \item Job Detail screen is displayed 
+    \item Taps Assign Worker
+    \item Shows pop-up window with available workers 
+    \item Confirms the selection with the \textbf{Confirm} button 
+    \item The assigned worker's name appears in Job Detail 
+    \item The worker's device receives a push notification: "You have been assigned a new job"
+\end{enumerate} \\
+Output Conditions & The manager assign the worker the task \\
+Test Result & PASS / FAIL \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ---------- UAT 2 ----------
+\begin{table}[h]
+\centering
+\caption{UAT 2 + Manager create new project }
+\begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
+Test Case ID & UAT 2+ \\
+Description & Manager create new project.\\
+Preconditions &
+\begin{itemize}
+    \item The manager already has a created account and is already logged in.
+    \item The manager has internet access
+\end{itemize} \\
+Test Scenario & 
+\begin{enumerate}
+    \item The manager opens application and opens projects list.
+    \item He clicks on \emph{"Add project"}
+    \item It shows a pop-up window with dafault parameters of project and adding tasks
+    \item Manager chooses parameters of project and add specific tasks and workers for project.
+    \item The project has been display in the project list
+\end{enumerate} \\
+Output Conditions & Project was successfully created and it visible in the project list\\
+Test Result & PASS / FAIL \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ---------- UAT 3 ----------
+\begin{table}[h]
+\centering
+\caption{UAT 3 – Create New Task }
+\begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
+Test Case ID & UAT 3+ \\
+Description & The system allows managers to create a new project. \\
+Preconditions &
+\begin{itemize}
+    \item Manager is logged in
+    \item Internet connection
+    \item The project of new task is already created.
+\end{itemize} \\
+Test Scenario &
+\begin{enumerate}
+    \item The manager opens application and opens projects list. 
+    \item He chooses the project in which he wants to create the task.
+    \item The manager clicks on \emph{Job detail} 
+    \item He clicks on \emph{Add the task}
+    \item He adds the name of the task and potentionally assign the workers
+    \item Confirms creation
+\end{enumerate} \\
+Output Conditions & The task is successfully created and appears in task list of project \\
+Test Result & PASS / FAIL \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ---------- UAT 1 negative ----------
+\begin{table}[h]
+\centering
+\caption{UAT 3 – The manager tries to create project with the same name }
+\begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
+Test Case ID & UAT 3+ \\
+Description & The system allows managers to create a new project. \\
+Preconditions &
+\begin{itemize}
+    \item Manager is logged in
+    \item Internet connection
+    \item The project's name is already created
+\end{itemize} \\
+Test Scenario &
+\begin{enumerate}
+    \item The manager opens application and opens projects list.
+    \item He clicks on \emph{"Add project"}
+    \item It shows a pop-up window with default parameters of project and adding tasks
+    \item The manager enters a name that is already in use
+    \item Comfirms the action
+    \item Under the input field the red sign \emph{"You are already using that name please change it"}.
+    \item The manager adds the unique name
+\end{enumerate} \\
+Output Conditions & The user was corrected and chose the unique name\\
+Test Result & PASS / FAIL \\
+\bottomrule
+\end{tabularx}
+\end{table}
+\end{document}
