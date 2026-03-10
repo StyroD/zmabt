@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2025.12.12)  24 FEB 2026 11:31
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2025.12.12)  25 FEB 2026 16:46
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -492,24 +492,24 @@ Underfull \hbox (badness 10000) in paragraph at lines 29--29
 []|\T1/cmr/m/n/12 UC-
  []
 
+
+Underfull \hbox (badness 10000) in paragraph at lines 30--30
+[]|\T1/cmr/m/n/12 UC-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 31--31
+[]|\T1/cmr/m/n/12 UC-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 32--32
+[]|\T1/cmr/m/n/12 UC-
+ []
+
 [4
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 41--41
-[]|\T1/cmr/m/n/12 UC-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 42--42
-[]|\T1/cmr/m/n/12 UC-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 43--43
-[]|\T1/cmr/m/n/12 UC-
- []
-
-
 Underfull \hbox (badness 10000) in paragraph at lines 44--44
 []|\T1/cmr/m/n/12 UC-
  []
@@ -531,6 +531,21 @@ Underfull \hbox (badness 10000) in paragraph at lines 47--47
 
 
 Underfull \hbox (badness 10000) in paragraph at lines 48--48
+[]|\T1/cmr/m/n/12 UC-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 49--49
+[]|\T1/cmr/m/n/12 UC-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 50--50
+[]|\T1/cmr/m/n/12 UC-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 51--51
 []|\T1/cmr/m/n/12 UC-
  []
 
@@ -717,9 +732,9 @@ Here is how much of TeX's memory you used:
  14 hyphenation exceptions out of 8191
  60i,11n,63p,589b,466s stack positions out of 5000i,500n,10000p,200000b,80000s
  </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt1200.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1440.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecti1200.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1200.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1728.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1095.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1200.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1200.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1728.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx2488.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1440.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx2074.600pk></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-Output written on %OUTDIR%/main.pdf (24 pages, 210603 bytes).
+Output written on %OUTDIR%/main.pdf (24 pages, 211232 bytes).
 PDF statistics:
- 968 PDF objects out of 1000 (max. 8388607)
+ 969 PDF objects out of 1000 (max. 8388607)
  458 compressed objects within 5 object streams
  117 named destinations out of 1000 (max. 500000)
  417 words of extra memory for PDF output out of 10000 (max. 10000000)
