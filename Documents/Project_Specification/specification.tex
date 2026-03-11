@@ -142,10 +142,10 @@ Test Result & PASS / FAIL \\
 % ---------- UAT 1 negative ----------
 \begin{table}[h]
 \centering
-\caption{UAT 3 – The manager tries to create project with the same name }
+\caption{UAT 1 – The manager tries to create project with a name that was already used. }
 \begin{tabularx}{\textwidth}{>{\bfseries}l X}
 \toprule
-Test Case ID & UAT 3+ \\
+Test Case ID & UAT 1- \\
 Description & The system allows managers to create a new project. \\
 Preconditions &
 \begin{itemize}
@@ -160,7 +160,7 @@ Test Scenario &
     \item It shows a pop-up window with default parameters of project and adding tasks
     \item The manager enters a name that is already in use
     \item Comfirms the action
-    \item Under the input field the red sign \emph{"You are already using that name please change it"}.
+    \item Under the input field the error message.
     \item The manager adds the unique name
 \end{enumerate} \\
 Output Conditions & The user was corrected and chose the unique name\\
@@ -168,4 +168,86 @@ Test Result & PASS / FAIL \\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+\begin{table}[h]
+\centering
+\caption{UAT 4+: The manager inspects workers in the map }
+\begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
+Test Case ID & UAT-04+ \\
+The manager inspects the location of a worker assigned to a project using the map. \\
+Preconditions &
+\begin{itemize}
+    \item Manager is logged in
+    \item Internet connection
+    \item The project where is the worker assigned already exists
+    \item The inspected worker is online 
+\end{itemize} \\
+Test Scenario &
+\begin{enumerate}
+    \item The manager opens the application and navigates to the project list.
+    \item The manager selects the project to which the worker is assigned.
+    \item The manager clicks the \emph{"View Map"} button.
+    \item The system displays the map and the list of workers assigned to the project.
+    \item The manager clicks on the selected worker.
+    \item The system displays the worker's current location on the map.
+\end{enumerate} \\
+Output Conditions & The worker's location is displayed on the map.\\
+Test Result & PASS / FAIL \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{UAT 5+: The worker uploads plumber certificate}
+
+\begin{tabularx}{\textwidth}{>{\bfseries}l X} 
+    Test Case ID & UAT-05+ \\
+Description & The worker uploads the plumber certificate so the manager can see his area of expertise \\
+Preconditions &
+\begin{itemize}
+    \item Worker is logged in
+    \item Internet connection
+\end{itemize} \\
+Test Scenario &
+\begin{enumerate}
+    \item Worker opens application and navigates on the navbar located on the bottom of the screen.
+    \item Worker clicks on profile icon in the navbar
+    \item Worker locates Edit Profile button and clicks on it
+    \item Worker locates specific area of expertise of the certificat and clicks on upload
+    \item Worker uploads the certificat and confirm the choice
+    \item Worker then clicks save to save changes of edit
+\end{enumerate} \\
+Output Conditions & The certificate is uploaded and visible to the manager.\\
+Test Result & PASS / FAIL \\
+\end{tabularx} 
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{UAT 5+: The worker uploads plumber certificate}
+
+\begin{tabularx}{\textwidth}{>{\bfseries}l X} 
+    Test Case ID & UAT-05+ \\
+Description & The worker uploads the plumber certificate so the manager can see his area of expertise \\
+Preconditions &
+\begin{itemize}
+    \item Worker is logged in
+    \item Internet connection
+\end{itemize} \\
+Test Scenario &
+\begin{enumerate}
+    \item Worker opens application and navigates on the navbar located on the bottom of the screen.
+    \item Worker clicks on profile icon in the navbar
+    \item Worker locates Edit Profile button and clicks on it
+    \item Worker locates specific area of expertise of the certificat and clicks on upload
+    \item Worker uploads the certificat and confirm the choice
+    \item Worker then clicks save to save changes of edit
+\end{enumerate} \\
+Output Conditions & The certificate is uploaded and visible to the manager.\\
+Test Result & PASS / FAIL \\
+\end{tabularx} 
+\end{table}
+
 \end{document}

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2025.12.12)  24 FEB 2026 16:02
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2025.12.12)  10 MAR 2026 15:44
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -330,7 +330,7 @@ Package hyperref Info: Option `colorlinks' set `true' on input line 36.
 File: l3backend-pdftex.def 2022-01-12 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count297
 \l__pdf_internal_box=\box63
-) (%OUTDIR%/specification.aux)
+) (./specification.aux)
 \openout1 = `specification.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 53.
@@ -418,11 +418,707 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 LaTeX Info: Redefining \ref on input line 53.
 LaTeX Info: Redefining \pageref on input line 53.
 LaTeX Info: Redefining \nameref on input line 53.
- (%OUTDIR%/specification.out) (%OUTDIR%/specification.out)
+ (./specification.out) (./specification.out)
 \@outlinefile=\write3
 \openout3 = `specification.out'.
 
 \c@lstlisting=\count305
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Package tabularx Warning: X Columns too narrow (table too wide)
+(tabularx)                 on input line 198.
+
+
+Overfull \hbox (17.28606pt too wide) in paragraph at lines 198--198
+[]|\T1/cmr/m/n/12 UAT-
+ []
+
+
+Overfull \hbox (9.13664pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 04+| 
+ []
+
+
+Overfull \hbox (17.62756pt too wide) in paragraph at lines 198--198
+[]
+ []
+
+
+Overfull \hbox (62.32777pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 Manager
+ []
+
+
+Overfull \hbox (25.52422pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 is
+ []
+
+
+Overfull \hbox (50.25848pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 logged
+ []
+
+
+Overfull \hbox (27.41682pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 in 
+ []
+
+
+Overfull \hbox (17.62756pt too wide) in paragraph at lines 198--198
+[]
+ []
+
+
+Overfull \hbox (58.73837pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 Internet
+ []
+
+
+Overfull \hbox (39.16396pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 con-
+ []
+
+
+Overfull \hbox (38.51135pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 nec-
+ []
+
+
+Overfull \hbox (37.85872pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 tion 
+ []
+
+
+Overfull \hbox (17.62756pt too wide) in paragraph at lines 198--198
+[]
+ []
+
+
+Overfull \hbox (37.85875pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 The
+ []
+
+
+Overfull \hbox (53.84789pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 project
+ []
+
+
+Overfull \hbox (47.64804pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 where
+ []
+
+
+Overfull \hbox (25.52422pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 is
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (51.89003pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 worker
+ []
+
+
+Overfull \hbox (32.05042pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 as-
+ []
+
+
+Overfull \hbox (49.67111pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 signed
+ []
+
+
+Overfull \hbox (30.67992pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 al-
+ []
+
+
+Overfull \hbox (46.01646pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ready
+ []
+
+
+Overfull \hbox (32.9641pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ex-
+ []
+
+
+Overfull \hbox (34.72612pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ists 
+ []
+
+
+Overfull \hbox (17.62756pt too wide) in paragraph at lines 198--198
+[]
+ []
+
+
+Overfull \hbox (37.85875pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 The
+ []
+
+
+Overfull \hbox (31.33253pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 in-
+ []
+
+
+Overfull \hbox (55.87099pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 spected
+ []
+
+
+Overfull \hbox (51.89003pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 worker
+ []
+
+
+Overfull \hbox (25.52422pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 is
+ []
+
+
+Overfull \hbox (33.94302pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 on-
+ []
+
+
+Overfull \hbox (35.90086pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 line 
+ []
+
+
+Overfull \hbox (17.62756pt too wide) in paragraph at lines 198--198
+[]
+ []
+
+
+Overfull \hbox (37.85875pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 The
+ []
+
+
+Overfull \hbox (43.7323pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 man-
+ []
+
+
+Overfull \hbox (39.16399pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ager
+ []
+
+
+Overfull \hbox (46.73433pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 opens
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (33.94302pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ap-
+ []
+
+
+Overfull \hbox (34.59561pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 pli-
+ []
+
+
+Overfull \hbox (32.63777pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ca-
+ []
+
+
+Overfull \hbox (37.85872pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 tion
+ []
+
+
+Overfull \hbox (36.5535pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 and
+ []
+
+
+Overfull \hbox (39.81657pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 nav-
+ []
+
+
+Overfull \hbox (24.80635pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 i-
+ []
+
+
+Overfull \hbox (43.79756pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 gates
+ []
+
+
+Overfull \hbox (28.06946pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 to
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (53.84789pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 project
+ []
+
+
+Overfull \hbox (36.6187pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 list. 
+ []
+
+
+Overfull \hbox (17.62756pt too wide) in paragraph at lines 198--198
+[]
+ []
+
+
+Overfull \hbox (37.85875pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 The
+ []
+
+
+Overfull \hbox (43.7323pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 man-
+ []
+
+
+Overfull \hbox (39.16399pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ager
+ []
+
+
+Overfull \hbox (31.39781pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 se-
+ []
+
+
+Overfull \hbox (40.53444pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 lects
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (53.84789pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 project
+ []
+
+
+Overfull \hbox (28.06946pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 to
+ []
+
+
+Overfull \hbox (47.32167pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 which
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (51.89003pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 worker
+ []
+
+
+Overfull \hbox (25.52422pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 is
+ []
+
+
+Overfull \hbox (32.05042pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 as-
+ []
+
+
+Overfull \hbox (52.93419pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 signed. 
+ []
+
+
+Overfull \hbox (17.62756pt too wide) in paragraph at lines 198--198
+[]
+ []
+
+
+Overfull \hbox (37.85875pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 The
+ []
+
+
+Overfull \hbox (43.7323pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 man-
+ []
+
+
+Overfull \hbox (39.16399pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ager
+ []
+
+
+Overfull \hbox (45.1027pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 clicks
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (49.14207pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/it/12 "View
+ []
+
+
+Overfull \hbox (46.1428pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/it/12 Map"
+ []
+
+
+Overfull \hbox (39.16397pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 but-
+ []
+
+
+Overfull \hbox (37.85872pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ton. 
+ []
+
+
+Overfull \hbox (17.62756pt too wide) in paragraph at lines 198--198
+[]
+ []
+
+
+Overfull \hbox (37.85875pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 The
+ []
+
+
+Overfull \hbox (37.01028pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 sys-
+ []
+
+
+Overfull \hbox (37.20613pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 tem
+ []
+
+
+Overfull \hbox (35.96611pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 dis-
+ []
+
+
+Overfull \hbox (43.79752pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 plays
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (39.81659pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 map
+ []
+
+
+Overfull \hbox (36.5535pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 and
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (33.35562pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 list
+ []
+
+
+Overfull \hbox (27.09053pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 of
+ []
+
+
+Overfull \hbox (46.34276pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 work-
+ []
+
+
+Overfull \hbox (32.05043pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ers
+ []
+
+
+Overfull \hbox (32.05042pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 as-
+ []
+
+
+Overfull \hbox (49.67111pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 signed
+ []
+
+
+Overfull \hbox (28.06946pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 to
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (57.11096pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 project. 
+ []
+
+
+Overfull \hbox (17.62756pt too wide) in paragraph at lines 198--198
+[]
+ []
+
+
+Overfull \hbox (37.85875pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 The
+ []
+
+
+Overfull \hbox (43.7323pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 man-
+ []
+
+
+Overfull \hbox (39.16399pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ager
+ []
+
+
+Overfull \hbox (45.1027pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 clicks
+ []
+
+
+Overfull \hbox (30.02731pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 on
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (31.39781pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 se-
+ []
+
+
+Overfull \hbox (47.64801pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 lected
+ []
+
+
+Overfull \hbox (55.1531pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 worker. 
+ []
+
+
+Overfull \hbox (17.62756pt too wide) in paragraph at lines 198--198
+[]
+ []
+
+
+Overfull \hbox (37.85875pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 The
+ []
+
+
+Overfull \hbox (37.01028pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 sys-
+ []
+
+
+Overfull \hbox (37.20613pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 tem
+ []
+
+
+Overfull \hbox (35.96611pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 dis-
+ []
+
+
+Overfull \hbox (43.79752pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 plays
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (59.78668pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 worker's
+ []
+
+
+Overfull \hbox (37.85872pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 cur-
+ []
+
+
+Overfull \hbox (38.18506pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 rent
+ []
+
+
+Overfull \hbox (30.67992pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 lo-
+ []
+
+
+Overfull \hbox (32.63777pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ca-
+ []
+
+
+Overfull \hbox (37.85872pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 tion
+ []
+
+
+Overfull \hbox (30.02731pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 on
+ []
+
+
+Overfull \hbox (33.94304pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (43.07967pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 map. 
+ []
+
+
+Overfull \hbox (8.48405pt too wide) in paragraph at lines 198--198
+[]|\T1/cmr/m/n/12 The
+ []
+
+
+Overfull \hbox (30.41199pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 worker's
+ []
+
+
+Overfull \hbox (1.30522pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 lo-
+ []
+
+
+Overfull \hbox (3.26308pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 ca-
+ []
+
+
+Overfull \hbox (8.48402pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 tion
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 198--198
+\T1/cmr/m/n/12 is
+ []
+
+
+Overfull \hbox (6.59142pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 dis-
+ []
+
+
+Overfull \hbox (21.21008pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 played
+ []
+
+
+Overfull \hbox (0.65262pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 on
+ []
+
+
+Overfull \hbox (4.56834pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 the
+ []
+
+
+Overfull \hbox (13.70497pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 map.| 
+ []
+
+
+Overfull \hbox (17.12498pt too wide) in paragraph at lines 198--198
+[]|\T1/cmr/m/n/12 PASS
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 198--198
+\T1/cmr/m/n/12 /
+ []
+
+
+Overfull \hbox (14.9977pt too wide) in paragraph at lines 198--198
+\T1/cmr/m/n/12 FAIL| 
+ []
+
+
+Overfull \hbox (89.51811pt too wide) in alignment at lines 198--198
+[][] 
+ []
+
+
+LaTeX Warning: Float too large for page by 1446.07802pt on input line 199.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
@@ -438,36 +1134,48 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 pdfTeX warning (ext4): destination with the same identifier (name{table.0.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.171 \end{document}
+l.253 \end{document}
                     ] [2pdfTeX warning (ext4): destination with the same identifier (name{table.0.2}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.171 \end{document}
+l.253 \end{document}
                     ] [3pdfTeX warning (ext4): destination with the same identifier (name{table.0.3}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.171 \end{document}
+l.253 \end{document}
                     ] [4pdfTeX warning (ext4): destination with the same identifier (name{table.0.4}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.171 \end{document}
-                    ] (%OUTDIR%/specification.aux)
+l.253 \end{document}
+                    ] [5pdfTeX warning (ext4): destination with the same identifier (name{table.0.5}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.253 \end{document}
+                    ] [6pdfTeX warning (ext4): destination with the same identifier (name{table.0.6}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.253 \end{document}
+                    ] [7pdfTeX warning (ext4): destination with the same identifier (name{table.0.7}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.253 \end{document}
+                    ] (./specification.aux)
 Package rerunfilecheck Info: File `specification.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 12837 strings out of 480247
- 199521 string characters out of 5896150
- 529930 words of memory out of 5000000
+ 12860 strings out of 480247
+ 199619 string characters out of 5896150
+ 542930 words of memory out of 5000000
  30592 multiletter control sequences out of 15000+600000
  475325 words of font info for 42 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 60i,11n,63p,271b,438s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 60i,11n,63p,284b,438s stack positions out of 5000i,500n,10000p,200000b,80000s
  </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecti1200.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm1200.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1200.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1200.600pk> </home/istvan/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecrm1095.600pk>
-Output written on specification.pdf (4 pages, 45768 bytes).
+Output written on specification.pdf (7 pages, 51371 bytes).
 PDF statistics:
- 212 PDF objects out of 1000 (max. 8388607)
- 74 compressed objects within 1 object stream
- 35 named destinations out of 1000 (max. 500000)
+ 260 PDF objects out of 1000 (max. 8388607)
+ 112 compressed objects within 2 object streams
+ 59 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
