@@ -12,7 +12,10 @@
 \usepackage{titlesec}
 \usepackage{amssymb}
 \usepackage{comment}
-
+\usepackage{colortbl}
+\usepackage{xcolor}
+ 
+\definecolor{uatgreen}{RGB}{198, 224, 180}
 \geometry{margin=2.5cm}
 
 \hypersetup{
@@ -68,15 +71,17 @@ The application supports offline mode --- changes made without an internet conne
 \subsection*{Wireframes and Prototype}
 
 Wireframes and the interactive prototype are available at the following link:\\
-\url{https://www.figma.com/design/5Mkvlexdcuru8Y7Si9LxXP/LoFi?node-id=0-1&t=wrG4URivL5cVtENA-1} % replace with your actual Figma link
+\begin{sloppypar}
+\url{https://www.figma.com/design/5Mkvlexdcuru8Y7Si9LxXP/...}
+\end{sloppypar} % replace with your actual Figma link
 
 \subsection*{Technology Stack}
-
+ 
 \begin{tabular}{ll}
 \toprule
 \textbf{Layer} & \textbf{Technology} \\
 \midrule
-Frontend           & React Native (iOS / Android) \\
+Frontend           & React Native with Expo (iOS / Android) \\
 Backend            & Node.js (Express) \\
 Database           & PostgreSQL \\
 Push notifications & FCM (Android) + APNs via FCM (iOS) \\
@@ -118,7 +123,7 @@ The Worker has restricted access --- only to tasks assigned to them:
     \item Uploads photo documentation from the camera or gallery.
     \item Uploads skill certificates for manager review.
     \item Shares GPS location with the manager (every 10 seconds).
-    \item Communicates with the manager via chat.
+    \item Communicates with the manager and other workers via chat.
     \item Receives a push notification when a new task is assigned.
     \item Can update task status offline; the change syncs after reconnection.
 \end{itemize}
@@ -131,7 +136,7 @@ The Worker has restricted access --- only to tasks assigned to them:
 
 \textbf{UCM2 --- Create, edit, delete a project:} The Manager creates a new project by filling in the project title, description, deadline, construction site address, GPS coordinates, and client information (name, phone, email). Existing projects can be edited or permanently deleted. Deleting a project removes all associated tasks and assignments.
 
-\textbf{UCM3 --- Create, edit, delete a task:} Within a project the Manager creates tasks by specifying a title, description, category (e.g.\ Elektrika, Kurenie), priority (Low / Medium / High), and deadline. Tasks can be edited or deleted at any time. Only workers with a verified certificate matching the task category are eligible for assignment.
+\textbf{UCM3 --- Create, edit, delete a task:} Within a project the Manager creates tasks by specifying a title, description, category (e.g.\ Electrical, Heating), priority (Low / Medium / High), and deadline. Tasks can be edited or deleted at any time. Only workers with a verified certificate matching the task category are eligible for assignment.
 
 \textbf{UCM4 --- Assign a task to a worker:} The Manager assigns a task to one or more workers. The assignment screen displays available workers filtered by their verified skill certificates and flags workers missing the required qualification as ineligible. Upon assignment the worker receives a push notification.
 
@@ -235,28 +240,34 @@ Screen for the Worker to submit a skill certificate for manager review. Shows in
 Screen for the Manager to review a certificate submitted by a worker. Shows informative text, the sender's name, a preview of the certificate photo, and two action buttons: \textbf{Accept} (\checkmark) and \textbf{Reject} (\texttimes).
 
 \end{comment}
+
+\newpage
 %--------------------------------------------------------------
 \section{Acceptance Tests (UAT)}
 %--------------------------------------------------------------
-
+ 
 \subsection*{Positive Tests}
-
+ 
 % ---------- UAT 1+ ----------
 \begin{table}[h]
 \centering
-\caption{UAT 1+: Assign Job to Worker}
-\begin{tabularx}{\textwidth}{>{\bfseries}l X}
-\toprule
-Test Case ID & UAT-01+ \\
-Description & The manager assigns a job to a worker. \\
-Preconditions &
-\begin{itemize}[noitemsep]
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 1+: Assign Job to Worker}} \\
+\hline
+Test Case ID        & UAT-01+ \\
+\hline
+Description         & The manager assigns a job to a worker. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
     \item Manager must be logged in
     \item Manager must have at least one project with at least one worker
     \item Manager must be connected to the internet
 \end{itemize} \\
-Test Scenario &
-\begin{enumerate}[noitemsep]
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
     \item Manager opens the Project List and taps an existing project.
     \item A list of jobs in the project is displayed.
     \item Manager taps a job to open the Job Detail screen.
@@ -265,27 +276,33 @@ Test Scenario &
     \item Manager selects a worker and confirms with the \textbf{Confirm} button.
     \item The assigned worker's name appears in the Job Detail screen.
 \end{enumerate} \\
-Output Conditions & The worker is successfully assigned to the job and their name appears in the Job Detail screen. \\
-Test Result & PASS / FAIL \\
-\bottomrule
+\hline
+Output Conditions   & The worker is successfully assigned to the job and their name appears in the Job Detail screen. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
 \end{tabularx}
 \end{table}
-
+ 
 % ---------- UAT 2+ ----------
 \begin{table}[h]
 \centering
-\caption{UAT 2+: Manager Creates a New Project}
-\begin{tabularx}{\textwidth}{>{\bfseries}l X}
-\toprule
-Test Case ID & UAT-02+ \\
-Description & The manager creates a new project. \\
-Preconditions &
-\begin{itemize}[noitemsep]
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 2+: Manager Creates a New Project}} \\
+\hline
+Test Case ID        & UAT-02+ \\
+\hline
+Description         & The manager creates a new project. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
     \item Manager is logged in
     \item Internet connection is available
 \end{itemize} \\
-Test Scenario &
-\begin{enumerate}[noitemsep]
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
     \item The manager opens the application and navigates to the project list.
     \item The manager taps \emph{``Add project''}.
     \item A pop-up window appears with default project parameters and options to add tasks.
@@ -293,28 +310,34 @@ Test Scenario &
     \item The manager confirms the creation.
     \item The new project appears in the project list.
 \end{enumerate} \\
-Output Conditions & The project is successfully created and is visible in the project list. \\
-Test Result & PASS / FAIL \\
-\bottomrule
+\hline
+Output Conditions   & The project is successfully created and is visible in the project list. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
 \end{tabularx}
 \end{table}
-
+ 
 % ---------- UAT 3+ ----------
 \begin{table}[h]
 \centering
-\caption{UAT 3+: Create New Task}
-\begin{tabularx}{\textwidth}{>{\bfseries}l X}
-\toprule
-Test Case ID & UAT-03+ \\
-Description & The manager creates a new task within an existing project. \\
-Preconditions &
-\begin{itemize}[noitemsep]
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 3+: Create New Task}} \\
+\hline
+Test Case ID        & UAT-03+ \\
+\hline
+Description         & The manager creates a new task within an existing project. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
     \item Manager is logged in
     \item Internet connection is available
     \item The project in which the task will be created already exists
 \end{itemize} \\
-Test Scenario &
-\begin{enumerate}[noitemsep]
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
     \item The manager opens the application and navigates to the project list.
     \item The manager selects the project in which they want to create the task.
     \item The manager opens the Job Detail screen.
@@ -322,29 +345,35 @@ Test Scenario &
     \item The manager enters the task name and optionally assigns workers.
     \item The manager confirms the creation.
 \end{enumerate} \\
-Output Conditions & The task is successfully created and appears in the task list of the project. \\
-Test Result & PASS / FAIL \\
-\bottomrule
+\hline
+Output Conditions   & The task is successfully created and appears in the task list of the project. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
 \end{tabularx}
 \end{table}
-
+ 
 % ---------- UAT 4+ ----------
 \begin{table}[h]
 \centering
-\caption{UAT 4+: The Manager Inspects Workers on the Map}
-\begin{tabularx}{\textwidth}{>{\bfseries}l X}
-\toprule
-Test Case ID & UAT-04+ \\
-Description & The manager inspects the location of a worker assigned to a project using the map. \\
-Preconditions &
-\begin{itemize}[noitemsep]
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 4+: The Manager Inspects Workers on the Map}} \\
+\hline
+Test Case ID        & UAT-04+ \\
+\hline
+Description         & The manager inspects the location of a worker assigned to a project using the map. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
     \item Manager is logged in
     \item Internet connection is available
     \item The project to which the worker is assigned already exists
     \item The inspected worker is online
 \end{itemize} \\
-Test Scenario &
-\begin{enumerate}[noitemsep]
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
     \item The manager opens the application and navigates to the project list.
     \item The manager selects the project to which the worker is assigned.
     \item The manager taps the \emph{``View Map''} button.
@@ -352,54 +381,66 @@ Test Scenario &
     \item The manager taps on the selected worker.
     \item The worker's current location is displayed on the map.
 \end{enumerate} \\
-Output Conditions & The worker's location is displayed on the map. \\
-Test Result & PASS / FAIL \\
-\bottomrule
+\hline
+Output Conditions   & The worker's location is displayed on the map. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
 \end{tabularx}
 \end{table}
-
+ 
 % ---------- UAT 5+ ----------
 \begin{table}[h]
 \centering
-\caption{UAT 5+: The Worker Sends a Message to the Manager}
-\begin{tabularx}{\textwidth}{>{\bfseries}l X}
-\toprule
-Test Case ID & UAT-05+ \\
-Description & The worker sends a message to the manager. \\
-Preconditions &
-\begin{itemize}[noitemsep]
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 5+: The Worker Sends a Message to the Manager}} \\
+\hline
+Test Case ID        & UAT-05+ \\
+\hline
+Description         & The worker sends a message to the manager. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
     \item Worker is logged in
     \item Internet connection is available
     \item A chat between the worker and manager already exists
 \end{itemize} \\
-Test Scenario &
-\begin{enumerate}[noitemsep]
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
     \item The worker opens the application and navigates to the navigation bar at the bottom of the screen.
     \item The worker taps the message icon in the navigation bar.
     \item The worker locates the chat with the manager in the chat list and taps on it.
     \item The worker writes a message and taps the send icon.
 \end{enumerate} \\
-Output Conditions & The message is successfully sent and appears in the chat conversation. \\
-Test Result & PASS / FAIL \\
-\bottomrule
+\hline
+Output Conditions   & The message is successfully sent and appears in the chat conversation. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
 \end{tabularx}
 \end{table}
-
+ 
 % ---------- UAT 6+ ----------
 \begin{table}[h]
 \centering
-\caption{UAT 6+: The Worker Uploads a Plumber Certificate}
-\begin{tabularx}{\textwidth}{>{\bfseries}l X}
-\toprule
-Test Case ID & UAT-06+ \\
-Description & The worker uploads a plumber certificate so the manager can see their area of expertise. \\
-Preconditions &
-\begin{itemize}[noitemsep]
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 6+: The Worker Uploads a Plumber Certificate}} \\
+\hline
+Test Case ID        & UAT-06+ \\
+\hline
+Description         & The worker uploads a plumber certificate so the manager can see their area of expertise. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
     \item Worker is logged in
     \item Internet connection is available
 \end{itemize} \\
-Test Scenario &
-\begin{enumerate}[noitemsep]
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
     \item The worker opens the application and navigates to the navigation bar at the bottom of the screen.
     \item The worker taps the profile icon in the navigation bar.
     \item The worker taps the \emph{Edit Profile} button.
@@ -407,56 +448,68 @@ Test Scenario &
     \item The worker selects the certificate file and confirms the choice.
     \item The worker taps \emph{Save} to save the profile changes.
 \end{enumerate} \\
-Output Conditions & The certificate is uploaded and visible in the worker's profile. \\
-Test Result & PASS / FAIL \\
-\bottomrule
+\hline
+Output Conditions   & The certificate is uploaded and visible in the worker's profile. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
 \end{tabularx}
 \end{table}
-
+ 
 % ---------- UAT 7+ ----------
 \begin{table}[h]
 \centering
-\caption{UAT 7+: The Manager Sends an Invitation to a Worker}
-\begin{tabularx}{\textwidth}{>{\bfseries}l X}
-\toprule
-Test Case ID & UAT-07+ \\
-Description & The manager invites a worker to be connected in the app. \\
-Preconditions &
-\begin{itemize}[noitemsep]
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 7+: The Manager Sends an Invitation to a Worker}} \\
+\hline
+Test Case ID        & UAT-07+ \\
+\hline
+Description         & The manager invites a worker to be connected in the app. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
     \item Manager is logged in
     \item Internet connection is available
 \end{itemize} \\
-Test Scenario &
-\begin{enumerate}[noitemsep]
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
     \item The manager opens the application and navigates to the Workers section.
     \item The manager taps the \emph{Invite Worker} button.
     \item A pop-up window appears displaying the invite link.
     \item The manager copies the link and sends it to the worker.
 \end{enumerate} \\
-Output Conditions & The invite link is successfully generated and displayed to the manager in a pop-up window. \\
-Test Result & PASS / FAIL \\
-\bottomrule
+\hline
+Output Conditions   & The invite link is successfully generated and displayed to the manager in a pop-up window. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
 \end{tabularx}
 \end{table}
-
-\subsection*{Negative Tests}
-
+ 
+\clearpage
+\subsection*{Negative Tests} 
 % ---------- UAT 1- ----------
 \begin{table}[h]
 \centering
-\caption{UAT 1-: Manager Tries to Create a Project with a Duplicate Name}
-\begin{tabularx}{\textwidth}{>{\bfseries}l X}
-\toprule
-Test Case ID & UAT-01- \\
-Description & The system prevents the manager from creating a project with a name that is already in use. \\
-Preconditions &
-\begin{itemize}[noitemsep]
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 1-: Manager Tries to Create a Project with a Duplicate Name}} \\
+\hline
+Test Case ID        & UAT-01- \\
+\hline
+Description         & The system prevents the manager from creating a project with a name that is already in use. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
     \item Manager is logged in
     \item Internet connection is available
     \item A project with the same name already exists
 \end{itemize} \\
-Test Scenario &
-\begin{enumerate}[noitemsep]
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
     \item The manager opens the application and navigates to the project list.
     \item The manager taps \emph{``Add project''}.
     \item A pop-up window appears with default project parameters.
@@ -465,56 +518,68 @@ Test Scenario &
     \item An error message appears below the input field.
     \item The manager enters a unique name and confirms successfully.
 \end{enumerate} \\
-Output Conditions & The manager is notified of the duplicate name and successfully creates the project with a unique name. \\
-Test Result & PASS / FAIL \\
-\bottomrule
+\hline
+Output Conditions   & The manager is notified of the duplicate name and successfully creates the project with a unique name. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
 \end{tabularx}
 \end{table}
-
+ 
 % ---------- UAT 2- ----------
 \begin{table}[h]
 \centering
-\caption{UAT 2-: Worker Tries to Send a Message Without Internet}
-\begin{tabularx}{\textwidth}{>{\bfseries}l X}
-\toprule
-Test Case ID & UAT-02- \\
-Description & The system prevents the worker from sending a message when there is no internet connection. \\
-Preconditions &
-\begin{itemize}[noitemsep]
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 2-: Worker Tries to Send a Message Without Internet}} \\
+\hline
+Test Case ID        & UAT-02- \\
+\hline
+Description         & The system prevents the worker from sending a message when there is no internet connection. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
     \item Worker is logged in
     \item Internet connection is unavailable
     \item A chat between the worker and manager already exists
 \end{itemize} \\
-Test Scenario &
-\begin{enumerate}[noitemsep]
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
     \item The worker opens the application and navigates to the navigation bar at the bottom of the screen.
     \item The worker taps the message icon in the navigation bar.
     \item The worker locates the chat with the manager and taps on it.
     \item The worker writes a message and taps the send icon.
     \item An error message appears informing the worker that the message could not be sent.
 \end{enumerate} \\
-Output Conditions & The message is not sent and an error message is displayed to the worker. \\
-Test Result & PASS / FAIL \\
-\bottomrule
+\hline
+Output Conditions   & The message is not sent and an error message is displayed to the worker. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
 \end{tabularx}
 \end{table}
-
+ 
 % ---------- UAT 3- ----------
 \begin{table}[h]
 \centering
-\caption{UAT 3-: Manager Tries to Create a Task Without a Name}
-\begin{tabularx}{\textwidth}{>{\bfseries}l X}
-\toprule
-Test Case ID & UAT-03- \\
-Description & The system prevents the manager from creating a task without entering a name. \\
-Preconditions &
-\begin{itemize}[noitemsep]
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 3-: Manager Tries to Create a Task Without a Name}} \\
+\hline
+Test Case ID        & UAT-03- \\
+\hline
+Description         & The system prevents the manager from creating a task without entering a name. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
     \item Manager is logged in
     \item Internet connection is available
     \item The project in which the task will be created already exists
 \end{itemize} \\
-Test Scenario &
-\begin{enumerate}[noitemsep]
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
     \item The manager opens the application and navigates to the project list.
     \item The manager selects the project in which they want to create the task.
     \item The manager opens the Job Detail screen.
@@ -522,10 +587,12 @@ Test Scenario &
     \item The manager leaves the task name field empty and confirms the creation.
     \item An error message appears below the name input field.
 \end{enumerate} \\
-Output Conditions & The task is not created and an error message is displayed below the name input field. \\
-Test Result & PASS / FAIL \\
-\bottomrule
+\hline
+Output Conditions   & The task is not created and an error message is displayed below the name input field. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
 \end{tabularx}
 \end{table}
-
+ 
 \end{document}

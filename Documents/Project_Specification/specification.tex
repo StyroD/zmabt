@@ -1,107 +1,251 @@
-\documentclass[12pt, a4paper]{report}
-
-% ----- Packages -----
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
-\usepackage[utf8]{inputenc}
 \usepackage{geometry}
-\usepackage{graphicx}
+\usepackage{enumitem}
 \usepackage{hyperref}
-\usepackage{xcolor}
-\usepackage{listings}
-\usepackage{longtable}
+\usepackage{parskip}
 \usepackage{booktabs}
 \usepackage{array}
-\usepackage{enumitem}
-\usepackage{titlesec}
-\usepackage{fancyhdr}
-\usepackage{float}
-\usepackage{multirow}
 \usepackage{tabularx}
+\usepackage{titlesec}
+\usepackage{amssymb}
+\usepackage{comment}
+\usepackage{colortbl}
+\usepackage{xcolor}
+ 
+\definecolor{uatgreen}{RGB}{198, 224, 180}
+\geometry{margin=2.5cm}
 
-\geometry{
-  top=2.5cm,
-  bottom=2.5cm,
-  left=3cm,
-  right=2.5cm,
-  headheight=14pt
-}
-
-% ----- Hyperref setup -----
 \hypersetup{
-  colorlinks=true,
-  linkcolor=blue!70!black,
-  urlcolor=blue!70!black,
-  citecolor=blue!70!black
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue
 }
 
-% ----- Header / Footer -----
-\pagestyle{fancy}
-\fancyhf{}
-\rhead{\small WorkFlow — Field Team Coordination App}
-\lhead{\small MTAA LS 2026}
-\cfoot{\thepage}
-
-% ----- Listings (code) -----
-\lstset{
-  basicstyle=\ttfamily\small,
-  breaklines=true,
-  frame=single,
-  backgroundcolor=\color{gray!10}
-}
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
 
 \begin{document}
 
-\chapter{Application Overview}
-\section{Purpose of the Application}
+%--------------------------------------------------------------
+% Title page
+%--------------------------------------------------------------
+\begin{titlepage}
+\begin{center}
+    \textbf{FAKULTA INFORMATIKY A INFORMAČNÝCH TECHNOLÓGIÍ}\\
+    Slovenská Technická Univerzita v Bratislave\\[3cm]
 
-WorkFlow is a mobile application designed for coordinating field teams. It allows managers to create and assign work orders (jobs) to field workers, track their location in real time on a map, and communicate with them through a built-in chat. Workers receive push notifications about new assignments, can update job statuses, and upload photo documentation directly from the field.
+    {\LARGE\textbf{MILESTONE 1}}\\[0.3cm]
+    {\large UATs and Application Specification}\\[3cm]
+\end{center}
 
-The goal of the application is to replace inefficient email or phone-based coordination and give management an instant overview of job progress and team location.
+\vfill
 
-\section{Technology Stack}
+\noindent\textbf{Subject:} Mobile and Wireless Technologies --- Fundamentals\\
+\textbf{Subject code:} MTAA\_B\\
+\textbf{Instructor:}Bc. Dominik Šalgovič\\
+\textbf{Authors:} Adam Strelec, Damián Štyrák\\
+\textbf{Field of study:} Computer Science\\
+\textbf{Study programme:} Computer Science\\
+\textbf{Year of study:} second\\
+\textbf{Form of study:} full-time\\
+\textbf{Semester:} spring\\
+\textbf{Academic year:} 2025/26
+\end{titlepage}
 
-\begin{table}[H]
-  \centering
-  \begin{tabularx}{\textwidth}{lX}
-    \toprule
-    \textbf{Layer} & \textbf{Technology} \\
-    \midrule
-    Frontend           & React Native (cross-platform iOS / Android) \\
-    Backend            & Node.js (Express) \\
-    Database           & PostgreSQL \\
-    Real-time          & WebSockets (Socket.IO) \\
-    Push notifications & Firebase Cloud Messaging (FCM) \\
-    Analytics          & Firebase Analytics + Firebase Crashlytics \\
-    Authentication     & JWT + Google SSO (OAuth 2.0) \\
-    Maps               & React Native Maps (Google Maps) \\
-    \bottomrule
-  \end{tabularx}
-  \caption{WorkFlow technology stack}
-\end{table}
-\chapter*{User Roles}
+\tableofcontents
+\newpage
 
-The application defines two distinct user roles: \textbf{Manager} and \textbf{Worker}. Each role has a dedicated interface and a specific set of permissions. Roles are strictly separate — a user registered as a Manager cannot act as a Worker and vice versa.
+%--------------------------------------------------------------
+\section{Application Description}
+%--------------------------------------------------------------
 
-\subsection*{Role Overview}
+\textbf{WorkFlow} is a cross-platform mobile application (iOS/Android) designed for coordinating field work teams. It replaces inefficient phone - or email-based communication by giving managers an instant, real-time overview of task progress and team locations.
 
-\begin{table}[h]
-\centering
-\begin{tabularx}{\textwidth}{>{\bfseries}l X}
+The application allows a manager to create projects and assign tasks within them to workers based on their verified skill certificates. Workers receive push notifications about new assignments, can update task statuses, upload photo documentation directly from the field, and communicate with the manager via a built-in chat. The manager tracks live worker locations on a map and verifies worker qualifications through submitted certificates.
+
+The application supports offline mode --- changes made without an internet connection are automatically synchronised once connectivity is restored.
+
+\subsection*{Wireframes and Prototype}
+
+Wireframes and the interactive prototype are available at the following link:\\
+\begin{sloppypar}
+\url{https://www.figma.com/design/5Mkvlexdcuru8Y7Si9LxXP/LoFi?node-id=0-1&t=wrG4URivL5cVtENA-1}
+\end{sloppypar} % replace with your actual Figma link
+
+\subsection*{Technology Stack}
+ 
+\begin{tabular}{ll}
 \toprule
-Role & Description \\
+\textbf{Layer} & \textbf{Technology} \\
 \midrule
-Manager & A team leader responsible for creating and managing projects, assigning jobs to workers, and monitoring worker activity. \\
-Worker & A field employee who receives job assignments, updates task progress, uploads professional certificates, and communicates with their manager. \\
+Frontend           & React Native with Expo (iOS / Android) \\
+Backend            & Node.js (Express) \\
+Database           & PostgreSQL \\
+Push notifications & FCM (Android) + APNs via FCM (iOS) \\
+Authentication     & Google SSO (OAuth 2.0) \\
+Maps               & react-native-maps (Google Maps / Apple Maps) \\
 \bottomrule
-\end{tabularx}
-\end{table}
+\end{tabular}
 
-\subsection*{Role Assignment}
+%--------------------------------------------------------------
+\section{User Roles}
+%--------------------------------------------------------------
 
-Roles are assigned at the point of registration and cannot be changed afterwards. A Manager registers directly through the application. A Worker can only join the system by receiving an invite link generated by a Manager — upon signing up via this link, the Worker is automatically assigned the Worker role and connected to the Manager who sent the invitation.
-\chapter{UATs}
-\section{Positive UATs}
+The application defines two user roles with distinct permissions.
+
+\subsection{Manager}
+
+The Manager has full control over projects, tasks, and the team:
+
+\begin{itemize}[noitemsep]
+    \item Creates, edits, and deletes projects.
+    \item Creates, edits, and deletes tasks within projects (title, description, GPS coordinates, deadline, category, priority).
+    \item Assigns tasks to workers based on their verified skill certificates.
+    \item Views live worker positions and task-site pins on the map.
+    \item Has an overview of all tasks and their current statuses.
+    \item Invites new workers to the application via an invite link.
+    \item Reviews and accepts worker skill certificates.
+    \item Communicates with workers via the built-in chat.
+    \item Receives a push notification when a worker marks a task as \textit{Done}.
+\end{itemize}
+
+\subsection{Worker}
+
+The Worker has restricted access --- only to tasks assigned to them:
+
+\begin{itemize}[noitemsep]
+    \item Views the list of assigned tasks within projects.
+    \item Opens task detail: description, category, assigned person, deadline, photos, and status.
+    \item Changes the task status to \textit{In Progress} or \textit{Done}.
+    \item Uploads photo documentation from the camera or gallery.
+    \item Uploads skill certificates for manager review.
+    \item Shares GPS location with the manager (every 10 seconds).
+    \item Communicates with the manager and other workers via chat.
+    \item Receives a push notification when a new task is assigned.
+    \item Can update task status offline; the change syncs after reconnection.
+\end{itemize}
+
+\subsection{Use Cases}
+
+\subsubsection{Manager}
+
+\textbf{UCM1 --- Login:} The Manager logs into the application using Google SSO or email and password. Upon successful authentication a JWT token is issued and stored securely on the device.
+
+\textbf{UCM2 --- Create, edit, delete a project:} The Manager creates a new project by filling in the project title, description, deadline, construction site address, GPS coordinates, and client information (name, phone, email). Existing projects can be edited or permanently deleted. Deleting a project removes all associated tasks and assignments.
+
+\textbf{UCM3 --- Create, edit, delete a task:} Within a project the Manager creates tasks by specifying a title, description, category (e.g.\ Electrical, Heating), priority (Low / Medium / High), and deadline. Tasks can be edited or deleted at any time. Only workers with a verified certificate matching the task category are eligible for assignment.
+
+\textbf{UCM4 --- Assign a task to a worker:} The Manager assigns a task to one or more workers. The assignment screen displays available workers filtered by their verified skill certificates and flags workers missing the required qualification as ineligible. Upon assignment the worker receives a push notification.
+
+\textbf{UCM5 --- View all tasks and their statuses:} The Manager sees a full list of tasks within a project with their current statuses (Pending, In Progress, Done) and an overall progress indicator showing how many tasks have been completed.
+
+\textbf{UCM6 --- Review and accept worker skill certificates:} When a worker submits a certificate, the Manager receives a notification and can view the certificate photo. The Manager either accepts the certificate --- making the worker eligible for the corresponding task category --- or rejects it.
+
+\textbf{UCM7 --- Team map:} The Manager opens a project-specific map showing the live GPS positions of all workers assigned to that project, updated every 10 seconds via WebSocket. Workers are shown with an online/offline indicator.
+
+\textbf{UCM8 --- Chat with a worker:} The Manager initiates or continues a real-time conversation with any worker via the built-in chat. Messages are delivered instantly over a WebSocket connection.
+
+\textbf{UCM9 --- Invite a new worker:} The Manager generates a unique invite link from the Worker List screen. The link can be copied and shared with a prospective worker, who uses it to register and join the Manager's team.
+
+\textbf{UCM10 --- Receive notification when a task is completed:} When a worker marks a task as Done, the Manager receives a background push notification. Tapping the notification navigates directly to the relevant task.
+
+\subsubsection{Worker}
+
+\textbf{UCW1 --- Login:} The Worker logs into the application using Google SSO or email and password.
+
+\textbf{UCW2 --- View list of assigned tasks:} The Worker sees only the projects and tasks assigned to them. Each task card shows the title, category, deadline, and current status.
+
+\textbf{UCW3 --- Open task detail:} The Worker opens a task to view the full description, category, assigned person, deadline, priority, and any previously uploaded photos.
+
+\textbf{UCW4 --- Update task status:} The Worker changes the task status to \textit{In Progress} or \textit{Done} directly from the task card. The change is reflected in real time on the Manager's view.
+
+\textbf{UCW5 --- Upload a photo to a task:} The Worker attaches photo documentation to a task by taking a photo with the camera or selecting one from the gallery. Multiple photos can be uploaded per task.
+
+\textbf{UCW6 --- Upload skill certificates:} The Worker submits a certificate of qualification for a specific skill category by uploading a photo of the document. The certificate is sent to the Manager for review and, once accepted, unlocks the Worker for tasks requiring that skill.
+
+\textbf{UCW7 --- Offline task status update:} When the device has no internet connection the Worker can still change a task status. The change is saved locally with a pending sync flag and automatically synchronised with the server once connectivity is restored. Conflicts are resolved with a server-wins policy.
+
+\textbf{UCW8 --- Chat with the manager:} The Worker sends and receives real-time messages with the Manager. If the device is offline the chat is unavailable and an informative banner is shown.
+
+\textbf{UCW9 --- Receive notification about a new task assignment:} When the Manager assigns a task to the Worker, a background push notification is delivered to the Worker's device. Tapping the notification navigates directly to the task detail.
+
+\begin{comment}
+%--------------------------------------------------------------
+\section{Screen Design}
+%--------------------------------------------------------------
+
+The application contains the following functional screens. Splash and login screens are not counted. Available actions differ based on the user role.
+
+\subsection{Dashboard (Manager)}
+
+The Manager's home screen after login. Displays a summary overview: manager name and role, count of active vs.\ total tasks (e.g.\ 4/13 active, 9/13 pending) with a \textbf{Detail} button, and total number of workers with a \textbf{Detail} button. The bottom navigation bar contains: Profile, Home, Chat.
+
+\subsection{Project List}
+
+List of all projects. The Manager sees an \textbf{Add project +} button; the Worker sees only projects they are assigned to. Each project is shown as a card with its name and a navigation arrow leading to Project Detail.
+
+\subsection{Project Detail}
+
+Full detail view of a project. The layout differs by role.
+
+The \textbf{Manager} sees: project title, status, deadline, location, client information (name, phone, email, construction site address), task progress (e.g.\ 3/7 done), number of assigned workers, list of workers with online/offline indicators, photo documentation gallery with a \textbf{+} button, and action buttons: \textbf{Edit project}, \textbf{Delete project}, \textbf{Assign worker}, \textbf{Add task}, \textbf{View map}.
+
+The \textbf{Worker} sees: project title, status, deadline, location, client name and phone, a progress bar showing percentage of tasks completed, tasks done counter, and photo documentation gallery.
+
+\subsection{Project Creation}
+
+A form available to the Manager only. Fields include: Title, Description, Deadline, Status (radio button), Construction site address, GPS coordinates (lat/lon), Client name, Phone, and Email.
+
+\subsection{Task List}
+
+List of tasks within a project, accessible from Project Detail. The header shows the project name, a filter icon, and a \textbf{+} button (Manager only). Tasks are shown as expandable cards displaying: title, status indicator, category, description, assigned person, deadline, photo thumbnails, an \textbf{Upload more photos} link, and a \textbf{Mark as done} button.
+
+\subsection{Task Creation}
+
+A form for the Manager to create a new task within a project. Fields include: Title, Description, Category (dropdown), Deadline, Priority (Low / Medium / High), and an \textbf{Assign worker} section showing available workers with their verified certificates. Confirmed with the \textbf{Save Task} button.
+
+\subsection{Assign Worker}
+
+Screen for the Manager to assign a worker to a task. Contains a search bar, skill filter chips (e.g.\ Elektrika, Voda, Kurenie, Plyn), and two sections: \textit{Available workers} --- workers with the required certificates, selectable via checkbox; and \textit{Missing certificate --- not eligible} --- workers who do not meet the requirements. Confirmed with the \textbf{Done} button.
+
+\subsection{Map}
+
+A project-specific map screen available to the Manager. Shows the project name in the header, a full-screen map with live worker markers, and a list of workers on the project below the map with their online/offline status.
+
+\subsection{Chat}
+
+Real-time messaging between the Manager and a Worker. The header displays the recipient's name and online status. Messages are shown in chronological order (own messages right-aligned, received messages left-aligned). A text input field and send button are at the bottom.
+
+\subsection{Worker List}
+
+Available to the Manager. Shows expandable worker cards. The expanded view displays skill certificates with a \checkmark (verified) or \texttimes{} (missing) icon and a \textbf{Show} link per certificate. An \textbf{Invite new worker} button at the bottom generates a unique invite link to be copied and shared.
+
+\subsection{Worker Profile --- Manager View}
+
+The Manager's view of a worker's profile. Shows profile photo, first name, last name, hourly rate, and a list of skill certificate categories with their verification status.
+
+\subsection{Profile --- Worker View}
+
+The worker's own profile with an \textbf{Edit profile} option. Contains: profile photo, username, last name, date of birth, hourly rate, bank information, and a list of skill certificates. A \textbf{Log out} button is at the bottom.
+
+\subsection{Certificate --- Submit (Worker)}
+
+Screen for the Worker to submit a skill certificate for manager review. Shows informative text about the request, the sender's name, and a large upload area for the certificate photo (camera or gallery).
+
+\subsection{Certificate --- Review (Manager)}
+
+Screen for the Manager to review a certificate submitted by a worker. Shows informative text, the sender's name, a preview of the certificate photo, and two action buttons: \textbf{Accept} (\checkmark) and \textbf{Reject} (\texttimes).
+
+\end{comment}
+%--------------------------------------------------------------
+\section{Acceptance Tests (UAT)}
+%--------------------------------------------------------------
+
+\subsection*{Positive Tests}
+
 % ---------- UAT 1+ ----------
 \begin{table}[h]
 \centering
@@ -111,13 +255,13 @@ Roles are assigned at the point of registration and cannot be changed afterwards
 Test Case ID & UAT-01+ \\
 Description & The manager assigns a job to a worker. \\
 Preconditions &
-\begin{itemize}
+\begin{itemize}[noitemsep]
     \item Manager must be logged in
     \item Manager must have at least one project with at least one worker
     \item Manager must be connected to the internet
 \end{itemize} \\
 Test Scenario &
-\begin{enumerate}
+\begin{enumerate}[noitemsep]
     \item Manager opens the Project List and taps an existing project.
     \item A list of jobs in the project is displayed.
     \item Manager taps a job to open the Job Detail screen.
@@ -141,14 +285,14 @@ Test Result & PASS / FAIL \\
 Test Case ID & UAT-02+ \\
 Description & The manager creates a new project. \\
 Preconditions &
-\begin{itemize}
+\begin{itemize}[noitemsep]
     \item Manager is logged in
     \item Internet connection is available
 \end{itemize} \\
 Test Scenario &
-\begin{enumerate}
+\begin{enumerate}[noitemsep]
     \item The manager opens the application and navigates to the project list.
-    \item The manager taps \emph{"Add project"}.
+    \item The manager taps \emph{``Add project''}.
     \item A pop-up window appears with default project parameters and options to add tasks.
     \item The manager sets the project parameters and adds specific tasks and workers.
     \item The manager confirms the creation.
@@ -169,17 +313,17 @@ Test Result & PASS / FAIL \\
 Test Case ID & UAT-03+ \\
 Description & The manager creates a new task within an existing project. \\
 Preconditions &
-\begin{itemize}
+\begin{itemize}[noitemsep]
     \item Manager is logged in
     \item Internet connection is available
     \item The project in which the task will be created already exists
 \end{itemize} \\
 Test Scenario &
-\begin{enumerate}
+\begin{enumerate}[noitemsep]
     \item The manager opens the application and navigates to the project list.
     \item The manager selects the project in which they want to create the task.
     \item The manager opens the Job Detail screen.
-    \item The manager taps \emph{"Add task"}.
+    \item The manager taps \emph{``Add task''}.
     \item The manager enters the task name and optionally assigns workers.
     \item The manager confirms the creation.
 \end{enumerate} \\
@@ -188,7 +332,6 @@ Test Result & PASS / FAIL \\
 \bottomrule
 \end{tabularx}
 \end{table}
-
 
 % ---------- UAT 4+ ----------
 \begin{table}[h]
@@ -199,17 +342,17 @@ Test Result & PASS / FAIL \\
 Test Case ID & UAT-04+ \\
 Description & The manager inspects the location of a worker assigned to a project using the map. \\
 Preconditions &
-\begin{itemize}
+\begin{itemize}[noitemsep]
     \item Manager is logged in
     \item Internet connection is available
     \item The project to which the worker is assigned already exists
     \item The inspected worker is online
 \end{itemize} \\
 Test Scenario &
-\begin{enumerate}
+\begin{enumerate}[noitemsep]
     \item The manager opens the application and navigates to the project list.
     \item The manager selects the project to which the worker is assigned.
-    \item The manager taps the \emph{"View Map"} button.
+    \item The manager taps the \emph{``View Map''} button.
     \item The system displays the map and the list of workers assigned to the project.
     \item The manager taps on the selected worker.
     \item The worker's current location is displayed on the map.
@@ -225,16 +368,17 @@ Test Result & PASS / FAIL \\
 \centering
 \caption{UAT 5+: The Worker Sends a Message to the Manager}
 \begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
 Test Case ID & UAT-05+ \\
 Description & The worker sends a message to the manager. \\
 Preconditions &
-\begin{itemize}
+\begin{itemize}[noitemsep]
     \item Worker is logged in
     \item Internet connection is available
     \item A chat between the worker and manager already exists
 \end{itemize} \\
 Test Scenario &
-\begin{enumerate}
+\begin{enumerate}[noitemsep]
     \item The worker opens the application and navigates to the navigation bar at the bottom of the screen.
     \item The worker taps the message icon in the navigation bar.
     \item The worker locates the chat with the manager in the chat list and taps on it.
@@ -242,6 +386,7 @@ Test Scenario &
 \end{enumerate} \\
 Output Conditions & The message is successfully sent and appears in the chat conversation. \\
 Test Result & PASS / FAIL \\
+\bottomrule
 \end{tabularx}
 \end{table}
 
@@ -250,15 +395,16 @@ Test Result & PASS / FAIL \\
 \centering
 \caption{UAT 6+: The Worker Uploads a Plumber Certificate}
 \begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
 Test Case ID & UAT-06+ \\
 Description & The worker uploads a plumber certificate so the manager can see their area of expertise. \\
 Preconditions &
-\begin{itemize}
+\begin{itemize}[noitemsep]
     \item Worker is logged in
     \item Internet connection is available
 \end{itemize} \\
 Test Scenario &
-\begin{enumerate}
+\begin{enumerate}[noitemsep]
     \item The worker opens the application and navigates to the navigation bar at the bottom of the screen.
     \item The worker taps the profile icon in the navigation bar.
     \item The worker taps the \emph{Edit Profile} button.
@@ -268,6 +414,7 @@ Test Scenario &
 \end{enumerate} \\
 Output Conditions & The certificate is uploaded and visible in the worker's profile. \\
 Test Result & PASS / FAIL \\
+\bottomrule
 \end{tabularx}
 \end{table}
 
@@ -276,15 +423,16 @@ Test Result & PASS / FAIL \\
 \centering
 \caption{UAT 7+: The Manager Sends an Invitation to a Worker}
 \begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
 Test Case ID & UAT-07+ \\
 Description & The manager invites a worker to be connected in the app. \\
 Preconditions &
-\begin{itemize}
+\begin{itemize}[noitemsep]
     \item Manager is logged in
     \item Internet connection is available
 \end{itemize} \\
 Test Scenario &
-\begin{enumerate}
+\begin{enumerate}[noitemsep]
     \item The manager opens the application and navigates to the Workers section.
     \item The manager taps the \emph{Invite Worker} button.
     \item A pop-up window appears displaying the invite link.
@@ -292,10 +440,12 @@ Test Scenario &
 \end{enumerate} \\
 Output Conditions & The invite link is successfully generated and displayed to the manager in a pop-up window. \\
 Test Result & PASS / FAIL \\
+\bottomrule
 \end{tabularx}
 \end{table}
 
-\section{Negative UATs}
+\subsection*{Negative Tests}
+
 % ---------- UAT 1- ----------
 \begin{table}[h]
 \centering
@@ -305,15 +455,15 @@ Test Result & PASS / FAIL \\
 Test Case ID & UAT-01- \\
 Description & The system prevents the manager from creating a project with a name that is already in use. \\
 Preconditions &
-\begin{itemize}
+\begin{itemize}[noitemsep]
     \item Manager is logged in
     \item Internet connection is available
     \item A project with the same name already exists
 \end{itemize} \\
 Test Scenario &
-\begin{enumerate}
+\begin{enumerate}[noitemsep]
     \item The manager opens the application and navigates to the project list.
-    \item The manager taps \emph{"Add project"}.
+    \item The manager taps \emph{``Add project''}.
     \item A pop-up window appears with default project parameters.
     \item The manager enters a name that is already in use.
     \item The manager confirms the action.
@@ -331,16 +481,17 @@ Test Result & PASS / FAIL \\
 \centering
 \caption{UAT 2-: Worker Tries to Send a Message Without Internet}
 \begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
 Test Case ID & UAT-02- \\
 Description & The system prevents the worker from sending a message when there is no internet connection. \\
 Preconditions &
-\begin{itemize}
+\begin{itemize}[noitemsep]
     \item Worker is logged in
     \item Internet connection is unavailable
     \item A chat between the worker and manager already exists
 \end{itemize} \\
 Test Scenario &
-\begin{enumerate}
+\begin{enumerate}[noitemsep]
     \item The worker opens the application and navigates to the navigation bar at the bottom of the screen.
     \item The worker taps the message icon in the navigation bar.
     \item The worker locates the chat with the manager and taps on it.
@@ -349,6 +500,7 @@ Test Scenario &
 \end{enumerate} \\
 Output Conditions & The message is not sent and an error message is displayed to the worker. \\
 Test Result & PASS / FAIL \\
+\bottomrule
 \end{tabularx}
 \end{table}
 
@@ -357,26 +509,28 @@ Test Result & PASS / FAIL \\
 \centering
 \caption{UAT 3-: Manager Tries to Create a Task Without a Name}
 \begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
 Test Case ID & UAT-03- \\
 Description & The system prevents the manager from creating a task without entering a name. \\
 Preconditions &
-\begin{itemize}
+\begin{itemize}[noitemsep]
     \item Manager is logged in
     \item Internet connection is available
     \item The project in which the task will be created already exists
 \end{itemize} \\
 Test Scenario &
-\begin{enumerate}
+\begin{enumerate}[noitemsep]
     \item The manager opens the application and navigates to the project list.
     \item The manager selects the project in which they want to create the task.
     \item The manager opens the Job Detail screen.
-    \item The manager taps \emph{"Add task"}.
+    \item The manager taps \emph{``Add task''}.
     \item The manager leaves the task name field empty and confirms the creation.
     \item An error message appears below the name input field.
 \end{enumerate} \\
 Output Conditions & The task is not created and an error message is displayed below the name input field. \\
 Test Result & PASS / FAIL \\
+\bottomrule
 \end{tabularx}
 \end{table}
- 
+
 \end{document}
