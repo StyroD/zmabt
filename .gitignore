@@ -1,1 +1,37 @@
 /main.pdf
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.blg
+*.bbl
+*.bcf
+*.run.xml
+*.nav
+*.snm
+*.vrb
+*.idx
+*.ind
+*.ilg
+*.glo
+*.gls
+*.glg
+*.xdv
+
+# The compiled PDF (optional — remove this line if you want to track the PDF)
+*.pdf
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+
+node_modules/
+.env
