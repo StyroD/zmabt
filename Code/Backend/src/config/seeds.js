@@ -105,7 +105,7 @@ async function seed() {
         `)
     console.log('✅ Worker locations seeded')
 
-    console.log('🎉 All seeds completed!')
+    console.log('🎉 All seeds completed!!')
     process.exit(0)
   } catch (err) {
     console.error('❌ Seed error:', err)
