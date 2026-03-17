@@ -2,6 +2,7 @@
 
 # dependencies
 node_modules/
+**/node_modules/
 
 # Expo
 .expo/
@@ -41,3 +42,12 @@ app-example
 # generated native folders
 /ios
 /android
+
+
+.DS_Store
+Documents/Project_Specification/*.aux
+Documents/Project_Specification/*.fdb_latexmk
+Documents/Project_Specification/*.fls
+Documents/Project_Specification/*.log
+Documents/Project_Specification/*.pdf
+Documents/Project_Specification/*.synctex.gz
