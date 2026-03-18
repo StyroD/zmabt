@@ -7,12 +7,16 @@ type ManagerProps = {
     activejobs: number;
     pendingjobs: number;
     workers: number;
+    onJobsDetail: () => void;
+    onWorkersDetail: () => void;
 }
 
 type WorkerProps = {
     isManager: false;
     activejobs: number;
     certificates: number;
+    onJobsDetail: () => void;
+    onCertificatesDetail: () => void;
 }
 
 type Props = ManagerProps | WorkerProps
@@ -53,7 +57,7 @@ export function InfoBox(props: Props) {
                             <Text style={styles.label}>Active jobs</Text>
                             <Text style={styles.value}>{props.activejobs}</Text>
                         </View>
-                        <TouchableOpacity style={styles.button}>
+                        <TouchableOpacity style={styles.button} onPress={props.onJobsDetail}>
                             <Text style={styles.buttonText}>Detail</Text>
                         </TouchableOpacity>
                     </View>
@@ -62,7 +66,7 @@ export function InfoBox(props: Props) {
                             <Text style={styles.label}>Certificates</Text>
                             <Text style={styles.value}>{props.certificates}</Text>
                         </View>
-                        <TouchableOpacity style={styles.button}>
+                        <TouchableOpacity style={styles.button} onPress={props.onCertificatesDetail}>
                             <Text style={styles.buttonText}>Detail</Text>
                         </TouchableOpacity>
                     </View>
