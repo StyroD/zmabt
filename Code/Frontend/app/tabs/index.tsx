@@ -5,7 +5,7 @@ import { InfoBox } from '../../components/Dashboard/InfoBox';
 export default function Dashboard() {
 
   const isManager = true;
-  const name = "Peter Novak";
+  const name = "Peter Slovak";
   const status = "Online"
   const totaljobs = 10;
   const activejobs = 3;
