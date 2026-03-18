@@ -1,6 +1,8 @@
 import { StyleSheet, View, Text, TextInput, Touchable, TouchableOpacity}  from "react-native";
 import { Colors } from "@/constants/color";
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+
 
 type Props = {
     placeholder: string
@@ -12,6 +14,8 @@ type Props = {
 }
 
 export function LogBox({ placeholder, label, value, onChangeText, secureTextEntry = false, icon = undefined }: Props) {
+        const [isVisible, setVisible] = useState(secureTextEntry);
+        const iconName = isVisible ? "eye-off" : "eye";
     return (
         <View style={styles.container}>
             <Text style={styles.label}>{label}</Text>
@@ -21,13 +25,19 @@ export function LogBox({ placeholder, label, value, onChangeText, secureTextEntr
                     placeholder={placeholder}
                     value={value}
                     onChangeText={onChangeText}
-                    secureTextEntry={secureTextEntry}
-                />
-{icon && <Ionicons style={{ marginLeft: 'auto' }} name={icon as any} size={20} color={Colors.primary} />}
+                    secureTextEntry={isVisible}
+       
+       />
+       {secureTextEntry && (
+        <TouchableOpacity onPress={() => setVisible(! isVisible)}>
+        {icon && <Ionicons style={{ marginLeft: 'auto' }} name={iconName as any} size={20} color={Colors.primary} />}
+        </TouchableOpacity> 
+       )}       
                 </View>
         </View>
     )
 }
+
 
  const styles = StyleSheet.create({
     container: {

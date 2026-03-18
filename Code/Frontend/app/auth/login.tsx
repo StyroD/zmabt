@@ -2,16 +2,22 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors } from "@/constants/color";
 import { LogBox } from "@/components/Auth/LogBox";
 import { ProfileBox } from "@/components/Dashboard/ProfileBox";
+import { useState } from 'react';
+import { Redirect, router, useRouter } from "expo-router";
+
 
 export default function Login() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const route = useRouter();
     return (
         <View style={styles.container}>
         <View style={styles.card}>
             <Text style={styles.title}>Login</Text>
-            <LogBox placeholder="Enter your email" label="Email" value="" onChangeText={() => {}} />
-            <LogBox placeholder="Enter your password" label="Password" value="" onChangeText={() => {}} secureTextEntry={true} icon="eye-off" />
+            <LogBox placeholder="Enter your email" label="Email" value={email} onChangeText={(text) => setEmail(text)} />
+            <LogBox placeholder="Enter your password" label="Password" value={password} onChangeText={(text) => setPassword(text)} secureTextEntry={true} icon="eye-off" />
              <View style={{ flexDirection: 'row', gap: 16 }}>
-                <TouchableOpacity onPress={() => {}}>
+                <TouchableOpacity onPress={() => { router.push('/auth/sign')}}>
                 <Text style={styles.link}>Don't have an account?</Text>
                 </TouchableOpacity>
             </View>
