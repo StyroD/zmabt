@@ -13,7 +13,7 @@ export default function Dashboard() {
   useEffect(() => {
     getUsers()
       .then(res => {
-        setCurrentUser(res.data[1])
+        setCurrentUser(res.data[0])
         setLoading(false)
       })
       .catch(err => {
@@ -43,7 +43,7 @@ export default function Dashboard() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Dashboarda</Text>
+        <Text style={styles.title}>Dashboard</Text>
         <View style={styles.divider} />
       </View>
 

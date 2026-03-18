@@ -36,7 +36,7 @@ export function InfoBox(props: Props) {
                             <Text style={styles.label}>Pending jobs</Text>
                             <Text style={styles.value}>{props.pendingjobs}/{props.totaljobs}</Text>
                         </View>
-                        <TouchableOpacity style={styles.button}>
+                        <TouchableOpacity style={styles.button} onPress={props.onJobsDetail}>
                             <Text style={styles.buttonText}>Detail</Text>
                         </TouchableOpacity>
                     </View>
@@ -45,7 +45,7 @@ export function InfoBox(props: Props) {
                             <Text style={styles.label}>Workers</Text>
                             <Text style={styles.value}>{props.workers}</Text>
                         </View>
-                        <TouchableOpacity style={styles.button}>
+                        <TouchableOpacity style={styles.button} onPress={props.onWorkersDetail}>
                             <Text style={styles.buttonText}>Detail</Text>
                         </TouchableOpacity>
                     </View>
