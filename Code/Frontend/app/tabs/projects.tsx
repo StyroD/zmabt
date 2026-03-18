@@ -1,21 +1,41 @@
-import { useEffect, useState } from 'react'
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { Colors } from '../../constants/color'
-import { ProfileBox } from '../../components/Dashboard/ProfileBox'
-import { InfoBox } from '../../components/Dashboard/InfoBox'
-import { getUsers } from '@/api/endpoints/users'
 import { router } from 'expo-router'
 import { BackArrow } from '@/components/BackArrow'
+import { ProjectBox } from '@/components/Projects/ProjectBox'
+import Entypo from '@expo/vector-icons/Entypo';
+
 
 export default function Projects() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <BackArrow onBackButton={() => router.push('/tabs/dashboard')}/>
+        <BackArrow onBackButton={() => router.push('/tabs/dashboard')} />
         <Text style={styles.title}>Projects</Text>
         <View style={styles.placeholder} />
       </View>
       <View style={styles.divider} />
+
+
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <TouchableOpacity style={styles.addButton} onPress={() => { }}>
+          <Entypo name="plus" size={20} color={Colors.primary} />
+          <Text style={styles.addText}>New project</Text>
+        </TouchableOpacity>
+
+        <ProjectBox />
+        <ProjectBox />
+
+        <ProjectBox />
+        <ProjectBox />
+        <ProjectBox />
+        <ProjectBox />
+        <ProjectBox />
+        <ProjectBox />
+      </ScrollView>
+
+
     </View>
   )
 }
@@ -33,7 +53,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   placeholder: {
-    width: 70, // same width as BackArrow box
+    width: 40,
   },
   title: {
     fontSize: 30,
@@ -44,5 +64,22 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.border,
     marginTop: 8,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    gap: 4,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginBottom: 3,
+    marginTop: 20
+  },
+  addText: {
+    fontSize: 13,
+    color: Colors.primary,
   }
 })
