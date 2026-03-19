@@ -36,4 +36,4 @@
 node_modules/
 .env
 
-/node-api-postgress
+/node-api-postgressnode_modules/ # root-level just in case

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors } from "@/constants/color";
 import { LogBox } from "@/components/Auth/LogBox";
@@ -71,3 +72,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
 });
+=======
+
+
+>>>>>>> origin/main
