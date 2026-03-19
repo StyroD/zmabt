@@ -10,7 +10,7 @@ export default function RootLayout() {
   const [isLoggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
-      setLoading(false)
+    setLoading(false)
   }, [])
   if (isLoading) {
     return (

@@ -4,18 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-<<<<<<< HEAD
-  "dev": "nodemon src/index.js",
-  "migrate": "node src/config/migrate.js",
-  "seed": "node src/config/seeds.js"
-},
-=======
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/index.js",
     "migrate": "node src/config/migrate.js",
     "seed": "node src/config/seeds.js"
   },
->>>>>>> origin/adam
   "keywords": [],
   "author": "",
   "license": "ISC",

@@ -10,13 +10,14 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const router = useRouter();
+    const [error, setError] = useState('')
     const handleLogin = async () => {
             try {
                 const data = await login(email, password)
                 await SecureStore.setItemAsync('token', data.token)
                 router.push('/tabs/dashboard')
             } catch (error) {
-                Alert.alert('Error', 'Invalid email or password')
+                setError('Invalid email or password')
             }
 
         }
@@ -34,6 +35,7 @@ export default function Login() {
             <TouchableOpacity style={styles.button} onPress={() => {handleLogin}}>
                 <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
+            {error && <Text style={styles.error}>{error}</Text>}
             </View>
         </View>
     )
@@ -80,6 +82,11 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 14,
     },
+    error: {
+    color: Colors.danger,
+    fontSize: 14,
+    textAlign: 'center',
+}
 });
 
 
