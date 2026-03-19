@@ -1,28 +1,3 @@
-<<<<<<< HEAD
-
-import axios from 'axios';
-
-const BASE_URL = 'http://10.0.2.2:3000/api';  // Android emulator
-// const BASE_URL = 'http://localhost:3000/api'; // iOS simulator
-// const BASE_URL = 'http://192.168.x.x:3000/api'; // Physical device
-
-const client = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000,
-});
-
-// Attach JWT token to every request automatically
-client.interceptors.request.use((config) => {
-  const token = ''; // replace with AsyncStorage.getItem('token')
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-export default client;
-=======
 import axios from 'axios'
 
 const client = axios.create({
@@ -30,4 +5,3 @@ const client = axios.create({
 })
 
 export default client
->>>>>>> origin/adam

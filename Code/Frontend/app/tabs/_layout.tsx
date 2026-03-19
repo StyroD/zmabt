@@ -1,7 +1,9 @@
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import { useEffect, useState } from 'react';
 
 export default function TabsLayout() {
+ 
   return (
     <Tabs screenOptions={{ tabBarActiveTintColor: '#2563EB', headerShown: true }}>
       <Tabs.Screen name="dashboard" options={{ title: 'Dashboard', tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} /> }} />

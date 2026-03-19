@@ -1,9 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors } from "@/constants/color";
 import { LogBox } from "@/components/Auth/LogBox";
-import { ProfileBox } from "@/components/Dashboard/ProfileBox";
 import { useState } from 'react';
-import { Redirect, router} from "expo-router";
+import { router} from "expo-router";
 
 export default function Sign() {
     const [email, setEmail] = useState('');
@@ -29,6 +28,8 @@ export default function Sign() {
     )
 
 }
+
+
 
 const styles = StyleSheet.create({
     container: {

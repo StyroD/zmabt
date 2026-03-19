@@ -1,15 +1,25 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Colors } from "@/constants/color";
 import { LogBox } from "@/components/Auth/LogBox";
-import { ProfileBox } from "@/components/Dashboard/ProfileBox";
 import { useState } from 'react';
-import { Redirect, router, useRouter } from "expo-router";
-
+import { useRouter } from "expo-router";
+import { login } from '@/api/auth'
+import * as SecureStore from 'expo-secure-store'
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const route = useRouter();
+    const router = useRouter();
+    const handleLogin = async () => {
+            try {
+                const data = await login(email, password)
+                await SecureStore.setItemAsync('token', data.token)
+                router.push('/tabs/dashboard')
+            } catch (error) {
+                Alert.alert('Error', 'Invalid email or password')
+            }
+
+        }
     return (
         <View style={styles.container}>
         <View style={styles.card}>
@@ -21,7 +31,7 @@ export default function Login() {
                 <Text style={styles.link}>Don't have an account?</Text>
                 </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.button} onPress={() => {}}>
+            <TouchableOpacity style={styles.button} onPress={() => {handleLogin}}>
                 <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
             </View>
