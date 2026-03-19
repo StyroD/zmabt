@@ -56,9 +56,9 @@ export default function Dashboard() {
       </View>
 
       {isManager ? (
-        <InfoBox isManager={true} totaljobs={10} activejobs={3} pendingjobs={6} workers={20} onJobsDetail={() => router.push('/tabs/projects')} onWorkersDetail={() => router.push('/tabs/workers')}/>
+        <InfoBox isManager={true} totaljobs={10} activejobs={3} pendingjobs={6} workers={20} onJobsDetail={() => router.push('/tabs/projectsList')} onWorkersDetail={() => router.push('/tabs/workers')}/>
       ) : (
-        <InfoBox isManager={false} activejobs={2} certificates={4} onJobsDetail={() => router.push('/tabs/projects')} onCertificatesDetail={() => router.push('/tabs/certificates')}/>
+        <InfoBox isManager={false} activejobs={2} certificates={4} onJobsDetail={() => router.push('/tabs/projectsList')} onCertificatesDetail={() => router.push('/tabs/certificates')}/>
       )}
     </View>
   )

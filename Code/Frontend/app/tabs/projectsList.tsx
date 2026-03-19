@@ -24,12 +24,16 @@ export default function Projects() {
           <Text style={styles.addText}>New project</Text>
         </TouchableOpacity>
 
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail')} />
+        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
+        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
+        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
+        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
+        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
+        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
+        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
+        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
+        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
+
       </ScrollView>
 
 
