@@ -1,5 +1,8 @@
 const pool = require('../config/db')
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/adam
 
 const getUsers = async (req, res) => {
   const result = await pool.query('SELECT * FROM users')

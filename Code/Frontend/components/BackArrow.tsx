@@ -1,24 +1,28 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors } from '@/constants/color';
 
-export function BackArrow(){
-    return(
-        <View style={styles.box}>
-            <AntDesign name="arrow-left" size={24} color={Colors.surface} />
-        </View>
+type Props = {
+    onBackButton: () => void;
+}
+
+export function BackArrow({ onBackButton }: Props) {
+    return (
+        <TouchableOpacity onPress={onBackButton} style={styles.box} activeOpacity={0.7}>
+            <AntDesign name="arrow-left" size={20} color={Colors.primary} />
+        </TouchableOpacity>
     )
 }
 
 const styles = StyleSheet.create({
-    box:{
-        width: 70,
-        backgroundColor: Colors.primary,
+    box: {
+        width: 40,
+        height: 40,
+        backgroundColor: Colors.surface,
         borderColor: Colors.border,
-        borderWidth: 0.5,
+        borderWidth: 1,
         borderRadius: 10,
-        padding: 8,
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
     }
 })
