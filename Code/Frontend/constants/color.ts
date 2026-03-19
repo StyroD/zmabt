@@ -1,41 +1,15 @@
 export const Colors = {
-  // Brand
-  primary: '#3B82F6',
-  primaryLight: '#1D4ED8',
-
-  // Backgrounds
-  background: '#0F172A',
-  surface: '#1E293B',
-  surfaceElevated: '#334155',
-
-  // Borders
-  border: '#334155',
-
-  // Text
-  textPrimary: '#F1F5F9',
+  primary: '#2563EB',
+  background: '#F8FAFC',
+  surface: '#FFFFFF',
+  border: '#ecf5ff',
+  textPrimary: '#0F172A',
   textSecondary: '#64748B',
-
-  // Status — In Progress (green)
-  success: '#86EFAC',
-  successBg: '#14532D',
-  successBorder: '#166534',
-
-  // Status — Pending (orange)
-  warning: '#FCD34D',
-  warningBg: '#78350F',
-  warningBorder: '#92400E',
-
-  // Status — Cancelled (red)
-  danger: '#FCA5A5',
-  dangerBg: '#7F1D1D',
-  dangerBorder: '#991B1B',
-
-  // Status — Finished (gray)
-  neutral: '#94A3B8',
-  neutralBg: '#1E293B',
-  neutralBorder: '#334155',
-
-  // Online indicator
-  online: '#22C55E',
-  offline: '#475569',
+  success: '#166534',
+  successBg: '#DCFCE7',
+  warning: '#9A3412',
+  warningBg: '#FFF7ED',
+  danger: '#EF4444',
+  statusActive: '#EFF6FF',
+  statusPending: '#FFF7ED',
 }
