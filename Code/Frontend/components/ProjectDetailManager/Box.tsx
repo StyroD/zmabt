@@ -11,7 +11,6 @@ type Props = {
 }
 
 export function Box(props: Props) {
-    const [expanded, setExpanded] = useState(false)
 
     return (
         <View style={[styles.container, props.width === 'small' ? styles.small : styles.big]}>
@@ -33,30 +32,32 @@ const styles = StyleSheet.create({
     container: {
         borderWidth: 1,
         borderColor: Colors.border,
-        borderRadius: 10,
+        borderRadius: 12,
         marginTop: 10,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
         backgroundColor: Colors.surface,
         justifyContent: 'center',
-        gap: 2,
+        gap: 4,
     },
     small: {
         width: '48%',
-        height: 65,
+        minHeight: 65,
         alignSelf: 'flex-start',
     },
     big: {
         alignSelf: 'stretch',
-        height: 65,
+        minHeight: 65,
     },
     placeholder: {
         fontSize: 11,
         color: Colors.textSecondary,
         fontWeight: '400',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     text: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '500',
         color: Colors.textPrimary,
     }

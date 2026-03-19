@@ -4,29 +4,30 @@ import { BackArrow } from '@/components/BackArrow'
 import { router } from 'expo-router'
 
 type Props = {
-    title: string
-    children: React.ReactNode
-    backRoute?: string
-    rightElement?: React.ReactNode
+  title: string
+  children: React.ReactNode
+  backRoute?: string
+  rightElement?: React.ReactNode
 }
 
 export function ScreenWrapper({ title, children, backRoute, rightElement }: Props) {
-    return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                {backRoute ? (
-                    <BackArrow onBackButton={() => router.push(backRoute as any)} />) : (
-                    <View style={styles.placeholder} />
-                )}
-                <Text style={styles.title}>{title}</Text>
-                <View style={styles.placeholder}>
-                    {rightElement}
-                </View>
-            </View>
-            <View style={styles.divider} />
-            {children}
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        {backRoute ? (
+          <BackArrow onBackButton={() => router.push(backRoute as any)} />
+        ) : (
+          <View style={styles.placeholder} />
+        )}
+        <Text style={styles.title}>{title}</Text>
+        <View style={styles.placeholder}>
+          {rightElement}
         </View>
-    )
+      </View>
+      <View style={styles.divider} />
+      {children}
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
