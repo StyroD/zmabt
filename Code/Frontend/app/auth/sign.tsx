@@ -4,13 +4,14 @@ import { LogBox } from "@/components/Auth/LogBox";
 import { ProfileBox } from "@/components/Dashboard/ProfileBox";
 import { useState } from 'react';
 import { Redirect, router} from "expo-router";
+import { ScreenWrapper} from '@/components/ScreenWrapper';
 
 export default function Sign() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     return (
-        <View style={styles.container}>
+        <ScreenWrapper title="SignUp">
         <View style={styles.card}>
             <Text style={styles.title}>Sign Up</Text>
             <LogBox placeholder="Enter your email" label="Email" value={email} onChangeText={(text) => setEmail(text)} />
@@ -25,19 +26,13 @@ export default function Sign() {
                 <Text style={styles.buttonText}>Sign Up</Text>
             </TouchableOpacity>
             </View>
-        </View>
+        </ScreenWrapper>
     )
 
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: Colors.background,
-        padding: 24,
-    },
+    
     card: {
         backgroundColor: Colors.surface,
         borderWidth: 1,
