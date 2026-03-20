@@ -33,7 +33,7 @@ export default function Login() {
                 <Text style={styles.link}>Don't have an account?</Text>
                 </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.button} onPress={() => {handleLogin}}>
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
                 <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
             </View>

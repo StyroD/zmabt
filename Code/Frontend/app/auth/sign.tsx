@@ -32,7 +32,6 @@ export default function Sign() {
 }
 
 const styles = StyleSheet.create({
-    
     card: {
         backgroundColor: Colors.surface,
         borderWidth: 1,
