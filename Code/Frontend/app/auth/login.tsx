@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors } from "@/constants/color";
 import { LogBox } from "@/components/Auth/LogBox";
@@ -19,7 +18,7 @@ export default function Login() {
             <LogBox placeholder="Enter your password" label="Password" value={password} onChangeText={(text) => setPassword(text)} secureTextEntry={true} icon="eye-off" />
              <View style={{ flexDirection: 'row', gap: 16 }}>
                 <TouchableOpacity onPress={() => { router.push('/auth/sign')}}>
-                <Text style={styles.link}>Don't have an account?</Text>
+                <Text style={styles.link}>Dont have an account?</Text>
                 </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.button} onPress={() => {}}>
@@ -72,7 +71,3 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
 });
-=======
-
-
->>>>>>> origin/main
