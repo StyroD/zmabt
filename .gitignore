@@ -36,4 +36,4 @@
 node_modules/
 .env
 
-**/node_modules/
+/node-api-postgress
