@@ -1,7 +1,6 @@
 import { Colors } from "@/constants/color";
 import { View, Text } from "react-native";
 import { StyleSheet } from "react-native";
-import { useState } from 'react';
 
 
 type Props = {
