@@ -4,13 +4,50 @@ import { router } from 'expo-router'
 import { BackArrow } from '@/components/BackArrow'
 import { ProjectBox } from '@/components/Projects/ProjectBox'
 import Entypo from '@expo/vector-icons/Entypo';
+import { useEffect, useState } from 'react'
+import { getProjects } from '@/api/endpoints/projects'
+import { ActivityIndicator } from 'react-native'
 
 
 export default function Projects() {
+
+  const [currentProject, setProject] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+
+  useEffect(() => {
+    getProjects()
+      .then(res => {
+        setProject(res.data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error(err)
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    )
+  }
+
+  if (!currentProject) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: Colors.textSecondary }}>No project found</Text>
+      </View>
+    )
+  }
+
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <BackArrow onBackButton={() => router.push('/tabs/dashboard')} />
+        <BackArrow onBackButton={() => router.push(`/tabs/dashboard`)} />
         <Text style={styles.title}>Projects</Text>
         <View style={styles.placeholder} />
       </View>
@@ -24,16 +61,15 @@ export default function Projects() {
           <Text style={styles.addText}>New project</Text>
         </TouchableOpacity>
 
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
-        <ProjectBox onProjectDetail={() => router.push('/tabs/projectDetail_manager')} />
-
+        {currentProject.map((project: any) => (
+          <ProjectBox
+            key={project.id}
+            title={project.title}
+            status={project.status}
+            deadline={project.deadline}
+            onProjectDetail={() => router.push(`/tabs/projectDetail_manager?id=${project.id}`)}
+          />
+        ))}
       </ScrollView>
 
 
@@ -42,6 +78,12 @@ export default function Projects() {
 }
 
 const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.background,
+  },
   container: {
     backgroundColor: Colors.background,
     flex: 1,

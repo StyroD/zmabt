@@ -5,12 +5,16 @@ import { Ionicons } from '@expo/vector-icons'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useEffect, useState } from 'react'
-import { getProjects } from '@/api/endpoints/projects'
+import { getProjectById } from '@/api/endpoints/projects'
 import { ActivityIndicator } from 'react-native'
 import { getProjectWorkers } from '@/api/endpoints/workers'
+import { useLocalSearchParams } from 'expo-router'
+
 
 
 export default function ProjectDetail() {
+
+  const {id} = useLocalSearchParams()
 
   const [currentProject, setProject] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -18,16 +22,16 @@ export default function ProjectDetail() {
 
   //Projects
   useEffect(() => {
-    getProjects()
+    getProjectById(id as string)
       .then(res => {
-        setProject(res.data[0])
+        setProject(res.data)
         setLoading(false)
       })
       .catch(err => {
         console.error(err)
         setLoading(false)
       })
-  }, [])
+  }, [id])
 
 
   //Project workers
@@ -138,6 +142,8 @@ export default function ProjectDetail() {
 
         <View style={styles.sectionDivider} />
         <Text style={styles.sectionLabel}>Assigned workers</Text>
+
+
         {workers.map(worker => (
           <TouchableOpacity key={worker.worker_id} style={styles.workerBox}>
             <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
@@ -154,8 +160,10 @@ export default function ProjectDetail() {
         <View style={styles.sectionDivider} />
         <Text style={styles.sectionLabel}>Photo documentation</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
-          {photos.map(p => (
-            <View key={p} style={styles.photoBox}>
+
+
+          {photos.map((p, index) => (
+            <View key={`photo-${index}`} style={styles.photoBox}>
               <Ionicons name="image-outline" size={28} color={Colors.textSecondary} />
               <Text style={styles.photoText}>Photo</Text>
             </View>
