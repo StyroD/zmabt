@@ -15,6 +15,9 @@ app.use('/api/projects', projectsRouter)
 const workersRouter = require('./routes/workers')
 app.use('/api/workers', workersRouter)
 
+const authRouter = require('./routes/auth')
+app.use('/api/auth', authRouter)
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' })
 })
