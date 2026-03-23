@@ -5,6 +5,7 @@ import { ProfileBox } from '../../components/Dashboard/ProfileBox'
 import { InfoBox } from '../../components/Dashboard/InfoBox'
 import { getUsers } from '@/api/endpoints/users'
 import { router } from 'expo-router'
+import { ScreenWrapper } from '@/components/ScreenWrapper'
 
 export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -41,6 +42,7 @@ export default function Dashboard() {
   const isManager = currentUser.role === 'manager'
 
   return (
+   
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Dashboard</Text>
@@ -78,6 +80,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     flex: 1,
     padding: 16,
+    paddingTop: 56
   },
   header: {
     marginBottom: 24,

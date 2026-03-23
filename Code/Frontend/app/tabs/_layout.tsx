@@ -1,6 +1,8 @@
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { Colors } from '@/constants/color'
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+
 
 export default function TabsLayout() {
   return (
@@ -24,6 +26,10 @@ export default function TabsLayout() {
       <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} /> }} />
       <Tabs.Screen name="projectDetail_worker" options={{ title: 'Project Detail Worker', href: null }} />
       <Tabs.Screen name="projectDetail_manager" options={{ title: 'Project Detail Manager', href: null }} />
+      <Tabs.Screen name="create-project" options={{ title: 'Create project', tabBarIcon: ({ color, size }) => <Ionicons name="create" size={size} color={color} /> }} />
+      <Tabs.Screen name="task-list" options={{ title: 'Task list', tabBarIcon: ({ color, size }) => <FontAwesome name="tasks" size={24} color={color} /> }} />
+      <Tabs.Screen name="create-task" options={{ title: 'Create task', tabBarIcon: ({ color, size }) => <FontAwesome name="tasks" size={24} color={color} /> }} />
+
     </Tabs>
   )
 }

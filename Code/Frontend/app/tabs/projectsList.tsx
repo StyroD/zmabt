@@ -7,6 +7,7 @@ import Entypo from '@expo/vector-icons/Entypo';
 import { useEffect, useState } from 'react'
 import { getProjects } from '@/api/endpoints/projects'
 import { ActivityIndicator } from 'react-native'
+import { ScreenWrapper } from '@/components/ScreenWrapper'
 
 
 export default function Projects() {
@@ -43,37 +44,41 @@ export default function Projects() {
     )
   }
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '—'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('sk-SK', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
+
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <BackArrow onBackButton={() => router.push(`/tabs/dashboard`)} />
-        <Text style={styles.title}>Projects</Text>
-        <View style={styles.placeholder} />
+    <ScreenWrapper title='Project list' backRoute='/tabs/dashboard'>
+      <View style={styles.container}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <TouchableOpacity style={styles.addButton} onPress={() => { }}>
+            <Entypo name="plus" size={20} color={Colors.primary} />
+            <Text style={styles.addText}>New project</Text>
+          </TouchableOpacity>
+
+          {currentProject.map((project: any) => (
+            <ProjectBox
+              key={project.id}
+              title={project.title}
+              status={project.status}
+              deadline={formatDate(project.deadline)}
+              onProjectDetail={() => router.push(`/tabs/projectDetail_manager?id=${project.id}`)}
+            />
+          ))}
+        </ScrollView>
+
+
       </View>
-      <View style={styles.divider} />
+    </ScreenWrapper>
 
-
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.addButton} onPress={() => { }}>
-          <Entypo name="plus" size={20} color={Colors.primary} />
-          <Text style={styles.addText}>New project</Text>
-        </TouchableOpacity>
-
-        {currentProject.map((project: any) => (
-          <ProjectBox
-            key={project.id}
-            title={project.title}
-            status={project.status}
-            deadline={project.deadline}
-            onProjectDetail={() => router.push(`/tabs/projectDetail_manager?id=${project.id}`)}
-          />
-        ))}
-      </ScrollView>
-
-
-    </View>
   )
 }
 
@@ -119,7 +124,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     marginBottom: 3,
-    marginTop: 20
+    marginTop: 5
   },
   addText: {
     fontSize: 13,
