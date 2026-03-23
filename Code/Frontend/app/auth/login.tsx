@@ -2,10 +2,28 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors } from "@/constants/color";
 import { LogBox } from "@/components/Auth/LogBox";
 import { ProfileBox } from "@/components/Dashboard/ProfileBox";
+import { useState } from 'react';
+import { Redirect, router, useRouter } from "expo-router";
+import { ScreenWrapper } from '@/components/ScreenWrapper';
+import * as SecureStore from 'expo-secure-store'
 
 export default function Login() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const route = useRouter();
+    const [logError, setLogError] = useState('');
+
+    const handleLogin = async () => {
+    try {
+        // temporary mock - remove when backend is ready
+        await SecureStore.setItemAsync('token', 'fake-token-123')
+        router.push('/tabs/dashboard')
+    } catch (e) {
+        setLogError('Invalid email or password')
+    }
+}
     return (
-        <View style={styles.container}>
+        <ScreenWrapper title="Login">
         <View style={styles.card}>
             <Text style={styles.title}>Login</Text>
             <LogBox placeholder="Enter your email" label="Email" value="" onChangeText={() => {}} />
@@ -15,23 +33,16 @@ export default function Login() {
                 <Text style={styles.link}>Dont have an account?</Text>
                 </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.button} onPress={() => {}}>
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
                 <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
             </View>
-        </View>
+        </ScreenWrapper>
     )
 
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: Colors.background,
-        padding: 24,
-    },
     card: {
         backgroundColor: Colors.surface,
         borderWidth: 1,
