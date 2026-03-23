@@ -11,8 +11,8 @@ export default function Login() {
             <LogBox placeholder="Enter your email" label="Email" value="" onChangeText={() => {}} />
             <LogBox placeholder="Enter your password" label="Password" value="" onChangeText={() => {}} secureTextEntry={true} icon="eye-off" />
              <View style={{ flexDirection: 'row', gap: 16 }}>
-                <TouchableOpacity onPress={() => {}}>
-                <Text style={styles.link}>Don't have an account?</Text>
+                <TouchableOpacity onPress={() => { router.push('/auth/sign')}}>
+                <Text style={styles.link}>Dont have an account?</Text>
                 </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.button} onPress={() => {}}>

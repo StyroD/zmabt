@@ -4,25 +4,84 @@ import { Box } from '@/components/ProjectDetailManager/Box'
 import { Ionicons } from '@expo/vector-icons'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
+import { useEffect, useState } from 'react'
+import { getProjectById } from '@/api/endpoints/projects'
+import { ActivityIndicator } from 'react-native'
+import { getProjectWorkers } from '@/api/endpoints/workers'
+import { useLocalSearchParams } from 'expo-router'
+
+
 
 export default function ProjectDetail() {
+
+  const {id} = useLocalSearchParams()
+
+  const [currentProject, setProject] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [workers, setWorkers] = useState<any[]>([])
+
+  //Projects
+  useEffect(() => {
+    getProjectById(id as string)
+      .then(res => {
+        setProject(res.data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error(err)
+        setLoading(false)
+      })
+  }, [id])
+
+
+  //Project workers
+  useEffect(() => {
+    if (!currentProject) return
+    getProjectWorkers(currentProject.id)
+      .then(res => {
+        setWorkers(res.data)
+      })
+      .catch(err => console.error(err))
+  }, [currentProject])
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    )
+  }
+
+  if (!currentProject) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: Colors.textSecondary }}>No project found</Text>
+      </View>
+    )
+  }
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '—'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('sk-SK', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
 
   const status = 'in_progress'
 
   const statusConfig = {
-    in_progress: { label: 'In Progress', dot: Colors.online,  bg: Colors.successBg,  text: Colors.success, border: Colors.successBorder },
-    pending:     { label: 'Pending',     dot: Colors.warning, bg: Colors.warningBg,  text: Colors.warning, border: Colors.warningBorder },
-    cancelled:   { label: 'Cancelled',   dot: Colors.danger,  bg: Colors.dangerBg,   text: Colors.danger,  border: Colors.dangerBorder },
-    finished:    { label: 'Finished',    dot: Colors.neutral, bg: Colors.neutralBg,  text: Colors.neutral, border: Colors.neutralBorder },
+    in_progress: { label: 'In Progress', dot: Colors.online, bg: Colors.successBg, text: Colors.success, border: Colors.successBorder },
+    pending: { label: 'Pending', dot: Colors.warning, bg: Colors.warningBg, text: Colors.warning, border: Colors.warningBorder },
+    cancelled: { label: 'Cancelled', dot: Colors.danger, bg: Colors.dangerBg, text: Colors.danger, border: Colors.dangerBorder },
+    finished: { label: 'Finished', dot: Colors.neutral, bg: Colors.neutralBg, text: Colors.neutral, border: Colors.neutralBorder },
   }
 
   const s = statusConfig[status]
 
-  const workers = [
-    { id: '1', name: 'Jano', online: true },
-    { id: '2', name: 'Peter', online: false },
-    { id: '3', name: 'Tono', online: true },
-  ]
+
 
   const photos = ['1', '2', '3', '4']
 
@@ -30,29 +89,40 @@ export default function ProjectDetail() {
     <ScreenWrapper title='Project detail' backRoute='/tabs/projectsList'>
       <ScrollView showsVerticalScrollIndicator={false}>
 
-        <Text style={styles.projectTitle}>Project Title</Text>
+        <Text style={styles.projectTitle}>{currentProject.title}</Text>
         <View style={[styles.statusBox, { backgroundColor: s.bg, borderColor: s.border }]}>
           <View style={[styles.dot, { backgroundColor: s.dot }]} />
           <Text style={[styles.statusText, { color: s.text }]}>{s.label}</Text>
         </View>
 
+        <Box width='big' text={currentProject.description ?? '—'} placeholder='Description' />
+
         <View style={styles.row}>
-          <Box width='small' text="29.2.2026" placeholder='Deadline' />
-          <Box width='small' text="Senkvice" placeholder='Location' />
+          <Box width='small' text={formatDate(currentProject.deadline) ?? '—'} placeholder='Deadline' />
+          <Box width='small' text={currentProject.address ?? '—'} placeholder='Location' />
         </View>
         <View style={styles.row}>
-          <Box width='small' text="Jano" placeholder='Created by' />
-          <Box width='small' text="29.2.2026" placeholder='Created at' />
+          <Box width='small' text={currentProject.created_by ?? '-'} placeholder='Created by' />
+          <Box width='small' text={formatDate(currentProject.created_at) ?? '-'} placeholder='Created at' />
         </View>
+
+        {/* Coordinates */}
+        <View style={styles.row}>
+          <Box width='small' text={currentProject.lat?.toString() ?? '—'} placeholder='Latitude' />
+          <Box width='small' text={currentProject.lng?.toString() ?? '—'} placeholder='Longitude' />
+        </View>
+
+
+
 
         <View style={styles.sectionDivider} />
         <Text style={styles.sectionLabel}>Client</Text>
-        <Box width='big' text="Ing. Damian Styrak, PhD., MBA., kkt." placeholder='Name' />
+        <Box width='big' text={currentProject.client_name ?? '-'} placeholder='Name' />
         <View style={styles.row}>
-          <Box width='small' text="+158" placeholder='Phone' />
-          <Box width='small' text="martankovia@mars.ma" placeholder='Email' />
+          <Box width='small' text={currentProject.client_phone ?? '-'} placeholder='Phone' />
+          <Box width='small' text={currentProject.client_email ?? '-'} placeholder='Email' />
         </View>
-        <Box width='big' text="Stare Grunty 53" placeholder='Construction site address' />
+        {/*<Box width='big' text="Stare Grunty 53" placeholder='Construction site address' />*/}
 
         <View style={styles.sectionDivider} />
         <Text style={styles.sectionLabel}>Progress</Text>
@@ -72,12 +142,16 @@ export default function ProjectDetail() {
 
         <View style={styles.sectionDivider} />
         <Text style={styles.sectionLabel}>Assigned workers</Text>
+
+
         {workers.map(worker => (
-          <TouchableOpacity key={worker.id} style={styles.workerBox}>
+          <TouchableOpacity key={worker.worker_id} style={styles.workerBox}>
             <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
-            <Text style={styles.workerName}>{worker.name}</Text>
+            <Text style={styles.workerName}>
+              {worker.first_name} {worker.last_name}
+            </Text>
             <View style={styles.workerRight}>
-              <View style={[styles.onlineDot, { backgroundColor: worker.online ? Colors.online : Colors.offline }]} />
+              <View style={[styles.onlineDot, { backgroundColor: Colors.offline }]} />
               <AntDesign name="right" size={14} color={Colors.textSecondary} />
             </View>
           </TouchableOpacity>
@@ -86,8 +160,10 @@ export default function ProjectDetail() {
         <View style={styles.sectionDivider} />
         <Text style={styles.sectionLabel}>Photo documentation</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
-          {photos.map(p => (
-            <View key={p} style={styles.photoBox}>
+
+
+          {photos.map((p, index) => (
+            <View key={`photo-${index}`} style={styles.photoBox}>
               <Ionicons name="image-outline" size={28} color={Colors.textSecondary} />
               <Text style={styles.photoText}>Photo</Text>
             </View>
@@ -130,6 +206,12 @@ export default function ProjectDetail() {
 }
 
 const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.background,
+  },
   sectionDivider: {
     height: 1,
     backgroundColor: Colors.border,
@@ -141,6 +223,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: Colors.textPrimary,
     fontWeight: '400',
+  },
+  description: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+    marginTop: 8,
+    marginBottom: 4,
   },
   statusBox: {
     flexDirection: 'row',

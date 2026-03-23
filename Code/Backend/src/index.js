@@ -9,6 +9,12 @@ app.use(express.json())
 const usersRouter = require('./routes/users')
 app.use('/api/users', usersRouter)
 
+const projectsRouter = require('./routes/projects')
+app.use('/api/projects', projectsRouter)
+
+const workersRouter = require('./routes/workers')
+app.use('/api/workers', workersRouter)
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' })
 })
