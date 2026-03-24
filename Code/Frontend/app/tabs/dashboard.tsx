@@ -6,15 +6,17 @@ import { InfoBox } from '../../components/Dashboard/InfoBox'
 import { getUsers } from '@/api/endpoints/users'
 import { router } from 'expo-router'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
+import { getMe } from '@/api/auth'
+
 
 export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getUsers()
+    getMe()
       .then(res => {
-        setCurrentUser(res.data[0])
+        setCurrentUser(res.data)
         setLoading(false)
       })
       .catch(err => {
