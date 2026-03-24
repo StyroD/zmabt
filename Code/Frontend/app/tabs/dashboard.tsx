@@ -14,6 +14,19 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+  getUsers()
+    .then(res => {
+      setCurrentUser(res.data[0]) // index 0 = Peter (manager)
+      // setCurrentUser(res.data[1]) // index 1 = Jozef (worker)
+      setLoading(false)
+    })
+    .catch(err => {
+      console.error(err)
+      setLoading(false)
+    })
+}, [])
+
+  /*useEffect(() => {
     getMe()
       .then(res => {
         setCurrentUser(res.data)
@@ -23,7 +36,9 @@ export default function Dashboard() {
         console.error(err)
         setLoading(false)
       })
-  }, [])
+  }, [])*/
+
+
 
   if (loading) {
     return (
