@@ -4,11 +4,33 @@ import { LogBox } from "@/components/Auth/LogBox";
 import { useState } from 'react';
 import { Redirect, router} from "expo-router";
 import { ScreenWrapper} from '@/components/ScreenWrapper';
+import { register } from "@/api/auth";
+
+    
 
 export default function Sign() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [logError, setLogError] = useState('');
+
+    const handleSignUp = async () => {
+    try {
+        if (password !== confirmPassword) {
+            setLogError("Passwords did not match.")
+            return
+        }
+        if (password === "") {
+            setLogError("Password cannot be empty.")
+            return
+        }
+        await register(email, password)
+        router.push('/auth/login')
+    } catch (e) {
+        console.log(e)
+        setLogError("Registration failed. Try again.")
+    }
+}
     return (
         <ScreenWrapper title="SignUp">
         <View style={styles.card}>
@@ -21,9 +43,10 @@ export default function Sign() {
                 <Text style={styles.link}>Already have an account?</Text>
                 </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.button} onPress={() => {}}>
+            <TouchableOpacity style={styles.button} onPress={handleSignUp} >
                 <Text style={styles.buttonText}>Sign Up</Text>
             </TouchableOpacity>
+            {logError ? <Text style={styles.error}>{logError}</Text> : null}
             </View>
         </ScreenWrapper>
     )
@@ -64,5 +87,10 @@ const styles = StyleSheet.create({
         color: Colors.primary,
         textAlign: 'center',
         fontSize: 14,
+    },
+    error: {
+    color: Colors.danger,
+    fontSize: 14,
+    textAlign: 'center',
     },
 });
