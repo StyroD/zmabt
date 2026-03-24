@@ -1,24 +1,24 @@
-require('dotenv').config()
-const { Pool } = require('pg')
+import dotenv from 'dotenv'
+import { Pool } from 'pg'
+
+dotenv.config()
 
 const pool = new Pool({
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
+  port: Number(process.env.DB_PORT),
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
 })
 
-async function migrate() {
+async function migrate(): Promise<void> {
   try {
-
     await pool.query(`
       DROP SCHEMA public CASCADE;
       CREATE SCHEMA public;
     `)
     console.log('🗑️  Schema dropped and recreated')
 
-    
     await pool.query(`
       CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
