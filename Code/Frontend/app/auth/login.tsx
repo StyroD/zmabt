@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Redirect, router, useRouter } from "expo-router";
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import * as SecureStore from 'expo-secure-store'
+import { login } from "@/api/auth";
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -13,10 +14,11 @@ export default function Login() {
     const route = useRouter();
     const [logError, setLogError] = useState('');
 
+
+
     const handleLogin = async () => {
     try {
-        // temporary mock - remove when backend is ready
-        await SecureStore.setItemAsync('token', 'fake-token-123')
+        await login(email, password)
         router.push('/tabs/dashboard')
     } catch (e) {
         setLogError('Invalid email or password')
@@ -26,8 +28,8 @@ export default function Login() {
         <ScreenWrapper title="Login">
         <View style={styles.card}>
             <Text style={styles.title}>Login</Text>
-            <LogBox placeholder="Enter your email" label="Email" value="" onChangeText={() => {}} />
-            <LogBox placeholder="Enter your password" label="Password" value="" onChangeText={() => {}} secureTextEntry={true} icon="eye-off" />
+            <LogBox placeholder="Enter your email" label="Email" value={email} onChangeText={(text) => setEmail(text)} />
+            <LogBox placeholder="Enter your password" label="Password" value={password} onChangeText={(text) => setPassword(text)} secureTextEntry={true} icon="eye-off" />
              <View style={{ flexDirection: 'row', gap: 16 }}>
                 <TouchableOpacity onPress={() => { router.push('/auth/sign')}}>
                 <Text style={styles.link}>Dont have an account?</Text>
@@ -36,6 +38,7 @@ export default function Login() {
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
                 <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
+            {logError ? <Text style={styles.error}>{logError}</Text> : null}
             </View>
         </ScreenWrapper>
     )
@@ -74,5 +77,10 @@ const styles = StyleSheet.create({
         color: Colors.primary,
         textAlign: 'center',
         fontSize: 14,
+    },
+    error: {
+    color: Colors.danger,
+    fontSize: 14,
+    textAlign: 'center',
     },
 });
