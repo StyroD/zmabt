@@ -3,8 +3,9 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native'
 import { Colors } from '../../constants/color'
 import { ProfileBox } from '../../components/Dashboard/ProfileBox'
 import { InfoBox } from '../../components/Dashboard/InfoBox'
-import { getUsers } from '@/api/endpoints/users'
+import { getUserById, getUsers } from '@/api/endpoints/users'
 import { router } from 'expo-router'
+import * as SecureStore from 'expo-secure-store'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { getMe } from '@/api/auth'
 
@@ -14,31 +15,21 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-  getUsers()
-    .then(res => {
-      setCurrentUser(res.data[0]) // index 0 = Peter (manager)
-      // setCurrentUser(res.data[1]) // index 1 = Jozef (worker)
-      setLoading(false)
-    })
-    .catch(err => {
-      console.error(err)
-      setLoading(false)
-    })
+    const loadUser = async () => {
+        try {
+            const userId = await SecureStore.getItemAsync('userId')
+            console.log('userId:', userId)
+            const data = await getUserById(userId!)
+            console.log('data:', data)
+            setCurrentUser(data.data)
+            setLoading(false)
+        } catch (err) {
+            console.error(err)
+            setLoading(false)
+        }
+    }
+    loadUser()
 }, [])
-
-  /*useEffect(() => {
-    getMe()
-      .then(res => {
-        setCurrentUser(res.data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error(err)
-        setLoading(false)
-      })
-  }, [])*/
-
-
 
   if (loading) {
     return (
