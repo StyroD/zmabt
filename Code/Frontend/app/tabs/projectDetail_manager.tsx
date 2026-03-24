@@ -146,7 +146,7 @@ export default function ProjectDetail() {
 
 
         {workers.map(worker => (
-          <TouchableOpacity key={worker.worker_id} style={styles.workerBox}>
+          <TouchableOpacity key={worker.id} style={styles.workerBox}>
             <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
             <Text style={styles.workerName}>
               {worker.first_name} {worker.last_name}
