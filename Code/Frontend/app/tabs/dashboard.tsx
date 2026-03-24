@@ -3,8 +3,9 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native'
 import { Colors } from '../../constants/color'
 import { ProfileBox } from '../../components/Dashboard/ProfileBox'
 import { InfoBox } from '../../components/Dashboard/InfoBox'
-import { getUsers } from '@/api/endpoints/users'
+import { getUserById, getUsers } from '@/api/endpoints/users'
 import { router } from 'expo-router'
+import * as SecureStore from 'expo-secure-store'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 
 export default function Dashboard() {
@@ -12,16 +13,21 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getUsers()
-      .then(res => {
-        setCurrentUser(res.data[0])
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error(err)
-        setLoading(false)
-      })
-  }, [])
+    const loadUser = async () => {
+        try {
+            const userId = await SecureStore.getItemAsync('userId')
+            console.log('userId:', userId)
+            const data = await getUserById(userId!)
+            console.log('data:', data)
+            setCurrentUser(data.data)
+            setLoading(false)
+        } catch (err) {
+            console.error(err)
+            setLoading(false)
+        }
+    }
+    loadUser()
+}, [])
 
   if (loading) {
     return (
