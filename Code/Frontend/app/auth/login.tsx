@@ -18,11 +18,23 @@ export default function Login() {
 
     const handleLogin = async () => {
     try {
-        await login(email, password)
+        const data = await login(email, password)
+        await SecureStore.setItemAsync('token', data.token)
+        await SecureStore.setItemAsync('userId', data.user.id)
         router.push('/tabs/dashboard')
-    } catch (e) {
-        setLogError('Invalid email or password')
+    } catch (e: any) {
+    if (e.response) {
+        // server responded with an error
+        if (e.response.status === 401) {
+            setLogError('Invalid email or password')
+        } else {
+            setLogError('Something went wrong')
+        }
+    } else {
+        // network error
+        setLogError('Something went wrong')
     }
+}
 }
     return (
         <ScreenWrapper title="Login">

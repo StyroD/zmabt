@@ -9,6 +9,7 @@ import { getProjectById } from '@/api/endpoints/projects'
 import { ActivityIndicator } from 'react-native'
 import { getProjectWorkers } from '@/api/endpoints/workers'
 import { useLocalSearchParams } from 'expo-router'
+import { router } from 'expo-router'
 
 
 
@@ -127,11 +128,11 @@ export default function ProjectDetail() {
         <View style={styles.sectionDivider} />
         <Text style={styles.sectionLabel}>Progress</Text>
         <View style={styles.row}>
-          <TouchableOpacity style={[styles.progressBox, { flex: 1, backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]}>
+          <TouchableOpacity style={[styles.progressBox, { flex: 1, backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]} onPress={() =>router.push(`/tabs/task-list?projectId=${id}&projectTitle=${currentProject.title}`)}>
             <Text style={[styles.progressValue, { color: Colors.textPrimary }]}>3/7</Text>
             <View style={styles.progressRow}>
               <Text style={[styles.progressLabel, { color: Colors.textPrimary }]}>Tasks done</Text>
-              <AntDesign name="arrow-right" size={14} color={Colors.textPrimary} />
+              <AntDesign name="arrow-right" size={14} color={Colors.textPrimary}  />
             </View>
           </TouchableOpacity>
           <View style={[styles.progressBox, { flex: 1 }]}>
@@ -145,7 +146,7 @@ export default function ProjectDetail() {
 
 
         {workers.map(worker => (
-          <TouchableOpacity key={worker.worker_id} style={styles.workerBox}>
+          <TouchableOpacity key={worker.id} style={styles.workerBox}>
             <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
             <Text style={styles.workerName}>
               {worker.first_name} {worker.last_name}

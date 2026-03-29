@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { View, ActivityIndicator } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import { Colors } from '@/constants/color'
+import { SafeAreaProvider} from 'react-native-safe-area-context'
+
 
 export default function RootLayout() {
     const [isLoading, setLoading] = useState(true)
@@ -24,10 +26,17 @@ export default function RootLayout() {
             </View>
         )
     }
-
     if (isLoggedIn) {
-        return <Redirect href="/tabs/dashboard" />
+        return (
+            <SafeAreaProvider>
+                <Redirect href="/tabs/dashboard" />
+            </SafeAreaProvider>
+        )
     }
 
-    return <Stack screenOptions={{ headerShown: false }} />
+    return (
+        <SafeAreaProvider>
+            <Stack screenOptions={{ headerShown: false }} />
+        </SafeAreaProvider>
+    )
 }

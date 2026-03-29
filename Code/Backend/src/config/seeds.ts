@@ -1,25 +1,30 @@
-require('dotenv').config()
-const { Pool } = require('pg')
+import dotenv from 'dotenv'
+import { Pool } from 'pg'
+import bcrypt from 'bcrypt'
+
+dotenv.config()
 
 const pool = new Pool({
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
+  port: Number(process.env.DB_PORT),
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
 })
 
-async function seed() {
+async function seed(): Promise<void> {
+  const hash = await bcrypt.hash('password123', 10)
+
   try {
     // Users
     await pool.query(`
-      INSERT INTO users (id, username, first_name, last_name, email, password_hash, role, phone, created_at) VALUES
-      ('a1b2c3d4-0000-0000-0000-000000000001', 'peter.novak', 'Peter', 'Novak', 'peter@workflow.com', '$2b$10$hashedpassword1', 'manager', '+421900111222', NOW()),
-      ('a1b2c3d4-0000-0000-0000-000000000002', 'jozef.novak', 'Jozef', 'Novak', 'jozef@workflow.com', '$2b$10$hashedpassword2', 'worker', '+421900333444', NOW()),
-      ('a1b2c3d4-0000-0000-0000-000000000003', 'maria.kovac', 'Maria', 'Kovac', 'maria@workflow.com', '$2b$10$hashedpassword3', 'worker', '+421900555666', NOW()),
-      ('a1b2c3d4-0000-0000-0000-000000000004', 'jan.hornak', 'Jan', 'Hornak', 'jan@workflow.com', '$2b$10$hashedpassword4', 'worker', '+421900777888', NOW())
-      ON CONFLICT DO NOTHING;
-    `)
+    INSERT INTO users (id, username, first_name, last_name, email, password_hash, role, phone, created_at) VALUES
+    ('a1b2c3d4-0000-0000-0000-000000000001', 'peter.novak', 'Peter', 'Novak', 'peter@workflow.com', '${hash}', 'manager', '+421900111222', NOW()),
+    ('a1b2c3d4-0000-0000-0000-000000000002', 'jozef.novak', 'Jozef', 'Novak', 'jozef@workflow.com', '${hash}', 'worker', '+421900333444', NOW()),
+    ('a1b2c3d4-0000-0000-0000-000000000003', 'maria.kovac', 'Maria', 'Kovac', 'maria@workflow.com', '${hash}', 'worker', '+421900555666', NOW()),
+    ('a1b2c3d4-0000-0000-0000-000000000004', 'jan.hornak', 'Jan', 'Hornak', 'jan@workflow.com', '${hash}', 'worker', '+421900777888', NOW())
+    ON CONFLICT DO NOTHING;
+  `)
     console.log('✅ Users seeded')
 
     // Skill categories

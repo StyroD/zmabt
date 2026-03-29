@@ -3,6 +3,8 @@ import { Colors } from "@/constants/color"
 import { useLocalSearchParams, router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { useState, useRef } from "react"
+import { SafeAreaView } from 'react-native-safe-area-context'
+
 
 type Message = {
   id: string
@@ -44,69 +46,72 @@ export default function ChatDetail() {
   }
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
     <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={25}
     >
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.userInfo}>
-          <View style={styles.avatarWrapper}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials}</Text>
-            </View>
-            <View style={[styles.statusDot, { backgroundColor: isOnline ? Colors.online : Colors.offline }]} />
-          </View>
-          <View>
-            <Text style={styles.userName}>{name}</Text>
-            <Text style={[styles.onlineLabel, { color: isOnline ? Colors.online : Colors.textSecondary }]}>
-              {isOnline ? 'Online' : 'Offline'}
-            </Text>
-          </View>
-        </View>
-        <View style={{ width: 40 }} />
-      </View>
-      <View style={styles.divider} />
-
-      <FlatList
-        ref={listRef}
-        data={messages}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => {
-          const isOwn = item.senderId === CURRENT_USER_ID
-          return (
-            <View style={[styles.messageRow, isOwn ? styles.messageRowOwn : styles.messageRowOther]}>
-              <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
-                <Text style={[styles.messageText, isOwn ? styles.messageTextOwn : styles.messageTextOther]}>
-                  {item.content}
-                </Text>
+    
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+          </TouchableOpacity>
+          <View style={styles.userInfo}>
+            <View style={styles.avatarWrapper}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{initials}</Text>
               </View>
+              <View style={[styles.statusDot, { backgroundColor: isOnline ? Colors.online : Colors.offline }]} />
             </View>
-          )
-        }}
-        contentContainerStyle={styles.messagesList}
-        showsVerticalScrollIndicator={false}
-        onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
-      />
+            <View>
+              <Text style={styles.userName}>{name}</Text>
+              <Text style={[styles.onlineLabel, { color: isOnline ? Colors.online : Colors.textSecondary }]}>
+                {isOnline ? 'Online' : 'Offline'}
+              </Text>
+            </View>
+          </View>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.divider} />
 
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          value={input}
-          onChangeText={setInput}
-          placeholder="Chat Input"
-          placeholderTextColor={Colors.textSecondary}
-          onSubmitEditing={sendMessage}
-          returnKeyType="send"
+        <FlatList
+          ref={listRef}
+          data={messages}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => {
+            const isOwn = item.senderId === CURRENT_USER_ID
+            return (
+              <View style={[styles.messageRow, isOwn ? styles.messageRowOwn : styles.messageRowOther]}>
+                <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
+                  <Text style={[styles.messageText, isOwn ? styles.messageTextOwn : styles.messageTextOther]}>
+                    {item.content}
+                  </Text>
+                </View>
+              </View>
+            )
+          }}
+          contentContainerStyle={styles.messagesList}
+          showsVerticalScrollIndicator={false}
+          onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
         />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-          <Ionicons name="send" size={18} color={Colors.textPrimary} />
-        </TouchableOpacity>
-      </View>
+
+        <View style={styles.inputRow}>
+          <TextInput
+            style={styles.input}
+            value={input}
+            onChangeText={setInput}
+            placeholder="Chat Input"
+            placeholderTextColor={Colors.textSecondary}
+            onSubmitEditing={sendMessage}
+            returnKeyType="send"
+          />
+          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+            <Ionicons name="send" size={18} color={Colors.textPrimary} />
+          </TouchableOpacity>
+        </View>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   )
 }
 
@@ -114,7 +119,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    paddingTop: 56,
   },
   header: {
     flexDirection: 'row',

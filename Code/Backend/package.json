@@ -21,8 +21,7 @@
     "jsonwebtoken": "^9.0.3",
     "node": "^25.8.1",
     "pg": "^8.20.0",
-    "swagger-ui-express": "^5.0.1",
-    "ts-node": "^10.9.2"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

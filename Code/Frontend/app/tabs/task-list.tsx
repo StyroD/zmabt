@@ -6,86 +6,32 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { ActivityIndicator } from 'react-native'
+import { getTasksByProjectId } from '@/api/endpoints/tasks'
+import { TaskBox } from '@/components/TaskBox'
 
-const statusConfig = {
-  pending:     { dot: Colors.warning },
-  in_progress: { dot: Colors.online },
-  done:        { dot: Colors.success },
-}
 
-function TaskBox({ task }: { task: any }) {
-  const [expanded, setExpanded] = useState(false)
-  const s = statusConfig[task.status as keyof typeof statusConfig] ?? { dot: Colors.offline }
-  const photos = ['1', '2', '3']
 
-  return (
-    <TouchableOpacity style={styles.taskBox} onPress={() => setExpanded(!expanded)} activeOpacity={0.8}>
-      <View style={styles.taskRow}>
-        <Text style={styles.taskTitle}>{task.title}</Text>
-        <View style={styles.taskRight}>
-          <View style={[styles.statusDot, { backgroundColor: s.dot }]} />
-          <AntDesign name={expanded ? 'up' : 'down'} size={14} color={Colors.textSecondary} />
-        </View>
-      </View>
 
-      {expanded && (
-        <View style={styles.taskDetail}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Category</Text>
-            <Text style={styles.detailValue}>{task.category ?? '—'}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Description</Text>
-            <Text style={styles.detailValue} numberOfLines={2}>{task.description ?? '—'}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Assigned person</Text>
-            <Text style={styles.detailValue}>{task.assigned ?? '—'}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Deadline</Text>
-            <Text style={styles.detailValue}>{task.deadline ?? '—'}</Text>
-          </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
-            {photos.map((p, i) => (
-              <View key={i} style={styles.photoBox}>
-                <Ionicons name="image-outline" size={22} color={Colors.textSecondary} />
-                <Text style={styles.photoText}>Photo</Text>
-              </View>
-            ))}
-          </ScrollView>
-
-          <TouchableOpacity style={styles.uploadBtn}>
-            <Text style={styles.uploadText}>Upload more photos</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.doneBtn}>
-            <Text style={styles.doneBtnText}>Mark as done</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </TouchableOpacity>
-  )
-}
 
 export default function TaskList() {
   const { projectId, projectTitle } = useLocalSearchParams()
+
+  
   const [tasks, setTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+
   useEffect(() => {
-    // TODO: fetch tasks by projectId
-    // Placeholder data
-    setTasks([
-      { id: '1', title: 'Task1', status: 'pending', category: 'Kurenie', description: 'Lorem ipsum...', assigned: 'Ivan', deadline: '29.2.2026' },
-      { id: '2', title: 'Task2', status: 'in_progress', category: 'Elektrika', description: 'Lorem ipsum...', assigned: 'Peter', deadline: '29.2.2026' },
-      { id: '3', title: 'Task3', status: 'done', category: 'Voda', description: 'Lorem ipsum...', assigned: 'Jano', deadline: '29.2.2026' },
-      { id: '4', title: 'Task4', status: 'pending', category: 'Plyn', description: 'Lorem ipsum...', assigned: 'Tono', deadline: '29.2.2026' },
-      { id: '5', title: 'Task5', status: 'in_progress', category: 'Kurenie', description: 'Lorem ipsum...', assigned: 'Ivan', deadline: '29.2.2026' },
-    ])
-    setLoading(false)
-  }, [projectId])
+    getTasksByProjectId(projectId as string)
+      .then(res => {
+        setTasks(res.data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error(err)
+        setLoading(false)
+      })
+  }, [])
 
   if (loading) {
     return (
