@@ -38,7 +38,7 @@ export default function Profile(){
             {/* Avatar + edit */}
             <View style={styles.avatarSection}>
                 <Ionicons name="person-circle" size={90} color={Colors.border} />
-                <TouchableOpacity style={styles.editButton}>
+                <TouchableOpacity style={styles.editButton} onPress={() => router.push('/edit-profile' as any)}>
                     <Ionicons name="pencil" size={14} color={Colors.primary} />
                     <Text style={styles.editText}>Edit profile</Text>
                 </TouchableOpacity>
