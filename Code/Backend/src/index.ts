@@ -9,6 +9,8 @@ import projectsRouter from './routes/projects'
 import workersRouter from './routes/workers'
 import authRouter from './routes/auth'
 import tasksRouter from './routes/tasks'
+import uploadsRouter from './routes/uploads'
+
 
 const app = express()
 app.use(cors())
@@ -19,6 +21,9 @@ app.use('/api/projects', projectsRouter)
 app.use('/api/workers', workersRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/tasks', tasksRouter)
+app.use('/api/uploads', uploadsRouter)
+
+
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -33,6 +38,7 @@ const swaggerDocument = {
     { name: 'Projects', description: 'Project management' },
     { name: 'Workers', description: 'Worker assignment' },
     { name: 'Tasks', description: 'Task management' },
+    { name: 'Uploads', description: 'File uploads' },
   ],
   paths: {
     '/api/auth/login': {
@@ -192,6 +198,39 @@ const swaggerDocument = {
         responses: { 200: { description: 'List of workers' } }
       }
     },
+    '/api/uploads/certificate': {
+    post: {
+      summary: 'Upload a certificate file',
+      tags: ['Uploads'],
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            schema: {
+              type: 'object',
+              properties: {
+                file: { type: 'string', format: 'binary' },
+                worker_id: { type: 'string' },
+                category_id: { type: 'string' },
+                name: { type: 'string', example: 'Elektrikar - osvedcenie' },
+              }
+            }
+          }
+        }
+      },
+      responses: { 200: { description: 'Certificate uploaded' } }
+    }
+  },
+  '/api/uploads/certificate/{id}': {
+    get: {
+      summary: 'Get certificate file by ID',
+      tags: ['Uploads'],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Returns binary file' },
+        404: { description: 'File not found' },
+      }
+    }
+  },
   }
 }
 
