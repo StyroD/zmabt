@@ -1,15 +1,28 @@
-import { Request, Response } from 'express'
-import pool from '../config/db'
+import { Request, Response } from "express";
+import pool from "../config/db";
 
-export const getProjectWorkers = async (req: Request, res: Response): Promise<void> => {
+export const getProjectWorkers = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const { projectId } = req.params
+    const { projectId } = req.params;
     const result = await pool.query(
-      'SELECT u.id, u.first_name, u.last_name FROM users u JOIN project_workers pw ON pw.worker_id = u.id WHERE pw.project_id = $1',
-      [projectId]
-    )
-    res.json(result.rows)
+      `SELECT u.id, u.first_name, u.last_name,
+    COALESCE(
+      json_agg(sc.name) FILTER (WHERE sc.name IS NOT NULL AND c.status = 'accepted'),
+      '[]'
+    ) as certificates
+  FROM users u
+  JOIN project_workers pw ON pw.worker_id = u.id
+  LEFT JOIN certificates c ON c.worker_id = u.id
+  LEFT JOIN skill_categories sc ON sc.id = c.category_id
+  WHERE pw.project_id = $1
+  GROUP BY u.id, u.first_name, u.last_name`,
+      [projectId],
+    );
+    res.json(result.rows);
   } catch (err: any) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message });
   }
-}
+};
