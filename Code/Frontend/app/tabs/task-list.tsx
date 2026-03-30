@@ -46,7 +46,7 @@ export default function TaskList() {
       title={projectTitle as string ?? 'Project'}
       backRoute='/tabs/projectsList'
       rightElement={
-        <TouchableOpacity onPress={() => router.push('/tabs/create-task')}>
+        <TouchableOpacity onPress={() => router.push(`/tabs/create-task?projectId=${projectId}`)}>
           <AntDesign name="plus" size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
       }

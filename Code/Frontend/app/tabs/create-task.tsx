@@ -1,11 +1,14 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Alert } from 'react-native'
 import { Colors } from '../../constants/color'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
-import { useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { router } from 'expo-router'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { Ionicons } from '@expo/vector-icons'
+import { useLocalSearchParams } from 'expo-router'
+import { getProjectWorkers } from '@/api/endpoints/workers'
+
 
 const CATEGORIES = ['Elektrika', 'Voda', 'Kurenie', 'Plyn']
 const PRIORITIES = ['low', 'medium', 'high']
@@ -16,13 +19,11 @@ const priorityColors: Record<string, string> = {
     high: Colors.danger,
 }
 
-const mockWorkers = [
-    { id: '1', name: 'Jano Novak', certificates: ['Elektrika', 'Voda', 'Kurenie', 'Plyn'] },
-    { id: '2', name: 'Peter Kováč', certificates: ['Elektrika', 'Voda'] },
-    { id: '3', name: 'Tono Horák', certificates: ['Kurenie', 'Plyn'] },
-]
+
 
 export default function CreateTask() {
+    const { projectId } = useLocalSearchParams()
+    const [workers, setWorkers] = useState<any[]>([])
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [category, setCategory] = useState('')
@@ -30,7 +31,7 @@ export default function CreateTask() {
     const [deadline, setDeadline] = useState<Date | null>(null)
     const [showDatePicker, setShowDatePicker] = useState(false)
     const [priority, setPriority] = useState('medium')
-    const [assignedWorker, setAssignedWorker] = useState<string | null>(null)
+    const [assignedWorkers, setAssignedWorkers] = useState<string[]>([])
     const [errors, setErrors] = useState<Record<string, string>>({})
 
     const formatDate = (date: Date) =>
@@ -51,9 +52,30 @@ export default function CreateTask() {
             return
         }
         // TODO: call createTask API
-        console.log({ title, description, category, deadline, priority, assignedWorker })
+        console.log({ title, description, category, deadline, priority, assignedWorkers })
         router.back()
     }
+
+    const toggleWorker = (id: string) => {
+        setAssignedWorkers(prev =>
+            prev.includes(id) ? prev.filter(w => w !== id) : [...prev, id]
+        )
+    }
+    const availableWorkers = workers.filter(worker =>
+        !assignedWorkers.includes(worker.id) &&
+        (category === '' || (worker.certificates ?? []).includes(category))
+    )
+
+
+    useEffect(() => {
+        if (!projectId) return
+        getProjectWorkers(projectId as string)
+            .then(res => {
+                console.log('Workers:', JSON.stringify(res.data[0]))
+                setWorkers(res.data)
+            })
+            .catch(err => console.error(err))
+    }, [projectId])
 
     return (
         <ScreenWrapper title='New task' backRoute='/tabs/projectsList'>
@@ -149,26 +171,50 @@ export default function CreateTask() {
                         </TouchableOpacity>
                     ))}
                 </View>
+                {/* Assigned workers */}
+                <Text style={styles.fieldLabel}>Assigned workers</Text>
+                <View style={styles.divider} />
+                {assignedWorkers.length === 0 ? (
+                    <Text style={styles.emptyText}>No workers assigned yet</Text>
+                ) : (
+                    workers.filter(w => assignedWorkers.includes(w.id)).map(worker => (
+                        <TouchableOpacity
+                            key={worker.id}
+                            style={[styles.workerBox, styles.workerSelected]}
+                            onPress={() => toggleWorker(worker.id)}
+                        >
+                            <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
+                            <View style={styles.workerInfo}>
+                                <Text style={styles.workerName}>{worker.first_name} {worker.last_name}</Text>
+                                <View style={styles.certRow}>
+                                    {(worker.certificates ?? []).map((cert: string) => (
+                                        <Text key={cert} style={styles.cert}>✓ {cert}</Text>
+                                    ))}
+                                </View>
+                            </View>
+                            <Ionicons name="checkmark-circle" size={22} color={Colors.primary} />
+                        </TouchableOpacity>
+                    ))
+                )}
 
-                <Text style={styles.fieldLabel}>Assign worker</Text>
-                {mockWorkers.map(worker => (
+                {/* Available workers */}
+                <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Tap to assign worker</Text>
+                <View style={styles.divider} />
+                {availableWorkers.map(worker => (
                     <TouchableOpacity
                         key={worker.id}
-                        style={[styles.workerBox, assignedWorker === worker.id && styles.workerSelected]}
-                        onPress={() => setAssignedWorker(assignedWorker === worker.id ? null : worker.id)}
+                        style={styles.workerBox}
+                        onPress={() => toggleWorker(worker.id)}
                     >
                         <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
                         <View style={styles.workerInfo}>
-                            <Text style={styles.workerName}>{worker.name}</Text>
+                            <Text style={styles.workerName}>{worker.first_name} {worker.last_name}</Text>
                             <View style={styles.certRow}>
-                                {worker.certificates.map(cert => (
+                                {(worker.certificates ?? []).map((cert: string) => (
                                     <Text key={cert} style={styles.cert}>✓ {cert}</Text>
                                 ))}
                             </View>
                         </View>
-                        {assignedWorker === worker.id && (
-                            <Ionicons name="checkmark-circle" size={22} color={Colors.primary} />
-                        )}
                     </TouchableOpacity>
                 ))}
 
@@ -183,6 +229,11 @@ export default function CreateTask() {
 }
 
 const styles = StyleSheet.create({
+    divider: {
+        height: 1,
+        backgroundColor: Colors.border,
+        marginVertical: 16,
+    },
     fieldLabel: {
         fontSize: 13,
         color: Colors.textSecondary,
@@ -270,7 +321,7 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     certRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-    cert: { fontSize: 12, color: Colors.textSecondary },
+    cert: { fontSize: 12, color: Colors.textPrimary },
     submitButton: {
         backgroundColor: Colors.primary,
         borderRadius: 10,
@@ -287,5 +338,11 @@ const styles = StyleSheet.create({
     dateText: {
         fontSize: 15,
         color: Colors.textPrimary,
+    },
+    emptyText: {
+        fontSize: 13,
+        color: Colors.textSecondary,
+        fontStyle: 'italic',
+        paddingVertical: 8,
     },
 })
