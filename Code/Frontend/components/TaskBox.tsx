@@ -4,9 +4,15 @@ import { AntDesign, Ionicons } from "@expo/vector-icons"
 import { useState } from "react"
 
 const statusConfig = {
-  pending: { dot: Colors.warning },
-  in_progress: { dot: Colors.online },
-  done: { dot: Colors.success },
+  pending: { dot: Colors.warning, label: 'Pending' },
+  in_progress: { dot: Colors.online, label: 'In Progress' },
+  done: { dot: Colors.success, label: 'Done' },
+}
+
+const priorityLabels: Record<string, string> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
 }
 
 
@@ -14,6 +20,18 @@ export function TaskBox({ task }: { task: any }) {
   const [expanded, setExpanded] = useState(false)
   const s = statusConfig[task.status as keyof typeof statusConfig] ?? { dot: Colors.offline }
   const photos = ['1', '2', '3']
+
+
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '—'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('sk-SK', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
 
   return (
     <TouchableOpacity style={styles.taskBox} onPress={() => setExpanded(!expanded)} activeOpacity={0.8}>
@@ -41,7 +59,15 @@ export function TaskBox({ task }: { task: any }) {
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Deadline</Text>
-            <Text style={styles.detailValue}>{task.deadline ?? '—'}</Text>
+            <Text style={styles.detailValue}>{formatDate(task.deadline) ?? '—'}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Status</Text>
+            <Text style={styles.detailValue}>{s.label ?? task.status ?? '—'}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Priority</Text>
+            <Text style={styles.detailValue}>{priorityLabels[task.priority] ?? task.priority ?? '—'}</Text>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>

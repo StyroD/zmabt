@@ -7,14 +7,38 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
 }
 
 export const getUserById = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params
-  const result = await pool.query('SELECT * FROM users WHERE id = $1', [id])
-  const user = result.rows[0]
-  if (!user) {
-    res.status(404).json({ error: 'User not found' })
-    return
+  try {
+    const { id } = req.params
+    const result = await pool.query(
+      `SELECT u.*,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', c.id,
+              'name', c.name,
+              'category', sc.name,
+              'status', c.status,
+              'submitted_at', c.submitted_at
+            )
+          ) FILTER (WHERE c.id IS NOT NULL),
+          '[]'
+        ) as certificates
+      FROM users u
+      LEFT JOIN certificates c ON c.worker_id = u.id
+      LEFT JOIN skill_categories sc ON sc.id = c.category_id
+      WHERE u.id = $1
+      GROUP BY u.id`,
+      [id]
+    )
+    const user = result.rows[0]
+    if (!user) {
+      res.status(404).json({ error: 'User not found' })
+      return
+    }
+    res.json(user)
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
   }
-  res.json(user)
 }
 
 export const createUser = async (req: Request, res: Response): Promise<void> => {

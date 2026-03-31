@@ -1,34 +1,89 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native'
-import {ScreenWrapper} from '@/components/ScreenWrapper'
-import {ProfileField} from '@/components/Profile/ProfileField'
-import {useState } from "react"
-import {Colors} from '@/constants/color' 
-import {Ionicons } from '@expo/vector-icons'
+import { ScreenWrapper } from '@/components/ScreenWrapper'
+import { ProfileField } from '@/components/Profile/ProfileField'
+import { useEffect, useState } from "react"
+import { Colors } from '@/constants/color'
+import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { CertificateRow } from '@/components/Profile/CertificateRow'
 import { ScrollView } from 'react-native'
 import * as SecureStore from 'expo-secure-store'    
+import { useLocalSearchParams } from 'expo-router'
+import { getUserById } from '@/api/endpoints/users'
+import { ActivityIndicator } from 'react-native'
 
 
 
-export default function Profile(){
+export default function Profile() {
     //const [currentUser, setCurrentUser] = useState<any>(null)
-    const [currentUser, setCurrentUser] = useState<any>({
-        title: 'Mr',
-    first_name: 'Peter',
-    last_name: 'Novak',
-    hourly_rate: '25',
-    });
-    const certificates = [
-    { name: 'Water', certified: true },
-    { name: 'Heating', certified: true },
-    { name: 'Electricity', certified: true },
-    { name: 'Gas', certified: false },
-    ];
+    const [currentUser, setCurrentUser] = useState<any>(null)
+
+
+    const { projectId, userId } = useLocalSearchParams()
+
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        if (!userId) {
+            setLoading(false)
+            return
+        }
+        getUserById(userId as string)
+            .then(res => {
+                setCurrentUser(res.data)
+                setLoading(false)
+            })
+            .catch(err => {
+                console.error(err)
+                setLoading(false)
+            })
+    }, [userId])
+
+    if (loading) return <ActivityIndicator size="large" color={Colors.primary} />
+
     if (!currentUser) {
+        return (
+            <ScreenWrapper title="Profile">
+                <Text>No user found</Text>
+            </ScreenWrapper>
+        )
+    }
+    const certificates = currentUser.certificates ?? []
+
+
+
     return (
-        <ScreenWrapper title="Profile">
-            <Text>No user found</Text>
+        <ScreenWrapper title="Profile" backRoute={`/tabs/projectDetail_manager?id=${projectId}`}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+
+                {/* Avatar + edit */}
+                <View style={styles.avatarSection}>
+                    <Ionicons name="person-circle" size={90} color={Colors.border} />
+                </View>
+
+                {/* Fields */}
+                <View style={styles.fieldsSection}>
+                    <ProfileField label="Title" value={currentUser.title ?? '—'} />
+                    <ProfileField label="First name" value={currentUser.first_name} />
+                    <ProfileField label="Last name" value={currentUser.last_name} />
+                    <ProfileField label="Hourly rate" value={currentUser.hourly_rate ? `${currentUser.hourly_rate} €/h` : '—'} />                </View>
+
+                {/* Certificates */}
+                <View style={styles.sectionDivider} />
+                <Text style={styles.sectionLabel}>Certificates</Text>
+                <View style={styles.certContainer}>
+                    {certificates.map((cert: any) => (
+                        <CertificateRow
+                            key={cert.id}
+                            name={cert.category}
+                            certified={cert.status === 'accepted'}
+                            onShow={() => { }}
+                        />
+                    ))}
+                </View>
+                
+                <View style={{ height: 40 }} />
+            </ScrollView>
         </ScreenWrapper>
     )
     }

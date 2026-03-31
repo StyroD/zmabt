@@ -22,7 +22,7 @@ const priorityColors: Record<string, string> = {
 
 
 export default function CreateTask() {
-    const { projectId } = useLocalSearchParams()
+    const { projectId, projectTitle } = useLocalSearchParams()
     const [workers, setWorkers] = useState<any[]>([])
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
@@ -78,7 +78,15 @@ export default function CreateTask() {
     }, [projectId])
 
     return (
-        <ScreenWrapper title='New task' backRoute='/tabs/projectsList'>
+        <ScreenWrapper title='New task' backRoute={`/tabs/projectDetail_manager?id=${projectId}`}>
+            <View style={styles.projectContext}>
+                <Ionicons name="folder-outline" size={12} color={Colors.textSecondary} />
+                <Text style={styles.projectContextText}>{projectTitle ?? 'Unknown project'}</Text>
+                <View style={styles.contextChevron}>
+                    <Ionicons name="chevron-forward" size={10} color={Colors.textSecondary} />
+                </View>
+                <Text style={styles.contextCurrent}>New task</Text>
+            </View>
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 <Text style={styles.fieldLabel}>Title <Text style={styles.required}>*</Text></Text>
@@ -229,6 +237,28 @@ export default function CreateTask() {
 }
 
 const styles = StyleSheet.create({
+    projectContext: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        marginBottom: 16,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.border,
+        marginTop: 10
+    },
+    projectContextText: {
+        fontSize: 12,
+        color: Colors.textSecondary,
+    },
+    contextChevron: {
+        marginHorizontal: 2,
+    },
+    contextCurrent: {
+        fontSize: 12,
+        color: Colors.textPrimary,
+        fontWeight: '500',
+    },
     divider: {
         height: 1,
         backgroundColor: Colors.border,
