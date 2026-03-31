@@ -18,19 +18,19 @@ async function seed(): Promise<void> {
   try {
     // Users
     await pool.query(`
-    INSERT INTO users (id, username, first_name, last_name, email, password_hash, role, phone, created_at) VALUES
-    ('a1000000-0000-0000-0000-000000000001', 'peter.novak', 'Peter', 'Novak', 'peter@workflow.com', '${hash}', 'manager', '+421900111001', NOW()),
-    ('a1000000-0000-0000-0000-000000000002', 'jana.kováčová', 'Jana', 'Kováčová', 'jana@workflow.com', '${hash}', 'manager', '+421900111002', NOW()),
-    ('a1000000-0000-0000-0000-000000000003', 'martin.horváth', 'Martin', 'Horváth', 'martin@workflow.com', '${hash}', 'manager', '+421900111003', NOW()),
-    ('a1000000-0000-0000-0000-000000000004', 'jozef.novak', 'Jozef', 'Novak', 'jozef@workflow.com', '${hash}', 'worker', '+421900222001', NOW()),
-    ('a1000000-0000-0000-0000-000000000005', 'maria.kovac', 'Maria', 'Kovac', 'maria@workflow.com', '${hash}', 'worker', '+421900222002', NOW()),
-    ('a1000000-0000-0000-0000-000000000006', 'jan.hornak', 'Jan', 'Hornak', 'jan@workflow.com', '${hash}', 'worker', '+421900222003', NOW()),
-    ('a1000000-0000-0000-0000-000000000007', 'tomas.vlcek', 'Tomas', 'Vlcek', 'tomas@workflow.com', '${hash}', 'worker', '+421900222004', NOW()),
-    ('a1000000-0000-0000-0000-000000000008', 'lukas.maly', 'Lukas', 'Maly', 'lukas@workflow.com', '${hash}', 'worker', '+421900222005', NOW()),
-    ('a1000000-0000-0000-0000-000000000009', 'peter.velky', 'Peter', 'Velky', 'peterv@workflow.com', '${hash}', 'worker', '+421900222006', NOW()),
-    ('a1000000-0000-0000-0000-000000000010', 'anna.svoboda', 'Anna', 'Svoboda', 'anna@workflow.com', '${hash}', 'worker', '+421900222007', NOW())
-    ON CONFLICT DO NOTHING;
-  `);
+  INSERT INTO users (id, username, title, first_name, last_name, email, password_hash, role, phone, address, date_of_birth, hourly_rate, monthly_salary, currency, employment_type, hired_at, iban, emergency_contact_name, emergency_contact_phone, notes, created_at) VALUES
+  ('a1000000-0000-0000-0000-000000000001', 'peter.novak', 'Ing', 'Peter', 'Novak', 'peter@workflow.com', '${hash}', 'manager', '+421900111001', 'Hlavna 1, Bratislava', '1985-03-15', 45.00, null, 'EUR', 'full_time', '2020-01-01', 'SK1234567890123456', 'Jana Novakova', '+421900999001', 'Senior manager', NOW()),
+  ('a1000000-0000-0000-0000-000000000002', 'jana.kovacova', 'Mgr', 'Jana', 'Kovacova', 'jana@workflow.com', '${hash}', 'manager', '+421900111002', 'Namestie 5, Kosice', '1990-07-22', 42.00, null, 'EUR', 'full_time', '2021-03-01', 'SK2345678901234567', 'Peter Kovac', '+421900999002', null, NOW()),
+  ('a1000000-0000-0000-0000-000000000003', 'martin.horvath', 'Bc', 'Martin', 'Horvath', 'martin@workflow.com', '${hash}', 'manager', '+421900111003', 'Sportova 3, Nitra', '1988-11-30', 40.00, null, 'EUR', 'full_time', '2019-06-01', 'SK3456789012345678', 'Eva Horvathova', '+421900999003', null, NOW()),
+  ('a1000000-0000-0000-0000-000000000004', 'jozef.novak', 'Bc', 'Jozef', 'Novak', 'jozef@workflow.com', '${hash}', 'worker', '+421900222001', 'Robotnicka 12, Bratislava', '1992-05-10', 18.50, null, 'EUR', 'full_time', '2022-01-15', 'SK4567890123456789', 'Maria Novakova', '+421900999004', 'Elektrikar, Instalater', NOW()),
+  ('a1000000-0000-0000-0000-000000000005', 'maria.kovac', 'Bc', 'Maria', 'Kovac', 'maria@workflow.com', '${hash}', 'worker', '+421900222002', 'Zelena 8, Zilina', '1995-09-18', 17.00, null, 'EUR', 'part_time', '2022-06-01', 'SK5678901234567890', 'Jan Kovac', '+421900999005', null, NOW()),
+  ('a1000000-0000-0000-0000-000000000006', 'jan.hornak', 'Bc', 'Jan', 'Hornak', 'jan@workflow.com', '${hash}', 'worker', '+421900222003', 'Lesna 3, Trnava', '1988-02-25', 19.00, null, 'EUR', 'full_time', '2021-09-01', 'SK6789012345678901', 'Anna Hornakova', '+421900999006', 'Kurenie specialist', NOW()),
+  ('a1000000-0000-0000-0000-000000000007', 'tomas.vlcek', 'Bc', 'Tomas', 'Vlcek', 'tomas@workflow.com', '${hash}', 'worker', '+421900222004', 'Polna 7, Trencin', '1993-12-03', 20.00, null, 'EUR', 'full_time', '2022-03-15', 'SK7890123456789012', 'Petra Vlckova', '+421900999007', 'Plynar', NOW()),
+  ('a1000000-0000-0000-0000-000000000008', 'lukas.maly','Bc', 'Lukas', 'Maly', 'lukas@workflow.com', '${hash}', 'worker', '+421900222005', 'Vysoka 2, Presov', '1997-06-14', 16.50, null, 'EUR', 'contractor', '2023-01-01', 'SK8901234567890123', 'Eva Mala', '+421900999008', null, NOW()),
+  ('a1000000-0000-0000-0000-000000000009', 'peter.velky', 'Bc', 'Peter', 'Velky', 'peterv@workflow.com', '${hash}', 'worker', '+421900222006', 'Dlha 15, Banska Bystrica', '1991-08-20', 18.00, null, 'EUR', 'full_time', '2021-11-01', 'SK9012345678901234', 'Zuzana Velkova', '+421900999009', null, NOW()),
+  ('a1000000-0000-0000-0000-000000000010', 'anna.svoboda', 'Bc', 'Anna', 'Svoboda', 'anna@workflow.com', '${hash}', 'worker', '+421900222007', 'Kratka 4, Poprad', '1994-04-07', 17.50, null, 'EUR', 'part_time', '2022-08-15', 'SK0123456789012345', 'Pavel Svoboda', '+421900999010', 'Instalater, Plynar', NOW())
+  ON CONFLICT DO NOTHING;
+`);
     console.log("✅ Users seeded");
 
     // Skill categories
