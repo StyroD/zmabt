@@ -10,16 +10,18 @@ import { ActivityIndicator } from 'react-native'
 import { getProjectWorkers } from '@/api/endpoints/workers'
 import { useLocalSearchParams } from 'expo-router'
 import { router } from 'expo-router'
-
+import { useRef } from 'react'
 
 
 export default function ProjectDetail() {
 
-  const {id} = useLocalSearchParams()
+  const { id } = useLocalSearchParams()
 
   const [currentProject, setProject] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [workers, setWorkers] = useState<any[]>([])
+  const scrollRef = useRef<ScrollView>(null)
+
 
   //Projects
   useEffect(() => {
@@ -33,7 +35,9 @@ export default function ProjectDetail() {
         setLoading(false)
       })
   }, [id])
-
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false })
+  }, [id])
 
   //Project workers
   useEffect(() => {
@@ -88,7 +92,7 @@ export default function ProjectDetail() {
 
   return (
     <ScreenWrapper title='Project detail' backRoute='/tabs/projectsList'>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false}>
 
         <Text style={styles.projectTitle}>{currentProject.title}</Text>
         <View style={[styles.statusBox, { backgroundColor: s.bg, borderColor: s.border }]}>
@@ -128,11 +132,11 @@ export default function ProjectDetail() {
         <View style={styles.sectionDivider} />
         <Text style={styles.sectionLabel}>Progress</Text>
         <View style={styles.row}>
-          <TouchableOpacity style={[styles.progressBox, { flex: 1, backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]} onPress={() =>router.push(`/tabs/task-list?projectId=${id}&projectTitle=${currentProject.title}`)}>
+          <TouchableOpacity style={[styles.progressBox, { flex: 1, backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]} onPress={() => router.push(`/tabs/task-list?projectId=${id}&projectTitle=${currentProject.title}`)}>
             <Text style={[styles.progressValue, { color: Colors.textPrimary }]}>3/7</Text>
             <View style={styles.progressRow}>
               <Text style={[styles.progressLabel, { color: Colors.textPrimary }]}>Tasks done</Text>
-              <AntDesign name="arrow-right" size={14} color={Colors.textPrimary}  />
+              <AntDesign name="arrow-right" size={14} color={Colors.textPrimary} />
             </View>
           </TouchableOpacity>
           <View style={[styles.progressBox, { flex: 1 }]}>
@@ -146,7 +150,7 @@ export default function ProjectDetail() {
 
 
         {workers.map(worker => (
-          <TouchableOpacity key={worker.id} style={styles.workerBox}>
+          <TouchableOpacity key={worker.id} style={styles.workerBox} onPress={() => router.push(`/tabs/profile?userId=${worker.id}&projectId=${currentProject.id}`)}>
             <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
             <Text style={styles.workerName}>
               {worker.first_name} {worker.last_name}

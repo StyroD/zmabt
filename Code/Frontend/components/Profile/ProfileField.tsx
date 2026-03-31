@@ -5,16 +5,16 @@ import {Colors} from '@/constants/color'
 
 type Props = {
     label: string
-    value: string
+    value: string | number | null | undefined
 }
 
-export function ProfileField ({label, value} : Props){
+export function ProfileField({ label, value }: Props) {
     return (
-        <View style = {styles.container}> 
-        <Text style = {styles.label}>{label}</Text>
-        <View style={styles.field}>
-            <Text style={styles.value}>{value}</Text>
-        </View>
+        <View style={styles.container}>
+            <Text style={styles.label}>{label}</Text>
+            <View style={styles.field}>
+                <Text style={styles.value}>{value ?? '—'}</Text>
+            </View>
         </View>
     )
 }
