@@ -19,3 +19,15 @@ export const getProjectById = async (req: Request, res: Response): Promise<void>
     res.status(500).json({ error: err.message })
   }
 }
+
+export const getProjectByManagerId = async (req: Request, res: Response): Promise<void> => {
+  try{
+    const {managerId} = req.params
+    const result = await pool.query('SELECT * FROM projects WHERE manager_id = $1', [managerId])
+    res.json(result.rows)
+  }catch (err: any){
+    res.status(500).json({error: err.message})
+  }
+}
+
+
