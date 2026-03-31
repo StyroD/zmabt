@@ -193,7 +193,7 @@ export default function ProjectDetail() {
             <Ionicons name="person-add-outline" size={16} color={Colors.textPrimary} />
             <Text style={styles.actionText}>Assign worker</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]}>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]} onPress={()=> router.push(`/tabs/create-task?projectId${currentProject.id}&projectTitle=${currentProject.title}`)}>
             <AntDesign name="plus" size={16} color={Colors.textPrimary} />
             <Text style={styles.actionText}>Add task</Text>
           </TouchableOpacity>
