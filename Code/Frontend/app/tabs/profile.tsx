@@ -85,6 +85,58 @@ export default function Profile() {
             </ScrollView>
         </ScreenWrapper>
     )
+    }
+    const handleLogout = async () => {
+        await SecureStore.deleteItemAsync('token')
+        await SecureStore.deleteItemAsync('userId')
+        router.push('/auth/login')
+    }
+    return (
+    <ScreenWrapper title="Profile">
+        <ScrollView showsVerticalScrollIndicator={false}>
+            
+            {/* Avatar + edit */}
+            <View style={styles.avatarSection}>
+                <Ionicons name="person-circle" size={90} color={Colors.border} />
+                <TouchableOpacity style={styles.editButton} onPress={() => router.push('/edit-profile' as any)}>
+                    <Ionicons name="pencil" size={14} color={Colors.primary} />
+                    <Text style={styles.editText}>Edit profile</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Fields */}
+            <View style={styles.fieldsSection}>
+                <ProfileField label="Title" value={currentUser.title} />
+                <ProfileField label="First name" value={currentUser.first_name} />
+                <ProfileField label="Last name" value={currentUser.last_name} />
+                <ProfileField label="Hourly rate" value={`${currentUser.hourly_rate} €/h`} />
+            </View>
+
+            {/* Certificates */}
+            <View style={styles.sectionDivider} />
+            <Text style={styles.sectionLabel}>Certificates</Text>
+            <View style={styles.certContainer}>
+                {certificates.map((cert) => (
+                    <CertificateRow
+                        key={cert.name}
+                        name={cert.name}
+                        certified={cert.certified}
+                        onShow={() => router.push('/tabs/certificates')}
+                    />
+                ))}
+            </View>
+
+            {/* Logout */}
+            <View style={styles.sectionDivider} />
+            <TouchableOpacity style={styles.logoutBtn}>
+                <Ionicons name="log-out-outline" size={18} color={Colors.danger} onPress={handleLogout} />
+                <Text style={styles.logoutText}>Log out</Text>
+            </TouchableOpacity>
+
+            <View style={{ height: 40 }} />
+        </ScrollView>
+    </ScreenWrapper>
+)
 }
 
 const styles = StyleSheet.create({
