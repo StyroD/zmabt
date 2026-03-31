@@ -7,6 +7,7 @@ import {Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { CertificateRow } from '@/components/Profile/CertificateRow'
 import { ScrollView } from 'react-native'
+import * as SecureStore from 'expo-secure-store'    
 
 
 
@@ -30,7 +31,12 @@ export default function Profile(){
             <Text>No user found</Text>
         </ScreenWrapper>
     )
-}
+    }
+    const handleLogout = async () => {
+        await SecureStore.deleteItemAsync('token')
+        await SecureStore.deleteItemAsync('userId')
+        router.push('/auth/login')
+    }
     return (
     <ScreenWrapper title="Profile">
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -69,7 +75,7 @@ export default function Profile(){
             {/* Logout */}
             <View style={styles.sectionDivider} />
             <TouchableOpacity style={styles.logoutBtn}>
-                <Ionicons name="log-out-outline" size={18} color={Colors.danger} />
+                <Ionicons name="log-out-outline" size={18} color={Colors.danger} onPress={handleLogout} />
                 <Text style={styles.logoutText}>Log out</Text>
             </TouchableOpacity>
 

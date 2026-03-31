@@ -5,6 +5,7 @@ import { Colors } from '@/constants/color'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { updateProfile } from '@/api/endpoints/users'
+import * as SecureStore from 'expo-secure-store'
 
 const CERTIFICATES = ['Water', 'Heating', 'Electricity', 'Gas']
 
@@ -36,6 +37,11 @@ export default function EditProfile() {
         } finally {
             setSaving(false)
         }
+    }
+    const handleLogout = async () => {
+        await SecureStore.deleteItemAsync('token')
+        await SecureStore.deleteItemAsync('userId')
+        router.push('/auth/login')
     }
 
     const saveButton = (
@@ -96,9 +102,11 @@ export default function EditProfile() {
                 <View style={styles.certContainer}>
                     {CERTIFICATES.map((cert, index) => (
                         <View key={cert} style={[styles.certRow, index === CERTIFICATES.length - 1 && styles.certRowLast]}>
-                            <Ionicons name="checkbox" size={20} color={Colors.success} />
                             <Text style={styles.certName}>{cert}</Text>
-                            <TouchableOpacity style={styles.uploadBtn}>
+                            <TouchableOpacity 
+                                style={styles.uploadBtn}
+                                onPress={() => router.push(`/uploadCertificate?category=${cert}`)}
+                            >
                                 <Ionicons name="cloud-upload-outline" size={14} color={Colors.primary} />
                                 <Text style={styles.uploadText}>Upload</Text>
                             </TouchableOpacity>
@@ -109,7 +117,7 @@ export default function EditProfile() {
                 {/* Logout */}
                 <View style={styles.sectionDivider} />
                 <TouchableOpacity style={styles.logoutBtn}>
-                    <Ionicons name="log-out-outline" size={18} color={Colors.danger} />
+                    <Ionicons name="log-out-outline" size={18} color={Colors.danger} onPress={handleLogout}/>
                     <Text style={styles.logoutText}>Log out</Text>
                 </TouchableOpacity>
 
