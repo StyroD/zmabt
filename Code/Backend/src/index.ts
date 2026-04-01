@@ -9,6 +9,8 @@ import projectsRouter from './routes/projects'
 import workersRouter from './routes/workers'
 import authRouter from './routes/auth'
 import tasksRouter from './routes/tasks'
+import dashboardRouter from './routes/dashboard'
+import notificationsRouter from './routes/notifications'
 
 const app = express()
 app.use(cors())
@@ -19,6 +21,8 @@ app.use('/api/projects', projectsRouter)
 app.use('/api/workers', workersRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/tasks', tasksRouter)
+app.use('/api/dashboard', dashboardRouter)
+app.use('/api/notifications', notificationsRouter)
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -31,10 +35,13 @@ const swaggerDocument = {
     { name: 'Auth', description: 'Authentication' },
     { name: 'Users', description: 'User management' },
     { name: 'Projects', description: 'Project management' },
-    { name: 'Workers', description: 'Worker assignment' },
+    { name: 'Workers', description: 'Worker management' },
     { name: 'Tasks', description: 'Task management' },
+    { name: 'Dashboard', description: 'Dashboard statistics' },
+    { name: 'Notifications', description: 'User notifications' },
   ],
   paths: {
+    // Auth
     '/api/auth/login': {
       post: {
         summary: 'Login',
@@ -58,6 +65,8 @@ const swaggerDocument = {
         }
       }
     },
+
+    // Users
     '/api/users': {
       get: {
         summary: 'Get all users',
@@ -82,6 +91,8 @@ const swaggerDocument = {
         responses: { 200: { description: 'Updated user' } }
       }
     },
+
+    // Projects
     '/api/projects': {
       get: {
         summary: 'Get all projects',
@@ -97,10 +108,17 @@ const swaggerDocument = {
               schema: {
                 type: 'object',
                 properties: {
+                  manager_id: { type: 'string' },
                   title: { type: 'string', example: 'Bytovy dom Bratislava' },
                   description: { type: 'string' },
+                  status: { type: 'string', example: 'pending' },
                   deadline: { type: 'string', example: '2026-08-01' },
                   address: { type: 'string' },
+                  lat: { type: 'number' },
+                  lng: { type: 'number' },
+                  client_name: { type: 'string' },
+                  client_phone: { type: 'string' },
+                  client_email: { type: 'string' },
                 }
               }
             }
@@ -118,6 +136,53 @@ const swaggerDocument = {
           200: { description: 'Project object' },
           404: { description: 'Project not found' },
         }
+      },
+      put: {
+        summary: 'Update project',
+        tags: ['Projects'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  title: { type: 'string' },
+                  description: { type: 'string' },
+                  status: { type: 'string', example: 'in_progress' },
+                  deadline: { type: 'string' },
+                  address: { type: 'string' },
+                  lat: { type: 'number' },
+                  lng: { type: 'number' },
+                  client_name: { type: 'string' },
+                  client_phone: { type: 'string' },
+                  client_email: { type: 'string' },
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: 'Updated project' },
+          404: { description: 'Project not found' },
+        }
+      },
+      delete: {
+        summary: 'Delete project',
+        tags: ['Projects'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: { description: 'Project deleted' },
+          404: { description: 'Project not found' },
+        }
+      }
+    },
+    '/api/projects/manager/{managerId}': {
+      get: {
+        summary: 'Get projects by manager ID',
+        tags: ['Projects'],
+        parameters: [{ name: 'managerId', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { 200: { description: 'List of projects' } }
       }
     },
     '/api/projects/{id}/workers': {
@@ -126,8 +191,62 @@ const swaggerDocument = {
         tags: ['Projects'],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: { 200: { description: 'List of workers' } }
+      },
+      post: {
+        summary: 'Assign worker to project',
+        tags: ['Projects'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  worker_id: { type: 'string' },
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          201: { description: 'Worker assigned' },
+          409: { description: 'Worker already assigned' },
+        }
       }
     },
+    '/api/projects/{id}/workers/{workerId}': {
+      delete: {
+        summary: 'Remove worker from project',
+        tags: ['Projects'],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'workerId', in: 'path', required: true, schema: { type: 'string' } },
+        ],
+        responses: {
+          200: { description: 'Worker removed' },
+          404: { description: 'Worker not assigned to this project' },
+        }
+      }
+    },
+
+    // Workers
+    '/api/workers': {
+      get: {
+        summary: 'Get all workers',
+        tags: ['Workers'],
+        responses: { 200: { description: 'List of all workers' } }
+      }
+    },
+    '/api/workers/{projectId}': {
+      get: {
+        summary: 'Get workers by project ID',
+        tags: ['Workers'],
+        parameters: [{ name: 'projectId', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { 200: { description: 'List of workers' } }
+      }
+    },
+
+    // Tasks
     '/api/tasks': {
       get: {
         summary: 'Get all tasks',
@@ -143,10 +262,15 @@ const swaggerDocument = {
               schema: {
                 type: 'object',
                 properties: {
-                  title: { type: 'string', example: 'Vymena rozvodov' },
                   project_id: { type: 'string' },
+                  title: { type: 'string', example: 'Vymena rozvodov' },
+                  description: { type: 'string' },
+                  category_id: { type: 'string' },
                   priority: { type: 'string', example: 'high' },
+                  status: { type: 'string', example: 'pending' },
                   deadline: { type: 'string', example: '2026-06-01' },
+                  lat: { type: 'number' },
+                  lng: { type: 'number' },
                 }
               }
             }
@@ -165,6 +289,45 @@ const swaggerDocument = {
           404: { description: 'Task not found' },
         }
       },
+      put: {
+        summary: 'Update task',
+        tags: ['Tasks'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  title: { type: 'string' },
+                  description: { type: 'string' },
+                  category_id: { type: 'string' },
+                  priority: { type: 'string', example: 'high' },
+                  status: { type: 'string', example: 'done' },
+                  deadline: { type: 'string', example: '2026-06-01' },
+                  lat: { type: 'number' },
+                  lng: { type: 'number' },
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: 'Updated task' },
+          404: { description: 'Task not found' },
+        }
+      },
+      delete: {
+        summary: 'Delete task',
+        tags: ['Tasks'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: { description: 'Task deleted' },
+          404: { description: 'Task not found' },
+        }
+      }
+    },
+    '/api/tasks/{id}/status': {
       patch: {
         summary: 'Update task status',
         tags: ['Tasks'],
@@ -175,21 +338,108 @@ const swaggerDocument = {
               schema: {
                 type: 'object',
                 properties: {
-                  status: { type: 'string', example: 'in_progress' },
+                  status: { type: 'string', example: 'done' },
                 }
               }
             }
           }
         },
-        responses: { 200: { description: 'Updated task' } }
+        responses: {
+          200: { description: 'Status updated' },
+          400: { description: 'Invalid status' },
+          404: { description: 'Task not found' },
+        }
       }
     },
-    '/api/workers/{projectId}': {
+    '/api/tasks/project/{id}': {
       get: {
-        summary: 'Get workers by project ID',
-        tags: ['Workers'],
-        parameters: [{ name: 'projectId', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: { 200: { description: 'List of workers' } }
+        summary: 'Get tasks by project ID',
+        tags: ['Tasks'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { 200: { description: 'List of tasks' } }
+      }
+    },
+    '/api/tasks/worker/{workerId}': {
+      get: {
+        summary: 'Get tasks by worker ID',
+        tags: ['Tasks'],
+        parameters: [{ name: 'workerId', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { 200: { description: 'List of tasks assigned to worker' } }
+      }
+    },
+
+    // Dashboard
+    '/api/dashboard/manager/{id}': {
+      get: {
+        summary: 'Get manager dashboard stats',
+        tags: ['Dashboard'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: {
+            description: 'Dashboard statistics',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    projects_count: { type: 'integer' },
+                    pending_tasks: { type: 'integer' },
+                    in_progress_tasks: { type: 'integer' },
+                    completed_tasks: { type: 'integer' },
+                    workers_count: { type: 'integer' },
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/dashboard/worker/{id}': {
+      get: {
+        summary: 'Get worker dashboard stats',
+        tags: ['Dashboard'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: {
+            description: 'Dashboard statistics',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    pending_tasks: { type: 'integer' },
+                    in_progress_tasks: { type: 'integer' },
+                    completed_tasks: { type: 'integer' },
+                    completed_today: { type: 'integer' },
+                    projects_count: { type: 'integer' },
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    // Notifications
+    '/api/notifications/user/{userId}': {
+      get: {
+        summary: 'Get user notifications',
+        tags: ['Notifications'],
+        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { 200: { description: 'List of notifications' } }
+      }
+    },
+    '/api/notifications/{id}/read': {
+      patch: {
+        summary: 'Mark notification as read',
+        tags: ['Notifications'],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          200: { description: 'Notification marked as read' },
+          404: { description: 'Notification not found' },
+        }
       }
     },
   }
