@@ -26,3 +26,16 @@ export const getProjectWorkers = async (
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getAllWorkers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const result = await pool.query(
+      `SELECT id, first_name, last_name, email, phone, certificates 
+       FROM users 
+       WHERE role = 'worker'`
+    )
+    res.json(result.rows)
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}
