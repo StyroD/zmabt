@@ -86,7 +86,7 @@ export default function Profile() {
             </ScrollView>
         </ScreenWrapper>
     )
-    }
+    
     const handleLogout = async () => {
         await SecureStore.deleteItemAsync('token')
         await SecureStore.deleteItemAsync('userId')
