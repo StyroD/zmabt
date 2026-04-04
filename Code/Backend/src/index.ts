@@ -13,15 +13,17 @@ import uploadsRouter from './routes/uploads'
 
 import dashboardRouter from './routes/dashboard'
 import notificationsRouter from './routes/notifications'
+import authMiddleware from './middleware/auth'
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
+app.use('/api/auth', authRouter)
+app.use(authMiddleware)
 app.use('/api/users', usersRouter)
 app.use('/api/projects', projectsRouter)
 app.use('/api/workers', workersRouter)
-app.use('/api/auth', authRouter)
 app.use('/api/tasks', tasksRouter)
 app.use('/api/uploads', uploadsRouter)
 
