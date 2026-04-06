@@ -14,6 +14,9 @@ import uploadsRouter from './routes/uploads'
 import dashboardRouter from './routes/dashboard'
 import notificationsRouter from './routes/notifications'
 import authMiddleware from './middleware/auth'
+import locationsRouter from './routes/locations'
+
+
 
 const app = express()
 app.use(cors())
@@ -26,7 +29,7 @@ app.use('/api/projects', projectsRouter)
 app.use('/api/workers', workersRouter)
 app.use('/api/tasks', tasksRouter)
 app.use('/api/uploads', uploadsRouter)
-
+app.use('/api/locations', locationsRouter)
 
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/notifications', notificationsRouter)
@@ -38,6 +41,16 @@ const swaggerDocument = {
     version: '1.0.0',
     description: 'API for the Workflow construction management app',
   },
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      }
+    }
+  },
+  security: [{ bearerAuth: [] }],
   tags: [
     { name: 'Auth', description: 'Authentication' },
     { name: 'Users', description: 'User management' },
