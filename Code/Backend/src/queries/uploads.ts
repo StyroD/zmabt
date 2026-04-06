@@ -36,3 +36,44 @@ export const getCertificateFile = async (req: Request, res: Response): Promise<v
     res.status(500).json({ error: err.message })
   }
 }
+
+export const getCertificatesByWorker = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { workerId } = req.params
+    const result = await pool.query(
+      `SELECT c.*, sc.name as category_name 
+       FROM certificates c
+       JOIN skill_categories sc ON c.category_id = sc.id
+       WHERE c.worker_id = $1
+       ORDER BY c.submitted_at DESC`,
+      [workerId]
+    )
+    res.json(result.rows)
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+export const updateCertificateStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const { status, reviewed_by } = req.body
+    if (!['pending', 'accepted', 'rejected'].includes(status)) {
+      res.status(400).json({ error: 'Invalid status' })
+      return
+    }
+    const result = await pool.query(
+      `UPDATE certificates 
+       SET status = $1, reviewed_by = $2, reviewed_at = NOW()
+       WHERE id = $3 RETURNING *`,
+      [status, reviewed_by, id]
+    )
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'Certificate not found' })
+      return
+    }
+    res.json(result.rows[0])
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}
