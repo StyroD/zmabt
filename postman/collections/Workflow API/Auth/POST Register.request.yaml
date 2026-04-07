@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/api/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "username": "testworker",
+      "email": "testworker@workflow.com",
+      "password": "password123",
+      "role": "worker",
+      "first_name": "Test",
+      "last_name": "Worker"
+    }
+order: 2000

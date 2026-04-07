@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{baseUrl}}/api/locations"
+method: POST
+headers:
+  Authorization: Bearer {{authToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "project_id": "{{projectId}}",
+      "lat": 48.1486,
+      "lng": 17.1077,
+      "is_online": true
+    }
+order: 1000

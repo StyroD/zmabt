@@ -1,0 +1,23 @@
+$kind: http-request
+name: POST Login
+url: "{{baseUrl}}/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+        "email": "test@test.com",
+        "password": "test123"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      var json = pm.response.json();
+      pm.collectionVariables.set('authToken', json.token);
+      pm.collectionVariables.set('userId', json.user.id);
+    language: text/javascript
+order: 1000
