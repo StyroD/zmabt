@@ -1,0 +1,30 @@
+meta {
+  name: POST Upload Certificate
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/uploads/certificate
+  body: multipartForm
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{authToken}}
+}
+
+body:multipart-form {
+  file: @file()
+  worker_id: {{userId}}
+  name: Elektrikar - osvedcenie
+}
+
+script:post-response {
+  test("Status code is 200", function () { expect(res.getStatus()).to.equal(200); });
+  bru.setEnvVar("certificateId", res.getBody().id);
+}
+
+settings {
+  encodeUrl: true
+}

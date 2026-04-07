@@ -1,0 +1,19 @@
+meta {
+  name: GET Me (no token)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/auth/me
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  test("Status code is 401", function () { expect(res.getStatus()).to.equal(401); });
+}
+
+settings {
+  encodeUrl: true
+}

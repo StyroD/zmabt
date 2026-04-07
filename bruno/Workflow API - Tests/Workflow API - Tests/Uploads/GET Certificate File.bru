@@ -1,0 +1,23 @@
+meta {
+  name: GET Certificate File
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/uploads/certificate/{{certificateId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{authToken}}
+}
+
+script:post-response {
+  test("Status code is 200", function () { expect(res.getStatus()).to.equal(200); });
+}
+
+settings {
+  encodeUrl: true
+}

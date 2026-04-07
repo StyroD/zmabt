@@ -1,0 +1,36 @@
+meta {
+  name: POST Create Task
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/tasks
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{authToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "project_id": "{{projectId}}",
+    "title": "Vymena rozvodov",
+    "description": "Replace water pipes",
+    "priority": "high",
+    "status": "pending",
+    "deadline": "2026-06-01"
+  }
+}
+
+script:post-response {
+  test("Status code is 201", function () { expect(res.getStatus()).to.equal(201); });
+  bru.setEnvVar("taskId", res.getBody().id);
+}
+
+settings {
+  encodeUrl: true
+}

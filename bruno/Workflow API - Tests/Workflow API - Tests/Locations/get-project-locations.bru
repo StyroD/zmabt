@@ -1,0 +1,21 @@
+meta {
+  name: GET Project Worker Locations
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/locations/project/{{projectId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

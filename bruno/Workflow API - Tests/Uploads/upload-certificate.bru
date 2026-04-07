@@ -1,0 +1,24 @@
+meta {
+  name: POST Upload Certificate
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/uploads/certificate
+  body: multipartForm
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:multipart-form {
+  worker_id: {{userId}}
+  name: Elektrikar - osvedcenie
+}
+
+script:after-response {
+  bru.setEnvVar("certificateId", res.body.id);
+}

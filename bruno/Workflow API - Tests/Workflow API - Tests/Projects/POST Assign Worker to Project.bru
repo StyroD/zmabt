@@ -1,0 +1,30 @@
+meta {
+  name: POST Assign Worker to Project
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/projects/{{projectId}}/workers
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{authToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "worker_id": "{{userId}}"
+  }
+}
+
+script:post-response {
+  test("Status is 201 or 409", function () { expect(res.getStatus()).to.be.oneOf([201, 409]); });
+}
+
+settings {
+  encodeUrl: true
+}

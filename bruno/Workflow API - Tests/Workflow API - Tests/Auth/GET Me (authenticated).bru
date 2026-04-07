@@ -1,0 +1,23 @@
+meta {
+  name: GET Me (authenticated)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/auth/me
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{authToken}}
+}
+
+script:post-response {
+  test("Status code is 200", function () { expect(res.getStatus()).to.equal(200); });
+}
+
+settings {
+  encodeUrl: true
+}

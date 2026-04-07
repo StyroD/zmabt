@@ -1,0 +1,30 @@
+meta {
+  name: PATCH Update Certificate Status
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/uploads/certificates/{{certificateId}}/status
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{authToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "accepted"
+  }
+}
+
+script:post-response {
+  test("Status code is 200", function () { expect(res.getStatus()).to.equal(200); });
+}
+
+settings {
+  encodeUrl: true
+}
