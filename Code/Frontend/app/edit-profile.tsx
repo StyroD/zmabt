@@ -31,7 +31,7 @@ export default function EditProfile() {
         try {
             // TODO: replace 'userId' with actual userId from SecureStore
             // await updateProfile(userId, { first_name: firstName, last_name: lastName, hourly_rate: hourlyRate })
-            router.push('/tabs/profile')
+            router.push('/tabs/worker-profile')
         } catch (e) {
             Alert.alert('Error', 'Could not save profile. Please try again.')
         } finally {

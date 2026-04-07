@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { getProjectById } from '@/api/endpoints/projects'
 import { ActivityIndicator } from 'react-native'
 import { getProjectWorkers } from '@/api/endpoints/workers'
+import { getTasksByProjectId } from '@/api/endpoints/tasks'
 import { useLocalSearchParams } from 'expo-router'
 import { router } from 'expo-router'
 import { useRef } from 'react'
@@ -20,6 +21,7 @@ export default function ProjectDetail() {
   const [currentProject, setProject] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [workers, setWorkers] = useState<any[]>([])
+  const [tasks, setTasks] = useState<any[]>([])
   const scrollRef = useRef<ScrollView>(null)
 
 
@@ -39,13 +41,14 @@ export default function ProjectDetail() {
     scrollRef.current?.scrollTo({ y: 0, animated: false })
   }, [id])
 
-  //Project workers
+  //Project workers + tasks
   useEffect(() => {
     if (!currentProject) return
     getProjectWorkers(currentProject.id)
-      .then(res => {
-        setWorkers(res.data)
-      })
+      .then(res => setWorkers(res.data))
+      .catch(err => console.error(err))
+    getTasksByProjectId(currentProject.id)
+      .then(res => setTasks(res.data))
       .catch(err => console.error(err))
   }, [currentProject])
 
@@ -133,14 +136,14 @@ export default function ProjectDetail() {
         <Text style={styles.sectionLabel}>Progress</Text>
         <View style={styles.row}>
           <TouchableOpacity style={[styles.progressBox, { flex: 1, backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]} onPress={() => router.push(`/tabs/task-list?projectId=${id}&projectTitle=${currentProject.title}`)}>
-            <Text style={[styles.progressValue, { color: Colors.textPrimary }]}>3/7</Text>
+            <Text style={[styles.progressValue, { color: Colors.textPrimary }]}>{tasks.filter(t => t.status === 'done').length}/{tasks.length}</Text>
             <View style={styles.progressRow}>
               <Text style={[styles.progressLabel, { color: Colors.textPrimary }]}>Tasks done</Text>
               <AntDesign name="arrow-right" size={14} color={Colors.textPrimary} />
             </View>
           </TouchableOpacity>
           <View style={[styles.progressBox, { flex: 1 }]}>
-            <Text style={styles.progressValue}>4</Text>
+            <Text style={styles.progressValue}>{workers.length}</Text>
             <Text style={styles.progressLabel}>Workers assigned</Text>
           </View>
         </View>
@@ -150,7 +153,7 @@ export default function ProjectDetail() {
 
 
         {workers.map(worker => (
-          <TouchableOpacity key={worker.id} style={styles.workerBox} onPress={() => router.push(`/tabs/profile?userId=${worker.id}&projectId=${currentProject.id}`)}>
+          <TouchableOpacity key={worker.id} style={styles.workerBox} onPress={() => router.push(`/tabs/profile?userId=${worker.id}&projectId=${currentProject.id}&mode=project`)}>
             <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
             <Text style={styles.workerName}>
               {worker.first_name} {worker.last_name}

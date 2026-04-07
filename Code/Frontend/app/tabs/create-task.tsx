@@ -1,16 +1,16 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Alert } from 'react-native'
 import { Colors } from '../../constants/color'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { router } from 'expo-router'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { Ionicons } from '@expo/vector-icons'
 import { useLocalSearchParams } from 'expo-router'
 import { getProjectWorkers } from '@/api/endpoints/workers'
+import { createTask, assignWorkersToTask } from '@/api/endpoints/tasks'
+import { getCategories } from '@/api/endpoints/categories'
 
-
-const CATEGORIES = ['Elektrika', 'Voda', 'Kurenie', 'Plyn']
 const PRIORITIES = ['low', 'medium', 'high']
 const priorityLabels: Record<string, string> = { low: 'Low', medium: 'Medium', high: 'High' }
 const priorityColors: Record<string, string> = {
@@ -24,9 +24,11 @@ const priorityColors: Record<string, string> = {
 export default function CreateTask() {
     const { projectId, projectTitle } = useLocalSearchParams()
     const [workers, setWorkers] = useState<any[]>([])
+    const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
-    const [category, setCategory] = useState('')
+    const [categoryId, setCategoryId] = useState('')
+    const [categoryName, setCategoryName] = useState('')
     const [showCategoryPicker, setShowCategoryPicker] = useState(false)
     const [deadline, setDeadline] = useState<Date | null>(null)
     const [showDatePicker, setShowDatePicker] = useState(false)
@@ -40,20 +42,33 @@ export default function CreateTask() {
     const validate = () => {
         const newErrors: Record<string, string> = {}
         if (!title.trim()) newErrors.title = 'Title is required'
-        if (!category) newErrors.category = 'Category is required'
+        if (!categoryId) newErrors.category = 'Category is required'
         if (!deadline) newErrors.deadline = 'Deadline is required'
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!validate()) {
             Alert.alert('Missing fields', 'Please fill in all required fields.')
             return
         }
-        // TODO: call createTask API
-        console.log({ title, description, category, deadline, priority, assignedWorkers })
-        router.back()
+        try {
+            const task = await createTask({
+                project_id: projectId as string,
+                title,
+                description,
+                category_id: categoryId,
+                priority,
+                deadline: deadline!.toISOString().split('T')[0],
+            })
+            if (assignedWorkers.length > 0) {
+                await assignWorkersToTask(task.data.id, assignedWorkers)
+            }
+            router.back()
+        } catch (err: any) {
+            Alert.alert('Error', err?.response?.data?.error ?? 'Failed to create task')
+        }
     }
 
     const toggleWorker = (id: string) => {
@@ -63,17 +78,19 @@ export default function CreateTask() {
     }
     const availableWorkers = workers.filter(worker =>
         !assignedWorkers.includes(worker.id) &&
-        (category === '' || (worker.certificates ?? []).includes(category))
+        (categoryName === '' || (worker.certificates ?? []).includes(categoryName))
     )
 
+    useEffect(() => {
+        getCategories()
+            .then(res => setCategories(res.data))
+            .catch(err => console.error(err))
+    }, [])
 
     useEffect(() => {
         if (!projectId) return
         getProjectWorkers(projectId as string)
-            .then(res => {
-                console.log('Workers:', JSON.stringify(res.data[0]))
-                setWorkers(res.data)
-            })
+            .then(res => setWorkers(res.data))
             .catch(err => console.error(err))
     }, [projectId])
 
@@ -115,21 +132,21 @@ export default function CreateTask() {
                     style={[styles.input, styles.pickerButton, errors.category && styles.inputError]}
                     onPress={() => setShowCategoryPicker(!showCategoryPicker)}
                 >
-                    <Text style={[styles.pickerText, !category && { color: Colors.textSecondary }]}>
-                        {category || 'Select'}
+                    <Text style={[styles.pickerText, !categoryName && { color: Colors.textSecondary }]}>
+                        {categoryName || 'Select'}
                     </Text>
                     <AntDesign name={showCategoryPicker ? 'up' : 'down'} size={12} color={Colors.textSecondary} />
                 </TouchableOpacity>
                 {errors.category && <Text style={styles.errorText}>{errors.category}</Text>}
                 {showCategoryPicker && (
                     <View style={styles.dropdown}>
-                        {CATEGORIES.map(c => (
+                        {categories.map(c => (
                             <TouchableOpacity
-                                key={c}
+                                key={c.id}
                                 style={styles.dropdownItem}
-                                onPress={() => { setCategory(c); setShowCategoryPicker(false); setErrors(e => ({ ...e, category: '' })) }}
+                                onPress={() => { setCategoryId(c.id); setCategoryName(c.name); setShowCategoryPicker(false); setErrors(e => ({ ...e, category: '' })) }}
                             >
-                                <Text style={[styles.dropdownText, category === c && { color: Colors.primary }]}>{c}</Text>
+                                <Text style={[styles.dropdownText, categoryId === c.id && { color: Colors.primary }]}>{c.name}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>
