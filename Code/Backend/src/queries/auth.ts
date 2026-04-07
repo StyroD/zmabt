@@ -11,7 +11,9 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
       'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING *',
       [username, email, passwordHash, role]
     )
-    res.json(result.rows[0])
+    const user = result.rows[0]
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET as string)
+    res.json({ token, user })
   } catch (err: any) {
     res.status(500).json({ error: err.message })
   }
