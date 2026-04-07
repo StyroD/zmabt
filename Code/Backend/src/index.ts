@@ -13,6 +13,7 @@ import uploadsRouter from './routes/uploads'
 
 import dashboardRouter from './routes/dashboard'
 import notificationsRouter from './routes/notifications'
+import categoriesRouter from './routes/categories'
 import authMiddleware from './middleware/auth'
 import locationsRouter from './routes/locations'
 
@@ -33,6 +34,7 @@ app.use('/api/locations', locationsRouter)
 
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/notifications', notificationsRouter)
+app.use('/api/categories', categoriesRouter)
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -47,8 +49,8 @@ const swaggerDocument = {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-      }
-    }
+      },
+    },
   },
   security: [{ bearerAuth: [] }],
   tags: [
@@ -67,6 +69,7 @@ const swaggerDocument = {
       post: {
         summary: 'Login',
         tags: ['Auth'],
+        security: [],
         requestBody: {
           content: {
             'application/json': {

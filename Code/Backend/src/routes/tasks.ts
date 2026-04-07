@@ -1,12 +1,13 @@
 import { Router } from 'express'
-import { 
-  getTasks, 
-  getTasksByProjectId, 
-  createTask, 
-  updateTask, 
+import {
+  getTasks,
+  getTasksByProjectId,
+  createTask,
+  updateTask,
   deleteTask,
   getTasksByWorkerId,
-  updateTaskStatus
+  updateTaskStatus,
+  assignWorkersToTask
 } from '../queries/tasks'
 
 const router = Router()
@@ -17,6 +18,7 @@ router.get('/worker/:workerId', getTasksByWorkerId)
 router.post('/', createTask)
 router.put('/:id', updateTask)
 router.patch('/:id/status', updateTaskStatus)
+router.post('/:id/workers', assignWorkersToTask)
 router.delete('/:id', deleteTask)
 
 export default router

@@ -128,6 +128,28 @@ export const getTasksByWorkerId = async (req: Request, res: Response): Promise<v
   }
 }
 
+export const assignWorkersToTask = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const { worker_ids } = req.body as { worker_ids: string[] }
+
+    if (!worker_ids?.length) {
+      res.status(400).json({ error: 'worker_ids is required' })
+      return
+    }
+
+    const values = worker_ids.map((_, i) => `($1, $${i + 2}, NOW())`).join(', ')
+    await pool.query(
+      `INSERT INTO task_assignments (task_id, worker_id, assigned_at) VALUES ${values} ON CONFLICT DO NOTHING`,
+      [id, ...worker_ids]
+    )
+
+    res.status(201).json({ message: 'Workers assigned' })
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 export const updateTaskStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params
