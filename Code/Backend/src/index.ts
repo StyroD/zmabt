@@ -20,8 +20,6 @@ import locationsRouter from './routes/locations'
 import messagesRouter from './routes/messages'
 import inviteRouter from './routes/invite'
 import { initSocket } from './socket'
-import authMiddleware from './middleware/auth'
-import locationsRouter from './routes/locations'
 
 
 
