@@ -18,6 +18,7 @@ import categoriesRouter from './routes/categories'
 import authMiddleware from './middleware/auth'
 import locationsRouter from './routes/locations'
 import messagesRouter from './routes/messages'
+import inviteRouter from './routes/invite'
 import { initSocket } from './socket'
 import authMiddleware from './middleware/auth'
 import locationsRouter from './routes/locations'
@@ -32,6 +33,7 @@ app.use(cors())
 app.use(express.json())
 
 app.use('/api/auth', authRouter)
+app.use('/api/invite', inviteRouter)
 app.use(authMiddleware)
 app.use('/api/users', usersRouter)
 app.use('/api/projects', projectsRouter)

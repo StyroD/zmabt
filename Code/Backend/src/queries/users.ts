@@ -49,3 +49,31 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
   )
   res.json(result.rows[0])
 }
+
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const { first_name, last_name, phone, address, avatar_url, fcm_token } = req.body
+
+    const result = await pool.query(
+      `UPDATE users SET
+        first_name = COALESCE($1, first_name),
+        last_name = COALESCE($2, last_name),
+        phone = COALESCE($3, phone),
+        address = COALESCE($4, address),
+        avatar_url = COALESCE($5, avatar_url),
+        fcm_token = COALESCE($6, fcm_token)
+       WHERE id = $7 RETURNING *`,
+      [first_name, last_name, phone, address, avatar_url, fcm_token, id]
+    )
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'User not found' })
+      return
+    }
+
+    res.json(result.rows[0])
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}

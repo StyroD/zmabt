@@ -10,11 +10,12 @@ export function initSocket(httpServer: HttpServer): SocketServer {
   })
 
   io.use((socket, next) => {
-    const token = socket.handshake.auth?.token
+    const token = socket.handshake.auth?.token || socket.handshake.query?.token
+
     if (!token) return next(new Error('No token'))
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string; role: string }
+      const decoded = jwt.verify(token as string, process.env.JWT_SECRET as string) as { id: string; role: string }
       socket.data.userId = decoded.id
       next()
     } catch {
