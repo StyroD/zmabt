@@ -2,6 +2,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import express from 'express'
+import { createServer } from 'http'
 import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
 import usersRouter from './routes/users'
@@ -16,10 +17,15 @@ import notificationsRouter from './routes/notifications'
 import categoriesRouter from './routes/categories'
 import authMiddleware from './middleware/auth'
 import locationsRouter from './routes/locations'
+import messagesRouter from './routes/messages'
+import { initSocket } from './socket'
 
 
 
 const app = express()
+const httpServer = createServer(app)
+initSocket(httpServer)
+
 app.use(cors())
 app.use(express.json())
 
@@ -35,6 +41,7 @@ app.use('/api/locations', locationsRouter)
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/notifications', notificationsRouter)
 app.use('/api/categories', categoriesRouter)
+app.use('/api/messages', messagesRouter)
 
 const swaggerDocument = {
   openapi: '3.0.0',
@@ -508,6 +515,6 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' })
 })
 
-app.listen(process.env.PORT, () => {
+httpServer.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`)
 })
