@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import pool from '../config/db'
+import { error } from 'node:console'
 
 export const updateWorkerLocation = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -32,6 +33,25 @@ export const getProjectWorkerLocations = async (req: Request, res: Response): Pr
 
     if (user.role !== 'manager') {
       res.status(403).json({ error: 'Forbidden: only managers can view worker locations' })
+      return
+    }
+
+    
+    const m_result = await pool.query(
+      `SELECT * FROM projects WHERE id = $1`,
+      [projectId]
+    )
+
+
+    if (m_result.rows.length === 0) {
+      res.status(404).json({ error: 'Project not found' })
+      return
+    }
+
+    const project = m_result.rows[0]
+
+    if (project.manager_id !== user.id) {
+      res.status(403).json({ error: 'Forbidden: the user is not part of the project' })
       return
     }
 

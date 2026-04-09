@@ -5,7 +5,7 @@ import { Alert } from "react-native"
 import { ScreenWrapper } from "@/components/ScreenWrapper"
 import * as ImagePicker from 'expo-image-picker'
 import * as DocumentPicker from 'expo-document-picker'
-
+/*
 const takePhoto = async () => {
     const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -60,3 +60,4 @@ export function UploadCertificatev (){
         </ScreenWrapper>
     )
 }
+*/

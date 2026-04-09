@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/api/projects/{{projectId}}"
+method: PUT
+headers:
+  Authorization: Bearer {{authToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "status": "in_progress",
+      "title": "Updated Project Title"
+    }
+order: 5000

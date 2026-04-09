@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/api/projects/{{projectId}}/workers"
+method: POST
+headers:
+  Authorization: Bearer {{authToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "worker_id": "{{userId}}"
+    }
+order: 6000

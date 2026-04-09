@@ -1,0 +1,11 @@
+name: Develpomnent
+values:
+  - key: baseUrl
+    value: ''
+    enabled: true
+  - key: projectId
+    value: ''
+    enabled: true
+  - key: token
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNiZjBjNmRiLWY3YjYtNGNmMS1iMmQzLTRlNzE0MTMxZDMzYSIsInJvbGUiOm51bGwsImlhdCI6MTc3NTU2MjgxNn0.L7269UbiPn18pRcDUUxax1EP67FmmAMH_M48LGfM7hM
+    enabled: true

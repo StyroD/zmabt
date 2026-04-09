@@ -1,0 +1,9 @@
+$kind: collection
+variables:
+  baseUrl: http://localhost:3000
+  authToken: ""
+  userId: ""
+  projectId: ""
+  taskId: ""
+  notificationId: ""
+  certificateId: ""

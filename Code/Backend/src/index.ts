@@ -19,6 +19,8 @@ import authMiddleware from './middleware/auth'
 import locationsRouter from './routes/locations'
 import messagesRouter from './routes/messages'
 import { initSocket } from './socket'
+import authMiddleware from './middleware/auth'
+import locationsRouter from './routes/locations'
 
 
 
@@ -56,8 +58,8 @@ const swaggerDocument = {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-      },
-    },
+      }
+    }
   },
   security: [{ bearerAuth: [] }],
   tags: [

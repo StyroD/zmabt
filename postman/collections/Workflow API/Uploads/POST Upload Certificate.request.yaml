@@ -1,0 +1,25 @@
+$kind: http-request
+url: "{{baseUrl}}/api/uploads/certificate"
+method: POST
+headers:
+  Authorization: Bearer {{authToken}}
+body:
+  type: formdata
+  content:
+    - type: text
+      key: worker_id
+      value: "{{userId}}"
+    - type: text
+      key: name
+      value: Elektrikar - osvedcenie
+    - type: file
+      key: file
+      src:
+        - ""
+scripts:
+  - type: afterResponse
+    code: |-
+      var json = pm.response.json();
+      pm.collectionVariables.set('certificateId', json.id);
+    language: text/javascript
+order: 1000
