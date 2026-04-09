@@ -1,12 +1,13 @@
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
-import { useState } from 'react'
 import { Colors } from '@/constants/color'
+import { Ionicons } from '@expo/vector-icons'
 import AntDesign from '@expo/vector-icons/AntDesign'
 
 type Props = {
   title: string
   status: string
   deadline: string
+  address?: string
   onProjectDetail: () => void
 }
 
@@ -18,31 +19,33 @@ const statusConfig = {
   not_available: { label: 'Not available', dot: Colors.offline, bg: Colors.neutralBg, text: Colors.neutral, border: Colors.neutralBorder },
 }
 
-export function ProjectBox({ title, status, deadline, onProjectDetail }: Props) {
-  const [expanded, setExpanded] = useState(false)
+export function ProjectBox({ title, status, deadline, address, onProjectDetail }: Props) {
   const s = statusConfig[status as keyof typeof statusConfig] ?? statusConfig['not_available']
 
   return (
-    <TouchableOpacity style={styles.box} onPress={() => setExpanded(!expanded)} activeOpacity={0.8}>
-      <View style={styles.row}>
-        <Text style={styles.title}>{title}</Text>
-        <TouchableOpacity onPress={(e) => { e.stopPropagation(); onProjectDetail() }}>
-          {!expanded && <AntDesign name="arrow-right" size={16} color={Colors.textSecondary} />}
-        </TouchableOpacity>
+    <TouchableOpacity style={styles.box} onPress={onProjectDetail} activeOpacity={0.75}>
+      <View style={styles.top}>
+        <View style={[styles.statusBadge, { backgroundColor: s.bg, borderColor: s.border }]}>
+          <View style={[styles.dot, { backgroundColor: s.dot }]} />
+          <Text style={[styles.statusText, { color: s.text }]}>{s.label}</Text>
+        </View>
+        <AntDesign name="right" size={14} color={Colors.textSecondary} />
       </View>
 
-      {expanded && (
-        <View style={styles.details}>
-          <View style={[styles.statusBadge, { backgroundColor: s.bg, borderColor: s.border }]}>
-            <View style={[styles.dot, { backgroundColor: s.dot }]} />
-            <Text style={[styles.statusText, { color: s.text }]}>{s.label}</Text>
+      <Text style={styles.title}>{title}</Text>
+
+      <View style={styles.bottom}>
+        {address ? (
+          <View style={styles.meta}>
+            <Ionicons name="location-outline" size={13} color={Colors.textSecondary} />
+            <Text style={styles.metaText} numberOfLines={1}>{address}</Text>
           </View>
-          <Text style={styles.detail}>Deadline: {deadline}</Text>
-          <TouchableOpacity style={styles.button} onPress={(e) => { e.stopPropagation(); onProjectDetail() }}>
-            <Text style={styles.buttonText}>Detail</Text>
-          </TouchableOpacity>
+        ) : null}
+        <View style={styles.meta}>
+          <Ionicons name="calendar-outline" size={13} color={Colors.textSecondary} />
+          <Text style={styles.metaText}>{deadline}</Text>
         </View>
-      )}
+      </View>
     </TouchableOpacity>
   )
 }
@@ -50,36 +53,41 @@ export function ProjectBox({ title, status, deadline, onProjectDetail }: Props) 
 const styles = StyleSheet.create({
   box: {
     backgroundColor: Colors.surface,
-    alignSelf: 'stretch',
-    marginTop: 12,
+    marginTop: 10,
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
   },
-  row: {
+  top: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   title: {
-    flex: 1,
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '500',
     color: Colors.textPrimary,
   },
-  details: {
-    marginTop: 12,
-    gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingTop: 12,
+  bottom: {
+    flexDirection: 'row',
+    gap: 14,
+    marginTop: 2,
+    flexWrap: 'wrap',
+  },
+  meta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
     gap: 6,
     borderWidth: 1,
     borderRadius: 20,
@@ -94,21 +102,4 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
   },
-  detail: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
-  button: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    alignSelf: 'flex-end',
-    marginTop: 4,
-  },
-  buttonText: {
-    fontSize: 13,
-    color: Colors.primary,
-  }
 })

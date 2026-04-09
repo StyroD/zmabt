@@ -1,32 +1,49 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { Colors } from '../../constants/color'
 import { router } from 'expo-router'
-import { BackArrow } from '@/components/BackArrow'
 import { ProjectBox } from '@/components/Projects/ProjectBox'
-import Entypo from '@expo/vector-icons/Entypo';
+import { Ionicons } from '@expo/vector-icons'
 import { useEffect, useState } from 'react'
 import { getProjects } from '@/api/endpoints/projects'
 import { ActivityIndicator } from 'react-native'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 
+const FILTERS = ['All', 'in_progress', 'pending', 'finished', 'cancelled'] as const
+const filterLabels: Record<string, string> = {
+  All: 'All',
+  in_progress: 'In Progress',
+  pending: 'Pending',
+  finished: 'Finished',
+  cancelled: 'Cancelled',
+}
 
 export default function Projects() {
-
-  const [currentProject, setProject] = useState<any>(null)
+  const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-
+  const [activeFilter, setActiveFilter] = useState<string>('All')
 
   useEffect(() => {
     getProjects()
-      .then(res => {
-        setProject(res.data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error(err)
-        setLoading(false)
-      })
+      .then(res => { setProjects(res.data); setLoading(false) })
+      .catch(err => { console.error(err); setLoading(false) })
   }, [])
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '—'
+    return new Date(dateString).toLocaleDateString('sk-SK', {
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    })
+  }
+
+  const filtered = activeFilter === 'All'
+    ? projects
+    : projects.filter(p => p.status === activeFilter)
+
+  const addButton = (
+    <TouchableOpacity onPress={() => router.push('/tabs/create-project')}>
+      <Ionicons name="add" size={26} color={Colors.primary} />
+    </TouchableOpacity>
+  )
 
   if (loading) {
     return (
@@ -36,49 +53,46 @@ export default function Projects() {
     )
   }
 
-  if (!currentProject) {
-    return (
-      <View style={styles.center}>
-        <Text style={{ color: Colors.textSecondary }}>No project found</Text>
-      </View>
-    )
-  }
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '—'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('sk-SK', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
-  }
-
-
   return (
-    <ScreenWrapper title='Project list' backRoute='/tabs/dashboard'>
-      <View style={styles.container}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <TouchableOpacity style={styles.addButton} onPress={() => { }}>
-            <Entypo name="plus" size={20} color={Colors.primary} />
-            <Text style={styles.addText}>New project</Text>
+    <ScreenWrapper title='Projects' backRoute='/tabs/dashboard' rightElement={addButton}>
+      {/* Filter bar */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterBar}
+        contentContainerStyle={styles.filterContent}
+      >
+        {FILTERS.map(f => (
+          <TouchableOpacity
+            key={f}
+            style={[styles.filterChip, activeFilter === f && styles.filterChipActive]}
+            onPress={() => setActiveFilter(f)}
+          >
+            <Text style={[styles.filterText, activeFilter === f && styles.filterTextActive]}>
+              {filterLabels[f]}
+            </Text>
           </TouchableOpacity>
+        ))}
+      </ScrollView>
 
-          {currentProject.map((project: any) => (
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {filtered.length === 0 ? (
+          <Text style={styles.emptyText}>No projects found</Text>
+        ) : (
+          filtered.map((project: any) => (
             <ProjectBox
               key={project.id}
               title={project.title}
               status={project.status}
               deadline={formatDate(project.deadline)}
+              address={project.address}
               onProjectDetail={() => router.push(`/tabs/projectDetail_manager?id=${project.id}`)}
             />
-          ))}
-        </ScrollView>
-
-
-      </View>
+          ))
+        )}
+        <View style={{ height: 40 }} />
+      </ScrollView>
     </ScreenWrapper>
-
   )
 }
 
@@ -89,45 +103,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Colors.background,
   },
-  container: {
-    backgroundColor: Colors.background,
-    flex: 1,
-    padding: 16,
+  filterBar: {
+    marginBottom: 8,
+    marginTop: 12,
+    flexGrow: 0,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+  filterContent: {
+    gap: 8,
+    paddingRight: 8,
   },
-  placeholder: {
-    width: 40,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '500',
-    color: Colors.textPrimary,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginTop: 8,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-end',
-    gap: 4,
+  filterChip: {
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: 8,
+    borderRadius: 20,
     paddingVertical: 6,
-    paddingHorizontal: 10,
-    marginBottom: 3,
-    marginTop: 5
+    paddingHorizontal: 14,
+    backgroundColor: Colors.surface,
   },
-  addText: {
+  filterChipActive: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
+  },
+  filterText: {
     fontSize: 13,
-    color: Colors.primary,
-  }
+    color: Colors.textSecondary,
+  },
+  filterTextActive: {
+    color: Colors.textPrimary,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 40,
+  },
 })
