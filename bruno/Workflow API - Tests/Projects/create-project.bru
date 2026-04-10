@@ -1,0 +1,41 @@
+meta {
+  name: POST Create Project
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/projects
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "manager_id": "{{userId}}",
+    "title": "Test Project Bratislava",
+    "description": "A test construction project",
+    "status": "pending",
+    "deadline": "2026-12-01",
+    "address": "Bratislava, Slovakia",
+    "lat": 48.1486,
+    "lng": 17.1077,
+    "client_name": "Test Client",
+    "client_phone": "+421900000000",
+    "client_email": "client@test.com"
+  }
+}
+
+script:after-response {
+  bru.setEnvVar("projectId", res.body.id);
+}
+
+tests {
+  test("Status is 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

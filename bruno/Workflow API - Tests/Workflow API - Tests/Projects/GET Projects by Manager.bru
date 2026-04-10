@@ -1,0 +1,23 @@
+meta {
+  name: GET Projects by Manager
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/projects/manager/{{userId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{authToken}}
+}
+
+script:post-response {
+  test("Status code is 200", function () { expect(res.getStatus()).to.equal(200); });
+}
+
+settings {
+  encodeUrl: true
+}

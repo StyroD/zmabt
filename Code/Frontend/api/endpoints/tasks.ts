@@ -30,4 +30,7 @@ export const updateTask = (id: string, data: {
 export const updateTaskStatus = (id: string, status: 'pending' | 'in_progress' | 'done') => 
   client.patch(`/tasks/${id}/status`, { status })
 
+export const assignWorkersToTask = (id: string, worker_ids: string[]) =>
+  client.post(`/tasks/${id}/workers`, { worker_ids })
+
 export const deleteTask = (id: string) => client.delete(`/tasks/${id}`)

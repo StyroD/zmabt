@@ -7,6 +7,8 @@ import MapView, { Marker } from 'react-native-maps'
 import { router } from 'expo-router'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { Ionicons } from '@expo/vector-icons'
+import * as SecureStore from 'expo-secure-store'
+import { createProject } from '@/api/endpoints/projects'
 
 export default function CreateProject() {
 
@@ -47,14 +49,34 @@ export default function CreateProject() {
         return Object.keys(newErrors).length === 0
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!validate()) {
             Alert.alert('Missing fields', 'Please fill in all required fields.')
             return
         }
-        // TODO: call createProject API
-        console.log({ title, description, deadline, status, address, lat, lng, clientName, clientPhone, clientEmail })
-        router.push('/tabs/projectsList')
+        try {
+            const managerId = await SecureStore.getItemAsync('userId')
+            if (!managerId) {
+                Alert.alert('Error', 'Not logged in')
+                return
+            }
+            await createProject({
+                manager_id: managerId,
+                title,
+                description,
+                status,
+                deadline: deadline!.toISOString().split('T')[0],
+                address,
+                lat: lat ?? undefined,
+                lng: lng ?? undefined,
+                client_name: clientName,
+                client_phone: clientPhone,
+                client_email: clientEmail,
+            })
+            router.push('/tabs/projectsList')
+        } catch (err: any) {
+            Alert.alert('Error', err?.response?.data?.error ?? 'Failed to create project')
+        }
     }
 
     return (

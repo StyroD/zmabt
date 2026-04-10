@@ -1,15 +1,14 @@
 import { Request, Response } from 'express'
 import pool from '../config/db'
-import { v4 as uuidv4 } from 'uuid'
 
 export const getNotifications = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.params
 
     const result = await pool.query(
-      `SELECT * FROM notifications 
-       WHERE user_id = $1 
-       ORDER BY created_at DESC`,
+      `SELECT * FROM notifications
+       WHERE user_id = $1
+       ORDER BY sent_at DESC`,
       [userId]
     )
 

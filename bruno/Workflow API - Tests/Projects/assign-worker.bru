@@ -1,0 +1,21 @@
+meta {
+  name: POST Assign Worker to Project
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/projects/{{projectId}}/workers
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "worker_id": "{{userId}}"
+  }
+}

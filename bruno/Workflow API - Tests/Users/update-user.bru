@@ -1,0 +1,30 @@
+meta {
+  name: PUT Update User
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/users/{{userId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "first_name": "Peter",
+    "last_name": "Novak",
+    "hourly_rate": "30",
+    "phone": "+421900000000"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,27 @@
+meta {
+  name: PATCH Update Task Status
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/tasks/{{taskId}}/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authToken}}
+}
+
+body:json {
+  {
+    "status": "in_progress"
+  }
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,31 @@
+meta {
+  name: PUT Update Project
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/projects/{{projectId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{authToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "in_progress",
+    "title": "Updated Project Title"
+  }
+}
+
+script:post-response {
+  test("Status code is 200", function () { expect(res.getStatus()).to.equal(200); });
+}
+
+settings {
+  encodeUrl: true
+}

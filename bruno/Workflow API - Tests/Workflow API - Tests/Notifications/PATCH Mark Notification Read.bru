@@ -1,0 +1,23 @@
+meta {
+  name: PATCH Mark Notification Read
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/notifications/{{notificationId}}/read
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{authToken}}
+}
+
+script:post-response {
+  test("Status is 200 or 404", function () { expect(res.getStatus()).to.be.oneOf([200, 404]); });
+}
+
+settings {
+  encodeUrl: true
+}

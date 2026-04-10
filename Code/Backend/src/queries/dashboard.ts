@@ -11,10 +11,10 @@ export const getManagerDashboard = async (req: Request, res: Response): Promise<
     )
 
     const tasksStats = await pool.query(
-      `SELECT 
-        COUNT(*) FILTER (WHERE status = 'pending') as pending_tasks,
-        COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress_tasks,
-        COUNT(*) FILTER (WHERE status = 'done') as completed_tasks
+      `SELECT
+        COUNT(*) FILTER (WHERE t.status = 'pending') as pending_tasks,
+        COUNT(*) FILTER (WHERE t.status = 'in_progress') as in_progress_tasks,
+        COUNT(*) FILTER (WHERE t.status = 'done') as completed_tasks
        FROM tasks t
        JOIN projects p ON t.project_id = p.id
        WHERE p.manager_id = $1`,
@@ -50,7 +50,7 @@ export const getWorkerDashboard = async (req: Request, res: Response): Promise<v
         COUNT(*) FILTER (WHERE status = 'pending') as pending_tasks,
         COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress_tasks,
         COUNT(*) FILTER (WHERE status = 'done') as completed_tasks,
-        COUNT(*) FILTER (WHERE status = 'done' AND DATE(updated_at) = CURRENT_DATE) as completed_today
+        COUNT(*) FILTER (WHERE status = 'done' AND DATE(created_at) = CURRENT_DATE) as completed_today
        FROM tasks t
        JOIN task_assignments ta ON t.id = ta.task_id
        WHERE ta.worker_id = $1`,

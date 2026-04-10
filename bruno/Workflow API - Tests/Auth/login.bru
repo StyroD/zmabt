@@ -1,0 +1,32 @@
+meta {
+  name: POST Login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "testmanager@workflow.com",
+    "password": "password123"
+  }
+}
+
+script:after-response {
+  bru.setEnvVar("authToken", res.body.token);
+  bru.setEnvVar("userId", res.body.user.id);
+}
+
+tests {
+  test("Status is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("Has token", function() {
+    expect(res.body).to.have.property("token");
+  });
+}

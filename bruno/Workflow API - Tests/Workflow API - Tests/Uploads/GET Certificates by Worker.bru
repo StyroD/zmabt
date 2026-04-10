@@ -1,0 +1,23 @@
+meta {
+  name: GET Certificates by Worker
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/uploads/certificates/worker/{{userId}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{authToken}}
+}
+
+script:post-response {
+  test("Status code is 200", function () { expect(res.getStatus()).to.equal(200); });
+}
+
+settings {
+  encodeUrl: true
+}
