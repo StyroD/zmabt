@@ -1,5 +1,4 @@
 $kind: http-request
-name: GET Me
 url: "{{baseUrl}}/api/auth/me"
 method: GET
 headers:

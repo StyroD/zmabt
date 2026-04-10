@@ -69,7 +69,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       return
     }
 
-    const fields = ['first_name', 'last_name', 'hourly_rate', 'currency']
+    const fields = ['first_name', 'last_name', 'hourly_rate', 'currency', 'phone', 'email']
     const updates: string[] = []
     const values: any[] = []
 
@@ -110,6 +110,32 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     }
 
     res.json(updatedUser)
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+export const updatePushToken = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const { expo_push_token } = req.body
+
+    if (!expo_push_token) {
+      res.status(400).json({ error: 'expo_push_token is required' })
+      return
+    }
+
+    const result = await pool.query(
+      'UPDATE users SET fcm_token = $1 WHERE id = $2 RETURNING id, fcm_token',
+      [expo_push_token, id]
+    )
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'User not found' })
+      return
+    }
+
+    res.json({ message: 'Push token updated', user: result.rows[0] })
   } catch (err: any) {
     res.status(500).json({ error: err.message })
   }

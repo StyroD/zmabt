@@ -108,7 +108,22 @@
               "raw": "{\n  \"first_name\": \"Peter\",\n  \"last_name\": \"Novak\",\n  \"hourly_rate\": \"30\",\n  \"phone\": \"+421900000000\"\n}"
             }
           }
+        },
+        {
+        "name": "PATCH Update Push Token",
+        "request": {
+          "method": "PATCH",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{authToken}}" },
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "url": "{{baseUrl}}/api/users/{{userId}}/push-token",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"expo_push_token\": \"ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]\"\n}"
+          }
         }
+      }
       ]
     },
     {
