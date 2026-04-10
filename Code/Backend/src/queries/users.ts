@@ -35,11 +35,6 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
       res.status(404).json({ error: 'User not found' })
       return
     }
-    const user = result.rows[0]
-    if (!user) {
-      res.status(404).json({ error: 'User not found' })
-      return
-    }
 
     // Remove sensitive fields
     delete user.password_hash
