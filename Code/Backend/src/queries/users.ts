@@ -92,9 +92,21 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     }
 
     values.push(id)
+    //const result = await pool.query(
+      //`UPDATE users SET ${updates.join(', ')} WHERE id = $${values.length} RETURNING *`,
+      //values
+    const { first_name, last_name, phone, address, avatar_url, fcm_token } = req.body
+
     const result = await pool.query(
-      `UPDATE users SET ${updates.join(', ')} WHERE id = $${values.length} RETURNING *`,
-      values
+      `UPDATE users SET
+        first_name = COALESCE($1, first_name),
+        last_name = COALESCE($2, last_name),
+        phone = COALESCE($3, phone),
+        address = COALESCE($4, address),
+        avatar_url = COALESCE($5, avatar_url),
+        fcm_token = COALESCE($6, fcm_token)
+       WHERE id = $7 RETURNING *`,
+      [first_name, last_name, phone, address, avatar_url, fcm_token, id]
     )
 
     if (result.rows.length === 0) {

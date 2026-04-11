@@ -3,23 +3,20 @@ import { Colors } from '../../constants/color'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useEffect, useState } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { Ionicons } from '@expo/vector-icons'
-import { useLocalSearchParams } from 'expo-router'
 import { getProjectWorkers } from '@/api/endpoints/workers'
 import { createTask, assignWorkersToTask } from '@/api/endpoints/tasks'
 import { getCategories } from '@/api/endpoints/categories'
 
 const PRIORITIES = ['low', 'medium', 'high']
 const priorityLabels: Record<string, string> = { low: 'Low', medium: 'Medium', high: 'High' }
-const priorityColors: Record<string, string> = {
-    low: Colors.neutral,
-    medium: Colors.warning,
-    high: Colors.danger,
+const priorityColors: Record<string, { bg: string; border: string; text: string }> = {
+    low:    { bg: Colors.neutralBg, border: Colors.neutralBorder, text: Colors.neutral },
+    medium: { bg: Colors.warningBg, border: Colors.warningBorder, text: Colors.warning },
+    high:   { bg: Colors.dangerBg,  border: Colors.dangerBorder,  text: Colors.danger  },
 }
-
-
 
 export default function CreateTask() {
     const { projectId, projectTitle } = useLocalSearchParams()
@@ -35,6 +32,7 @@ export default function CreateTask() {
     const [priority, setPriority] = useState('medium')
     const [assignedWorkers, setAssignedWorkers] = useState<string[]>([])
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [submitting, setSubmitting] = useState(false)
 
     const formatDate = (date: Date) =>
         date.toLocaleDateString('sk-SK', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -49,10 +47,8 @@ export default function CreateTask() {
     }
 
     const handleSubmit = async () => {
-        if (!validate()) {
-            Alert.alert('Missing fields', 'Please fill in all required fields.')
-            return
-        }
+        if (!validate()) return
+        setSubmitting(true)
         try {
             const task = await createTask({
                 project_id: projectId as string,
@@ -68,6 +64,8 @@ export default function CreateTask() {
             router.back()
         } catch (err: any) {
             Alert.alert('Error', err?.response?.data?.error ?? 'Failed to create task')
+        } finally {
+            setSubmitting(false)
         }
     }
 
@@ -76,6 +74,7 @@ export default function CreateTask() {
             prev.includes(id) ? prev.filter(w => w !== id) : [...prev, id]
         )
     }
+
     const availableWorkers = workers.filter(worker =>
         !assignedWorkers.includes(worker.id) &&
         (categoryName === '' || (worker.certificates ?? []).includes(categoryName))
@@ -96,14 +95,15 @@ export default function CreateTask() {
 
     return (
         <ScreenWrapper title='New task' backRoute={`/tabs/projectDetail_manager?id=${projectId}`}>
-            <View style={styles.projectContext}>
+
+            {/* Breadcrumb */}
+            <View style={styles.breadcrumb}>
                 <Ionicons name="folder-outline" size={12} color={Colors.textSecondary} />
-                <Text style={styles.projectContextText}>{projectTitle ?? 'Unknown project'}</Text>
-                <View style={styles.contextChevron}>
-                    <Ionicons name="chevron-forward" size={10} color={Colors.textSecondary} />
-                </View>
-                <Text style={styles.contextCurrent}>New task</Text>
+                <Text style={styles.breadcrumbText}>{projectTitle ?? 'Project'}</Text>
+                <Ionicons name="chevron-forward" size={10} color={Colors.textSecondary} />
+                <Text style={styles.breadcrumbCurrent}>New task</Text>
             </View>
+
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 <Text style={styles.fieldLabel}>Title <Text style={styles.required}>*</Text></Text>
@@ -124,16 +124,16 @@ export default function CreateTask() {
                     value={description}
                     onChangeText={setDescription}
                     multiline
-                    numberOfLines={5}
+                    numberOfLines={4}
                 />
 
                 <Text style={styles.fieldLabel}>Category <Text style={styles.required}>*</Text></Text>
                 <TouchableOpacity
-                    style={[styles.input, styles.pickerButton, errors.category && styles.inputError]}
+                    style={[styles.input, styles.pickerBtn, errors.category && styles.inputError]}
                     onPress={() => setShowCategoryPicker(!showCategoryPicker)}
                 >
                     <Text style={[styles.pickerText, !categoryName && { color: Colors.textSecondary }]}>
-                        {categoryName || 'Select'}
+                        {categoryName || 'Select category'}
                     </Text>
                     <AntDesign name={showCategoryPicker ? 'up' : 'down'} size={12} color={Colors.textSecondary} />
                 </TouchableOpacity>
@@ -143,10 +143,16 @@ export default function CreateTask() {
                         {categories.map(c => (
                             <TouchableOpacity
                                 key={c.id}
-                                style={styles.dropdownItem}
-                                onPress={() => { setCategoryId(c.id); setCategoryName(c.name); setShowCategoryPicker(false); setErrors(e => ({ ...e, category: '' })) }}
+                                style={[styles.dropdownItem, categoryId === c.id && styles.dropdownItemActive]}
+                                onPress={() => {
+                                    setCategoryId(c.id)
+                                    setCategoryName(c.name)
+                                    setShowCategoryPicker(false)
+                                    setErrors(e => ({ ...e, category: '' }))
+                                }}
                             >
                                 <Text style={[styles.dropdownText, categoryId === c.id && { color: Colors.primary }]}>{c.name}</Text>
+                                {categoryId === c.id && <Ionicons name="checkmark" size={16} color={Colors.primary} />}
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -154,7 +160,7 @@ export default function CreateTask() {
 
                 <Text style={styles.fieldLabel}>Deadline <Text style={styles.required}>*</Text></Text>
                 <TouchableOpacity
-                    style={[styles.input, styles.dateButton, errors.deadline && styles.inputError]}
+                    style={[styles.input, styles.dateBtn, errors.deadline && styles.inputError]}
                     onPress={() => setShowDatePicker(true)}
                 >
                     <AntDesign name="calendar" size={16} color={Colors.textSecondary} />
@@ -175,8 +181,8 @@ export default function CreateTask() {
                             }}
                         />
                         {Platform.OS === 'ios' && (
-                            <TouchableOpacity style={styles.dateConfirm} onPress={() => setShowDatePicker(false)}>
-                                <Text style={styles.dateConfirmText}>Confirm</Text>
+                            <TouchableOpacity style={styles.confirmBtn} onPress={() => setShowDatePicker(false)}>
+                                <Text style={styles.confirmText}>Confirm</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -184,67 +190,66 @@ export default function CreateTask() {
 
                 <Text style={styles.fieldLabel}>Priority</Text>
                 <View style={styles.priorityRow}>
-                    {PRIORITIES.map(p => (
-                        <TouchableOpacity
-                            key={p}
-                            style={[styles.priorityBtn, priority === p && { backgroundColor: priorityColors[p], borderColor: priorityColors[p] }]}
-                            onPress={() => setPriority(p)}
-                        >
-                            <Text style={[styles.priorityText, priority === p && { color: Colors.textPrimary }]}>
-                                {priorityLabels[p]}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
+                    {PRIORITIES.map(p => {
+                        const pc = priorityColors[p]
+                        const active = priority === p
+                        return (
+                            <TouchableOpacity
+                                key={p}
+                                style={[styles.priorityBtn, active && { backgroundColor: pc.bg, borderColor: pc.border }]}
+                                onPress={() => setPriority(p)}
+                            >
+                                <Text style={[styles.priorityText, active && { color: pc.text }]}>{priorityLabels[p]}</Text>
+                            </TouchableOpacity>
+                        )
+                    })}
                 </View>
+
                 {/* Assigned workers */}
-                <Text style={styles.fieldLabel}>Assigned workers</Text>
-                <View style={styles.divider} />
+                <Text style={styles.sectionLabel}>Assigned workers</Text>
                 {assignedWorkers.length === 0 ? (
                     <Text style={styles.emptyText}>No workers assigned yet</Text>
                 ) : (
                     workers.filter(w => assignedWorkers.includes(w.id)).map(worker => (
-                        <TouchableOpacity
-                            key={worker.id}
-                            style={[styles.workerBox, styles.workerSelected]}
-                            onPress={() => toggleWorker(worker.id)}
-                        >
-                            <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
+                        <TouchableOpacity key={worker.id} style={[styles.workerBox, styles.workerSelected]} onPress={() => toggleWorker(worker.id)}>
+                            <Ionicons name="person-outline" size={18} color={Colors.primary} />
                             <View style={styles.workerInfo}>
                                 <Text style={styles.workerName}>{worker.first_name} {worker.last_name}</Text>
-                                <View style={styles.certRow}>
-                                    {(worker.certificates ?? []).map((cert: string) => (
-                                        <Text key={cert} style={styles.cert}>✓ {cert}</Text>
-                                    ))}
-                                </View>
+                                {(worker.certificates ?? []).length > 0 && (
+                                    <Text style={styles.workerCerts}>{worker.certificates.join(' · ')}</Text>
+                                )}
                             </View>
-                            <Ionicons name="checkmark-circle" size={22} color={Colors.primary} />
+                            <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
                         </TouchableOpacity>
                     ))
                 )}
 
-                {/* Available workers */}
-                <Text style={[styles.fieldLabel, { marginTop: 16 }]}>Tap to assign worker</Text>
-                <View style={styles.divider} />
-                {availableWorkers.map(worker => (
-                    <TouchableOpacity
-                        key={worker.id}
-                        style={styles.workerBox}
-                        onPress={() => toggleWorker(worker.id)}
-                    >
-                        <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
-                        <View style={styles.workerInfo}>
-                            <Text style={styles.workerName}>{worker.first_name} {worker.last_name}</Text>
-                            <View style={styles.certRow}>
-                                {(worker.certificates ?? []).map((cert: string) => (
-                                    <Text key={cert} style={styles.cert}>✓ {cert}</Text>
-                                ))}
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-                ))}
+                {availableWorkers.length > 0 && (
+                    <>
+                        <Text style={[styles.fieldLabel, { marginTop: 16 }]}>
+                            {categoryName ? `Workers certified in ${categoryName}` : 'Available workers'}
+                        </Text>
+                        {availableWorkers.map(worker => (
+                            <TouchableOpacity key={worker.id} style={styles.workerBox} onPress={() => toggleWorker(worker.id)}>
+                                <Ionicons name="person-outline" size={18} color={Colors.textSecondary} />
+                                <View style={styles.workerInfo}>
+                                    <Text style={styles.workerName}>{worker.first_name} {worker.last_name}</Text>
+                                    {(worker.certificates ?? []).length > 0 && (
+                                        <Text style={styles.workerCerts}>{worker.certificates.join(' · ')}</Text>
+                                    )}
+                                </View>
+                                <Ionicons name="add-circle-outline" size={20} color={Colors.textSecondary} />
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                )}
 
-                <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-                    <Text style={styles.submitText}>Save Task</Text>
+                <TouchableOpacity
+                    style={[styles.submitButton, submitting && { opacity: 0.6 }]}
+                    onPress={handleSubmit}
+                    disabled={submitting}
+                >
+                    <Text style={styles.submitText}>{submitting ? 'Saving...' : 'Save task'}</Text>
                 </TouchableOpacity>
 
                 <View style={{ height: 40 }} />
@@ -254,39 +259,26 @@ export default function CreateTask() {
 }
 
 const styles = StyleSheet.create({
-    projectContext: {
+    breadcrumb: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        marginBottom: 16,
+        marginBottom: 12,
         paddingBottom: 12,
         borderBottomWidth: 1,
         borderBottomColor: Colors.border,
-        marginTop: 10
     },
-    projectContextText: {
-        fontSize: 12,
-        color: Colors.textSecondary,
-    },
-    contextChevron: {
-        marginHorizontal: 2,
-    },
-    contextCurrent: {
-        fontSize: 12,
-        color: Colors.textPrimary,
-        fontWeight: '500',
-    },
-    divider: {
-        height: 1,
-        backgroundColor: Colors.border,
-        marginVertical: 16,
-    },
-    fieldLabel: {
+    breadcrumbText: { fontSize: 12, color: Colors.textSecondary },
+    breadcrumbCurrent: { fontSize: 12, color: Colors.textPrimary, fontWeight: '500' },
+    sectionLabel: {
         fontSize: 13,
         color: Colors.textSecondary,
-        marginBottom: 6,
-        marginTop: 14,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginTop: 20,
+        marginBottom: 8,
     },
+    fieldLabel: { fontSize: 13, color: Colors.textSecondary, marginBottom: 6, marginTop: 14 },
     required: { color: Colors.danger },
     input: {
         backgroundColor: Colors.surface,
@@ -299,15 +291,8 @@ const styles = StyleSheet.create({
     },
     inputError: { borderColor: Colors.danger },
     errorText: { fontSize: 12, color: Colors.danger, marginTop: 4 },
-    textArea: { height: 120, textAlignVertical: 'top' },
-    row: { flexDirection: 'row', gap: 12 },
-    half: { flex: 1 },
-    pickerButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 8,
-    },
+    textArea: { height: 100, textAlignVertical: 'top' },
+    pickerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     pickerText: { fontSize: 15, color: Colors.textPrimary, flex: 1 },
     dropdown: {
         backgroundColor: Colors.surface,
@@ -318,23 +303,26 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     dropdownItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         padding: 12,
         borderBottomWidth: 1,
         borderBottomColor: Colors.border,
     },
+    dropdownItemActive: { backgroundColor: Colors.primaryLight },
     dropdownText: { fontSize: 14, color: Colors.textPrimary },
-    dateConfirm: {
+    dateBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    dateText: { fontSize: 15, color: Colors.textPrimary },
+    confirmBtn: {
         backgroundColor: Colors.primary,
         borderRadius: 10,
         padding: 10,
         alignItems: 'center',
         marginTop: 8,
     },
-    dateConfirmText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '500' },
-    priorityRow: {
-        flexDirection: 'row',
-        gap: 10,
-    },
+    confirmText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '500' },
+    priorityRow: { flexDirection: 'row', gap: 10 },
     priorityBtn: {
         flex: 1,
         paddingVertical: 10,
@@ -345,6 +333,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.surface,
     },
     priorityText: { fontSize: 14, color: Colors.textSecondary },
+    emptyText: { fontSize: 13, color: Colors.textSecondary, fontStyle: 'italic', paddingVertical: 8 },
     workerBox: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -354,21 +343,15 @@ const styles = StyleSheet.create({
         borderColor: Colors.border,
         borderRadius: 12,
         padding: 14,
-        marginTop: 10,
+        marginTop: 8,
     },
     workerSelected: {
         borderColor: Colors.primary,
         backgroundColor: Colors.primaryLight,
     },
     workerInfo: { flex: 1 },
-    workerName: {
-        fontSize: 15,
-        fontWeight: '500',
-        color: Colors.textPrimary,
-        marginBottom: 4,
-    },
-    certRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-    cert: { fontSize: 12, color: Colors.textPrimary },
+    workerName: { fontSize: 15, fontWeight: '500', color: Colors.textPrimary },
+    workerCerts: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
     submitButton: {
         backgroundColor: Colors.primary,
         borderRadius: 10,
@@ -377,19 +360,4 @@ const styles = StyleSheet.create({
         marginTop: 24,
     },
     submitText: { color: Colors.textPrimary, fontSize: 16, fontWeight: '500' },
-    dateButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    dateText: {
-        fontSize: 15,
-        color: Colors.textPrimary,
-    },
-    emptyText: {
-        fontSize: 13,
-        color: Colors.textSecondary,
-        fontStyle: 'italic',
-        paddingVertical: 8,
-    },
 })

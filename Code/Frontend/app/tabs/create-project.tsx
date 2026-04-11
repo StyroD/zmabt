@@ -7,11 +7,24 @@ import MapView, { Marker } from 'react-native-maps'
 import { router } from 'expo-router'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { Ionicons } from '@expo/vector-icons'
-import * as SecureStore from 'expo-secure-store'
+import { getUsers } from '@/api/endpoints/users'
 import { createProject } from '@/api/endpoints/projects'
 
-export default function CreateProject() {
+const STATUSES = ['in_progress', 'pending', 'finished', 'cancelled']
+const statusLabels: Record<string, string> = {
+    in_progress: 'In Progress',
+    pending: 'Pending',
+    finished: 'Finished',
+    cancelled: 'Cancelled',
+}
+const statusColors: Record<string, { bg: string; border: string; text: string }> = {
+    in_progress: { bg: Colors.successBg, border: Colors.successBorder, text: Colors.success },
+    pending:     { bg: Colors.warningBg, border: Colors.warningBorder, text: Colors.warning },
+    finished:    { bg: Colors.neutralBg, border: Colors.neutralBorder, text: Colors.neutral },
+    cancelled:   { bg: Colors.dangerBg,  border: Colors.dangerBorder,  text: Colors.danger  },
+}
 
+export default function CreateProject() {
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [deadline, setDeadline] = useState<Date | null>(null)
@@ -25,18 +38,10 @@ export default function CreateProject() {
     const [clientPhone, setClientPhone] = useState('')
     const [clientEmail, setClientEmail] = useState('')
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [submitting, setSubmitting] = useState(false)
 
-    const statuses = ['in_progress', 'pending', 'finished', 'cancelled']
-    const statusLabels: Record<string, string> = {
-        in_progress: 'In progress',
-        pending: 'Pending',
-        finished: 'Finished',
-        cancelled: 'Cancelled',
-    }
-
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString('sk-SK', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    }
+    const formatDate = (date: Date) =>
+        date.toLocaleDateString('sk-SK', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
     const validate = () => {
         const newErrors: Record<string, string> = {}
@@ -50,16 +55,12 @@ export default function CreateProject() {
     }
 
     const handleSubmit = async () => {
-        if (!validate()) {
-            Alert.alert('Missing fields', 'Please fill in all required fields.')
-            return
-        }
+        if (!validate()) return
+        setSubmitting(true)
         try {
-            const managerId = await SecureStore.getItemAsync('userId')
-            if (!managerId) {
-                Alert.alert('Error', 'Not logged in')
-                return
-            }
+            const usersRes = await getUsers()
+            const managerId = usersRes.data[0]?.id
+            if (!managerId) { Alert.alert('Error', 'Could not determine manager'); return }
             await createProject({
                 manager_id: managerId,
                 title,
@@ -76,11 +77,13 @@ export default function CreateProject() {
             router.push('/tabs/projectsList')
         } catch (err: any) {
             Alert.alert('Error', err?.response?.data?.error ?? 'Failed to create project')
+        } finally {
+            setSubmitting(false)
         }
     }
 
     return (
-        <ScreenWrapper title='New project' backRoute='/tabs/projectList'>
+        <ScreenWrapper title='New project' backRoute='/tabs/projectsList'>
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 {/* Project info */}
@@ -106,10 +109,10 @@ export default function CreateProject() {
                     multiline
                     numberOfLines={4}
                 />
-                {/* Deadline */}
+
                 <Text style={styles.fieldLabel}>Deadline <Text style={styles.required}>*</Text></Text>
                 <TouchableOpacity
-                    style={[styles.input, styles.dateButton, errors.deadline && styles.inputError]}
+                    style={[styles.input, styles.row, errors.deadline && styles.inputError]}
                     onPress={() => setShowDatePicker(true)}
                 >
                     <AntDesign name="calendar" size={16} color={Colors.textSecondary} />
@@ -125,35 +128,33 @@ export default function CreateProject() {
                             mode="date"
                             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                             onChange={(_, date) => {
-                                if (Platform.OS === 'android') {
-                                    setShowDatePicker(false)
-                                }
-                                if (date) {
-                                    setDeadline(date)
-                                    setErrors(e => ({ ...e, deadline: '' }))
-                                }
+                                if (Platform.OS === 'android') setShowDatePicker(false)
+                                if (date) { setDeadline(date); setErrors(e => ({ ...e, deadline: '' })) }
                             }}
                         />
                         {Platform.OS === 'ios' && (
-                            <TouchableOpacity
-                                style={styles.dateConfirm}
-                                onPress={() => setShowDatePicker(false)}
-                            >
-                                <Text style={styles.dateConfirmText}>Confirm</Text>
+                            <TouchableOpacity style={styles.confirmBtn} onPress={() => setShowDatePicker(false)}>
+                                <Text style={styles.confirmText}>Confirm</Text>
                             </TouchableOpacity>
                         )}
                     </View>
                 )}
 
-                {/* Status */}
                 <Text style={styles.fieldLabel}>Status</Text>
                 <View style={styles.statusRow}>
-                    {statuses.map(s => (
-                        <TouchableOpacity key={s} style={styles.statusOption} onPress={() => setStatus(s)}>
-                            <View style={[styles.radio, status === s && styles.radioSelected]} />
-                            <Text style={styles.statusLabel}>{statusLabels[s]}</Text>
-                        </TouchableOpacity>
-                    ))}
+                    {STATUSES.map(s => {
+                        const sc = statusColors[s]
+                        const active = status === s
+                        return (
+                            <TouchableOpacity
+                                key={s}
+                                style={[styles.statusChip, active && { backgroundColor: sc.bg, borderColor: sc.border }]}
+                                onPress={() => setStatus(s)}
+                            >
+                                <Text style={[styles.statusChipText, active && { color: sc.text }]}>{statusLabels[s]}</Text>
+                            </TouchableOpacity>
+                        )
+                    })}
                 </View>
 
                 <View style={styles.sectionDivider} />
@@ -161,21 +162,20 @@ export default function CreateProject() {
                 {/* Location */}
                 <Text style={styles.sectionLabel}>Location</Text>
 
-                <Text style={styles.fieldLabel}>Construction site address <Text style={styles.required}>*</Text></Text>
+                <Text style={styles.fieldLabel}>Address <Text style={styles.required}>*</Text></Text>
                 <TextInput
                     style={[styles.input, errors.address && styles.inputError]}
-                    placeholder="Hlavna 12, Senkvice"
+                    placeholder="Hlavna 12, Bratislava"
                     placeholderTextColor={Colors.textSecondary}
                     value={address}
                     onChangeText={t => { setAddress(t); setErrors(e => ({ ...e, address: '' })) }}
                 />
                 {errors.address && <Text style={styles.errorText}>{errors.address}</Text>}
 
-                <Text style={styles.fieldLabel}>GPS coordinates</Text>
                 <TouchableOpacity style={styles.mapToggle} onPress={() => setShowMap(!showMap)}>
                     <Ionicons name="map-outline" size={16} color={Colors.primary} />
                     <Text style={styles.mapToggleText}>
-                        {lat && lng ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : 'Tap to pick location on map'}
+                        {lat && lng ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : 'Pick location on map'}
                     </Text>
                     <AntDesign name={showMap ? 'up' : 'down'} size={12} color={Colors.textSecondary} />
                 </TouchableOpacity>
@@ -193,9 +193,9 @@ export default function CreateProject() {
                     </MapView>
                 )}
 
-                <View style={styles.row}>
+                <View style={styles.coordRow}>
                     <View style={styles.half}>
-                        <Text style={styles.fieldLabel}>GPS Lat</Text>
+                        <Text style={styles.fieldLabel}>Latitude</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="48.1482"
@@ -206,7 +206,7 @@ export default function CreateProject() {
                         />
                     </View>
                     <View style={styles.half}>
-                        <Text style={styles.fieldLabel}>GPS Lon</Text>
+                        <Text style={styles.fieldLabel}>Longitude</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="17.1067"
@@ -220,25 +220,25 @@ export default function CreateProject() {
 
                 <View style={styles.sectionDivider} />
 
-                {/* Client info */}
-                <Text style={styles.sectionLabel}>Client info</Text>
+                {/* Client */}
+                <Text style={styles.sectionLabel}>Client</Text>
 
-                <Text style={styles.fieldLabel}>Client name <Text style={styles.required}>*</Text></Text>
+                <Text style={styles.fieldLabel}>Name <Text style={styles.required}>*</Text></Text>
                 <TextInput
                     style={[styles.input, errors.clientName && styles.inputError]}
-                    placeholder="Ing. Damian Styrak, PhD., MBA., kkt."
+                    placeholder="Client name"
                     placeholderTextColor={Colors.textSecondary}
                     value={clientName}
                     onChangeText={t => { setClientName(t); setErrors(e => ({ ...e, clientName: '' })) }}
                 />
                 {errors.clientName && <Text style={styles.errorText}>{errors.clientName}</Text>}
 
-                <View style={styles.row}>
+                <View style={styles.coordRow}>
                     <View style={styles.half}>
                         <Text style={styles.fieldLabel}>Phone</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="+158"
+                            placeholder="+421..."
                             placeholderTextColor={Colors.textSecondary}
                             value={clientPhone}
                             onChangeText={setClientPhone}
@@ -249,7 +249,7 @@ export default function CreateProject() {
                         <Text style={styles.fieldLabel}>Email</Text>
                         <TextInput
                             style={[styles.input, errors.clientEmail && styles.inputError]}
-                            placeholder="styrak@gmail.com"
+                            placeholder="client@email.com"
                             placeholderTextColor={Colors.textSecondary}
                             value={clientEmail}
                             onChangeText={t => { setClientEmail(t); setErrors(e => ({ ...e, clientEmail: '' })) }}
@@ -262,8 +262,12 @@ export default function CreateProject() {
 
                 <View style={styles.sectionDivider} />
 
-                <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-                    <Text style={styles.submitText}>Create project</Text>
+                <TouchableOpacity
+                    style={[styles.submitButton, submitting && { opacity: 0.6 }]}
+                    onPress={handleSubmit}
+                    disabled={submitting}
+                >
+                    <Text style={styles.submitText}>{submitting ? 'Creating...' : 'Create project'}</Text>
                 </TouchableOpacity>
 
                 <View style={{ height: 40 }} />
@@ -287,9 +291,7 @@ const styles = StyleSheet.create({
         marginBottom: 6,
         marginTop: 12,
     },
-    required: {
-        color: Colors.danger,
-    },
+    required: { color: Colors.danger },
     input: {
         backgroundColor: Colors.surface,
         borderWidth: 1,
@@ -299,69 +301,24 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: Colors.textPrimary,
     },
-    inputError: {
-        borderColor: Colors.danger,
-    },
-    errorText: {
-        fontSize: 12,
-        color: Colors.danger,
-        marginTop: 4,
-    },
-    textArea: {
-        height: 100,
-        textAlignVertical: 'top',
-    },
-    dateButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    dateText: {
-        fontSize: 15,
-        color: Colors.textPrimary,
-    },
-    row: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    half: {
-        flex: 1,
-    },
-    sectionDivider: {
-        height: 1,
-        backgroundColor: Colors.border,
-        marginTop: 20,
-    },
-    statusPicker: {
-        backgroundColor: Colors.surface,
+    inputError: { borderColor: Colors.danger },
+    errorText: { fontSize: 12, color: Colors.danger, marginTop: 4 },
+    textArea: { height: 100, textAlignVertical: 'top' },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    dateText: { fontSize: 15, color: Colors.textPrimary },
+    coordRow: { flexDirection: 'row', gap: 12, marginTop: 0 },
+    half: { flex: 1 },
+    sectionDivider: { height: 1, backgroundColor: Colors.border, marginTop: 20 },
+    statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
+    statusChip: {
         borderWidth: 1,
         borderColor: Colors.border,
-        borderRadius: 10,
-        padding: 10,
-        gap: 8,
-        marginTop: 12,
+        borderRadius: 20,
+        paddingVertical: 6,
+        paddingHorizontal: 14,
+        backgroundColor: Colors.surface,
     },
-    statusOption: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        width: '45%',
-    },
-    radio: {
-        width: 14,
-        height: 14,
-        borderRadius: 7,
-        borderWidth: 1.5,
-        borderColor: Colors.textSecondary,
-    },
-    radioSelected: {
-        borderColor: Colors.primary,
-        backgroundColor: Colors.primary,
-    },
-    statusLabel: {
-        fontSize: 13,
-        color: Colors.textPrimary,
-    },
+    statusChipText: { fontSize: 13, color: Colors.textSecondary },
     mapToggle: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -373,11 +330,7 @@ const styles = StyleSheet.create({
         padding: 12,
         marginTop: 8,
     },
-    mapToggleText: {
-        flex: 1,
-        fontSize: 14,
-        color: Colors.primary,
-    },
+    mapToggleText: { flex: 1, fontSize: 14, color: Colors.primary },
     map: {
         height: 200,
         borderRadius: 10,
@@ -386,6 +339,14 @@ const styles = StyleSheet.create({
         borderColor: Colors.border,
         overflow: 'hidden',
     },
+    confirmBtn: {
+        backgroundColor: Colors.primary,
+        borderRadius: 10,
+        padding: 10,
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    confirmText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '500' },
     submitButton: {
         backgroundColor: Colors.primary,
         borderRadius: 10,
@@ -393,32 +354,5 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 24,
     },
-    submitText: {
-        color: Colors.textPrimary,
-        fontSize: 16,
-        fontWeight: '500',
-    },
-    statusRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-        backgroundColor: Colors.surface,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 10,
-        padding: 12,
-    },
-    dateConfirm: {
-        backgroundColor: Colors.primary,
-        borderRadius: 10,
-        padding: 10,
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    dateConfirmText: {
-        color: Colors.textPrimary,
-        fontSize: 15,
-        fontWeight: '500',
-    },
-
+    submitText: { color: Colors.textPrimary, fontSize: 16, fontWeight: '500' },
 })

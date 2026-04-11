@@ -159,7 +159,13 @@ export default function TaskList() {
           </View>
         ) : (
           filteredTasks.map(task => (
-            <TaskBox key={task.id} task={task} />
+            <TaskBox
+              key={task.id}
+              task={task}
+              onStatusChange={() => {
+                setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'done' } : t))
+              }}
+            />
           ))
         )}
         <View style={{ height: 30 }} />

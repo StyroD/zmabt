@@ -1,75 +1,125 @@
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native"
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native"
 import { Colors } from "@/constants/color"
 import { useLocalSearchParams, router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { SafeAreaView } from 'react-native-safe-area-context'
-
+import { getMessages, postMessage } from "@/api/endpoints/messages"
+import { getSocket } from "@/api/socket"
+import * as SecureStore from "expo-secure-store"
+import type { Socket } from "socket.io-client"
 
 type Message = {
   id: string
-  senderId: string
+  sender_id: string
+  receiver_id: string
   content: string
-  timestamp: string
+  sent_at: string
 }
 
-const CURRENT_USER_ID = 'me'
-
-// Replace with real API call: getMessages(userId)
-const MOCK_MESSAGES: Message[] = [
-  { id: '1', senderId: '1', content: 'Message', timestamp: '10:20' },
-  { id: '2', senderId: '1', content: 'Message', timestamp: '10:21' },
-  { id: '3', senderId: 'me', content: 'Message', timestamp: '10:22' },
-  { id: '4', senderId: '1', content: 'Do roboty !!!', timestamp: '10:23' },
-]
-
 export default function ChatDetail() {
-  const { userId, name, online } = useLocalSearchParams<{ userId: string; name: string; online: string }>()
-  const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES)
+  const { userId, name } = useLocalSearchParams<{ userId: string; name: string }>()
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState('')
+  const currentUserIdRef = useRef('')
   const listRef = useRef<FlatList>(null)
-  const isOnline = online === '1'
+  const socketRef = useRef<Socket | null>(null)
 
   const initials = name?.split(' ').map(n => n[0]).join('') ?? '?'
 
-  const sendMessage = () => {
-    if (!input.trim()) return
-    const newMsg: Message = {
-      id: Date.now().toString(),
-      senderId: CURRENT_USER_ID,
-      content: input.trim(),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  useEffect(() => {
+    let mounted = true
+
+    const setup = async () => {
+      try {
+        const [uid, messagesRes, socket] = await Promise.all([
+          SecureStore.getItemAsync('userId'),
+          getMessages(userId),
+          getSocket(),
+        ])
+
+        if (!mounted) return
+
+        currentUserIdRef.current = uid ?? ''
+        setCurrentUserId(uid ?? '')
+        setMessages(messagesRes.data)
+        socketRef.current = socket
+
+        // Only handle incoming messages from the other person.
+        // Own messages are added optimistically in sendMessage.
+        socket.on('new_message', (msg: Message) => {
+          if (!mounted) return
+          if (msg.sender_id === currentUserIdRef.current) return
+          if (msg.sender_id !== userId) return
+          setMessages(prev => [...prev, msg])
+          setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50)
+        })
+      } catch (err) {
+        console.error(err)
+      } finally {
+        if (mounted) setLoading(false)
+      }
     }
-    setMessages(prev => [...prev, newMsg])
-    setInput('')
+
+    setup()
+
+    return () => {
+      mounted = false
+      socketRef.current?.off('new_message')
+    }
+  }, [userId])
+
+  const scrollToBottom = () =>
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50)
+
+  const sendMessage = async () => {
+    const text = input.trim()
+    if (!text) return
+
+    // Add optimistically so it appears immediately
+    const optimistic: Message = {
+      id: `tmp-${Date.now()}`,
+      sender_id: currentUserIdRef.current,
+      receiver_id: userId,
+      content: text,
+      sent_at: new Date().toISOString(),
+    }
+    setMessages(prev => [...prev, optimistic])
+    setInput('')
+    scrollToBottom()
+
+    // Save to DB via REST — this is what makes it persist and show in conversations
+    postMessage(userId, text).catch(err => console.error('Failed to send:', err))
+  }
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      </SafeAreaView>
+    )
   }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
-    <KeyboardAvoidingView
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={25}
-    >
-    
+      >
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.userInfo}>
-            <View style={styles.avatarWrapper}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{initials}</Text>
-              </View>
-              <View style={[styles.statusDot, { backgroundColor: isOnline ? Colors.online : Colors.offline }]} />
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials}</Text>
             </View>
-            <View>
-              <Text style={styles.userName}>{name}</Text>
-              <Text style={[styles.onlineLabel, { color: isOnline ? Colors.online : Colors.textSecondary }]}>
-                {isOnline ? 'Online' : 'Offline'}
-              </Text>
-            </View>
+            <Text style={styles.userName}>{name}</Text>
           </View>
           <View style={{ width: 40 }} />
         </View>
@@ -80,7 +130,7 @@ export default function ChatDetail() {
           data={messages}
           keyExtractor={item => item.id}
           renderItem={({ item }) => {
-            const isOwn = item.senderId === CURRENT_USER_ID
+            const isOwn = item.sender_id === currentUserId
             return (
               <View style={[styles.messageRow, isOwn ? styles.messageRowOwn : styles.messageRowOther]}>
                 <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
@@ -101,7 +151,7 @@ export default function ChatDetail() {
             style={styles.input}
             value={input}
             onChangeText={setInput}
-            placeholder="Chat Input"
+            placeholder="Message..."
             placeholderTextColor={Colors.textSecondary}
             onSubmitEditing={sendMessage}
             returnKeyType="send"
@@ -110,15 +160,16 @@ export default function ChatDetail() {
             <Ionicons name="send" size={18} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
+  center: {
     flex: 1,
-    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -136,9 +187,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  avatarWrapper: {
-    position: 'relative',
-  },
   avatar: {
     width: 40,
     height: 40,
@@ -152,23 +200,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  statusDot: {
-    position: 'absolute',
-    bottom: 1,
-    right: 1,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: Colors.background,
-  },
   userName: {
     color: Colors.textPrimary,
     fontSize: 16,
     fontWeight: '600',
-  },
-  onlineLabel: {
-    fontSize: 12,
   },
   divider: {
     height: 1,
