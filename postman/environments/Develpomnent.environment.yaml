@@ -12,3 +12,6 @@ values:
   - key: userId
     value: ''
     enabled: true
+  - key: authToken
+    value: ''
+    enabled: true
