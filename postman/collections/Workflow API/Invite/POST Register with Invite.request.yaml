@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/api/invite/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "token": "",
+      "username": "newworker",
+      "email": "newworker@workflow.com",
+      "password": "password123",
+      "first_name": "New",
+      "last_name": "Worker",
+      "phone": "+421900000000"
+    }
+order: 2000

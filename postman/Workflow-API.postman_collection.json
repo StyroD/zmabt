@@ -126,6 +126,35 @@
       }
       ]
     },
+      {
+        "name": "Invite",
+        "item": [
+          {
+            "name": "POST Generate Invite",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              ],
+              "url": "{{baseUrl}}/api/invite/generate"
+            }
+          },
+          {
+            "name": "POST Register with Invite",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "url": "{{baseUrl}}/api/invite/register",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"token\": \"\",\n  \"username\": \"newworker\",\n  \"email\": \"newworker@workflow.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"New\",\n  \"last_name\": \"Worker\",\n  \"phone\": \"+421900000000\"\n}"
+              }
+            }
+          }
+        ]
+    },
     {
       "name": "Workers",
       "item": [
@@ -362,14 +391,16 @@
         }
       ]
     },
-    {
+        {
       "name": "Notifications",
       "item": [
         {
           "name": "GET User Notifications",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
             "url": "{{baseUrl}}/api/notifications/user/{{userId}}"
           }
         },
@@ -377,8 +408,40 @@
           "name": "PATCH Mark Notification Read",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
             "url": "{{baseUrl}}/api/notifications/{{notificationId}}/read"
+          }
+        },
+        {
+          "name": "PATCH Update Push Token",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userId}}/push-token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expo_push_token\": \"ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "GET All Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/categories"
           }
         }
       ]
@@ -407,6 +470,46 @@
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": "{{baseUrl}}/api/locations/project/{{projectId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "GET Conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/messages/conversations"
+          }
+        },
+        {
+          "name": "GET Messages Between Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/messages/{{otherUserId}}"
+          }
+        },
+        {
+          "name": "POST Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/messages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": \"{{otherUserId}}\",\n  \"content\": \"Hello!\"\n}"
+            }
           }
         }
       ]
