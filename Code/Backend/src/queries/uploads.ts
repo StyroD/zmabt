@@ -113,3 +113,69 @@ export const updateCertificateStatus = async (req: Request, res: Response): Prom
     res.status(500).json({ error: err.message })
   }
 }
+export const uploadProjectPhoto = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { project_id, task_id } = req.body
+    const uploadedBy = (req.user as { id: string }).id
+    const fileData = (req.file as Express.Multer.File).buffer
+    const mimeType = (req.file as Express.Multer.File).mimetype
+
+    const result = await pool.query(
+      `INSERT INTO project_photos (project_id, task_id, uploaded_by, file_data, file_url, uploaded_at)
+       VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
+      [project_id, task_id ?? null, uploadedBy, fileData, mimeType]
+    )
+
+    res.status(201).json(result.rows[0])
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+export const getProjectPhotos = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { projectId } = req.params
+    const { task_id } = req.query
+
+    let query = `SELECT * FROM project_photos WHERE project_id = $1`
+    const values: any[] = [projectId]
+
+    if (task_id) {
+      query += ` AND task_id = $2`
+      values.push(task_id)
+    }
+
+    query += ` ORDER BY uploaded_at DESC`
+
+    const result = await pool.query(query, values)
+
+    // Convert file_data to base64
+    const photos = result.rows.map(photo => ({
+      ...photo,
+      file_data: photo.file_data ? photo.file_data.toString('base64') : null
+    }))
+
+    res.json(photos)
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+export const getProjectPhotoFile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const result = await pool.query(
+      'SELECT file_data, file_url FROM project_photos WHERE id = $1',
+      [id]
+    )
+    const photo = result.rows[0]
+    if (!photo || !photo.file_data) {
+      res.status(404).json({ error: 'Photo not found' })
+      return
+    }
+    res.setHeader('Content-Type', photo.file_url)
+    res.send(photo.file_data)
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}

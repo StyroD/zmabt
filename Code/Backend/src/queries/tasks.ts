@@ -139,15 +139,44 @@ export const assignWorkersToTask = async (req: Request, res: Response): Promise<
       return
     }
 
+    // Get task to check category
+    const taskResult = await pool.query('SELECT id, title, category_id FROM tasks WHERE id = $1', [id])
+    if (taskResult.rows.length === 0) {
+      res.status(404).json({ error: 'Task not found' })
+      return
+    }
+    const task = taskResult.rows[0]
+
+    // Check eligibility if task has a category
+    const ineligible: string[] = []
+    if (task.category_id) {
+      const eligibilityResult = await pool.query(
+        `SELECT worker_id FROM certificates
+         WHERE worker_id = ANY($1::uuid[])
+         AND category_id = $2
+         AND status = 'accepted'`,
+        [worker_ids, task.category_id]
+      )
+      const eligibleIds = eligibilityResult.rows.map(r => r.worker_id)
+      worker_ids.forEach(wId => {
+        if (!eligibleIds.includes(wId)) ineligible.push(wId)
+      })
+    }
+
+    if (ineligible.length > 0) {
+      res.status(400).json({
+        error: 'Some workers are not eligible for this task',
+        ineligible_worker_ids: ineligible
+      })
+      return
+    }
+
+    // Assign eligible workers
     const values = worker_ids.map((_, i) => `($1, $${i + 2}, NOW())`).join(', ')
     await pool.query(
       `INSERT INTO task_assignments (task_id, worker_id, assigned_at) VALUES ${values} ON CONFLICT DO NOTHING`,
       [id, ...worker_ids]
     )
-
-    // Get task title for notification
-    const taskResult = await pool.query('SELECT title FROM tasks WHERE id = $1', [id])
-    const taskTitle = taskResult.rows[0]?.title ?? 'A task'
 
     // Notify each assigned worker
     await Promise.all(
@@ -156,7 +185,7 @@ export const assignWorkersToTask = async (req: Request, res: Response): Promise<
           userId: workerId,
           type: 'task_assigned',
           title: 'New task assigned',
-          body: `You have been assigned to: ${taskTitle}`,
+          body: `You have been assigned to: ${task.title}`,
           referenceId: id,
           referenceType: 'task',
         })

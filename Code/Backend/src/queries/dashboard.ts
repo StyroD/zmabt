@@ -29,12 +29,22 @@ export const getManagerDashboard = async (req: Request, res: Response): Promise<
       [id]
     )
 
+    const onlineWorkersCount = await pool.query(
+      `SELECT COUNT(DISTINCT wl.worker_id)
+       FROM worker_locations wl
+       JOIN project_workers pw ON pw.worker_id = wl.worker_id
+       JOIN projects p ON p.id = pw.project_id
+       WHERE p.manager_id = $1 AND wl.is_online = true`,
+      [id]
+    )
+
     res.json({
       projects_count: parseInt(projectsCount.rows[0].count),
       pending_tasks: parseInt(tasksStats.rows[0].pending_tasks),
       in_progress_tasks: parseInt(tasksStats.rows[0].in_progress_tasks),
       completed_tasks: parseInt(tasksStats.rows[0].completed_tasks),
       workers_count: parseInt(workersCount.rows[0].count),
+      online_workers_count: parseInt(onlineWorkersCount.rows[0].count),
     })
   } catch (err: any) {
     res.status(500).json({ error: err.message })
@@ -64,12 +74,18 @@ export const getWorkerDashboard = async (req: Request, res: Response): Promise<v
       [id]
     )
 
+    const certificatesCount = await pool.query(
+      `SELECT COUNT(*) FROM certificates WHERE worker_id = $1`,
+      [id]
+    )
+
     res.json({
       pending_tasks: parseInt(tasksStats.rows[0].pending_tasks),
       in_progress_tasks: parseInt(tasksStats.rows[0].in_progress_tasks),
       completed_tasks: parseInt(tasksStats.rows[0].completed_tasks),
       completed_today: parseInt(tasksStats.rows[0].completed_today),
       projects_count: parseInt(projectsCount.rows[0].count),
+      certificates_count: parseInt(certificatesCount.rows[0].count),
     })
   } catch (err: any) {
     res.status(500).json({ error: err.message })
