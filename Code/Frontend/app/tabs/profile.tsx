@@ -1,13 +1,16 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { ProfileField } from '@/components/Profile/ProfileField'
 import { useEffect, useState } from 'react'
 import { Colors } from '@/constants/color'
 import { Ionicons } from '@expo/vector-icons'
-import { router, useLocalSearchParams } from 'expo-router'
+import { router } from 'expo-router'
 import { CertificateRow } from '@/components/Profile/CertificateRow'
 import { getUserById, getUsers } from '@/api/endpoints/users'
 import { logout } from '@/api/auth'
+import * as SecureStore from 'expo-secure-store'    
+import { useLocalSearchParams } from 'expo-router'
+import { ActivityIndicator } from 'react-native'
 
 // mode = 'project'  → from project detail: limited view (name, hourly rate, certs)
 // mode = 'full'     → from workers list: full info (address, emergency, etc.)
@@ -41,10 +44,6 @@ export default function WorkerProfile() {
         load()
     }, [paramUserId])
 
-    const handleLogout = async () => {
-        await logout()
-        router.replace('/auth/login')
-    }
 
     const backRoute = projectId
         ? `/tabs/projectDetail_manager?id=${projectId}`
@@ -137,7 +136,7 @@ export default function WorkerProfile() {
                 {isOwn && (
                     <>
                         <View style={styles.sectionDivider} />
-                        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                        <TouchableOpacity style={styles.logoutBtn} /*</>onPress={{handleLogout}}*/>
                             <Ionicons name="log-out-outline" size={18} color={Colors.danger} />
                             <Text style={styles.logoutText}>Log out</Text>
                         </TouchableOpacity>
@@ -148,6 +147,42 @@ export default function WorkerProfile() {
             </ScrollView>
         </ScreenWrapper>
     )
+    
+    const handleLogout = async () => {
+        await SecureStore.deleteItemAsync('token')
+        await SecureStore.deleteItemAsync('userId')
+        router.push('/auth/login')
+    }
+    return (
+    <ScreenWrapper title="Profile">
+        <ScrollView showsVerticalScrollIndicator={false}>
+            
+
+            {/* Certificates */}
+            <View style={styles.sectionDivider} />
+            <Text style={styles.sectionLabel}>Certificates</Text>
+            <View style={styles.certContainer}>
+               {/* {certificates.map((cert) => (
+                    <CertificateRow
+                        key={cert.name}
+                        name={cert.name}
+                        certified={cert.certified}
+                        onShow={() => router.push('/tabs/certificates')}
+                    />
+                ))}*/}
+            </View>
+
+            {/* Logout */}
+            <View style={styles.sectionDivider} />
+            <TouchableOpacity style={styles.logoutBtn}>
+                <Ionicons name="log-out-outline" size={18} color={Colors.danger} onPress={handleLogout} />
+                <Text style={styles.logoutText}>Log out</Text>
+            </TouchableOpacity>
+
+            <View style={{ height: 40 }} />
+        </ScrollView>
+    </ScreenWrapper>
+)
 }
 
 const styles = StyleSheet.create({

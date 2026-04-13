@@ -1,18 +1,15 @@
 $kind: http-request
-name: POST Login
 url: "{{baseUrl}}/api/auth/login"
 method: POST
 headers:
   Content-Type: application/json
 body:
-  type: json
+  type: text
   content: |-
     {
-        "email": "test@test.com",
-        "password": "test123"
+      "email": "peter@workflow.com",
+      "password": "password123"
     }
-auth:
-  type: noauth
 scripts:
   - type: afterResponse
     code: |-

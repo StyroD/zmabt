@@ -1,0 +1,581 @@
+{
+  "info": {
+    "name": "Workflow API",
+    "_postman_id": "workflow-api-collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "authToken", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "projectId", "value": "" },
+    { "key": "taskId", "value": "" },
+    { "key": "notificationId", "value": "" },
+    { "key": "certificateId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('authToken', json.token);",
+                  "pm.collectionVariables.set('userId', json.user.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"peter@workflow.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testworker\",\n  \"email\": \"testworker@workflow.com\",\n  \"password\": \"password123\",\n  \"role\": \"worker\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"Worker\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "GET All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/users"
+          }
+        },
+        {
+          "name": "GET User by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/users/{{userId}}"
+          }
+        },
+        {
+          "name": "PUT Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Peter\",\n  \"last_name\": \"Novak\",\n  \"hourly_rate\": \"30\",\n  \"phone\": \"+421900000000\"\n}"
+            }
+          }
+        },
+        {
+        "name": "PATCH Update Push Token",
+        "request": {
+          "method": "PATCH",
+          "header": [
+            { "key": "Authorization", "value": "Bearer {{authToken}}" },
+            { "key": "Content-Type", "value": "application/json" }
+          ],
+          "url": "{{baseUrl}}/api/users/{{userId}}/push-token",
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"expo_push_token\": \"ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]\"\n}"
+          }
+        }
+      }
+      ]
+    },
+      {
+        "name": "Invite",
+        "item": [
+          {
+            "name": "POST Generate Invite",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Authorization", "value": "Bearer {{authToken}}" }
+              ],
+              "url": "{{baseUrl}}/api/invite/generate"
+            }
+          },
+          {
+            "name": "POST Register with Invite",
+            "request": {
+              "method": "POST",
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "url": "{{baseUrl}}/api/invite/register",
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"token\": \"\",\n  \"username\": \"newworker\",\n  \"email\": \"newworker@workflow.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"New\",\n  \"last_name\": \"Worker\",\n  \"phone\": \"+421900000000\"\n}"
+              }
+            }
+          }
+        ]
+    },
+    {
+      "name": "Workers",
+      "item": [
+        {
+          "name": "GET All Workers",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/workers"
+          }
+        },
+        {
+          "name": "GET Workers by Project",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/workers/{{projectId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "GET All Projects",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/projects"
+          }
+        },
+        {
+          "name": "POST Create Project",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('projectId', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/projects",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"manager_id\": \"{{userId}}\",\n  \"title\": \"Test Project Bratislava\",\n  \"description\": \"A test construction project\",\n  \"status\": \"pending\",\n  \"deadline\": \"2026-12-01\",\n  \"address\": \"Bratislava, Slovakia\",\n  \"lat\": 48.1486,\n  \"lng\": 17.1077,\n  \"client_name\": \"Test Client\",\n  \"client_phone\": \"+421900000000\",\n  \"client_email\": \"client@test.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET Project by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}"
+          }
+        },
+        {
+          "name": "GET Projects by Manager",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/projects/manager/{{userId}}"
+          }
+        },
+        {
+          "name": "PUT Update Project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"title\": \"Updated Project Title\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST Assign Worker to Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/workers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"worker_id\": \"{{userId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "DELETE Remove Worker from Project",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}/workers/{{userId}}"
+          }
+        },
+        {
+          "name": "DELETE Project",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/projects/{{projectId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "GET All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/tasks"
+          }
+        },
+        {
+          "name": "POST Create Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('taskId', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/tasks",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project_id\": \"{{projectId}}\",\n  \"title\": \"Vymena rozvodov\",\n  \"description\": \"Replace water pipes\",\n  \"priority\": \"high\",\n  \"status\": \"pending\",\n  \"deadline\": \"2026-06-01\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET Tasks by Project",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/tasks/project/{{projectId}}"
+          }
+        },
+        {
+          "name": "GET Tasks by Worker",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/tasks/worker/{{userId}}"
+          }
+        },
+        {
+          "name": "PUT Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Task Title\",\n  \"priority\": \"medium\"\n}"
+            }
+          }
+        },
+        {
+          "name": "PATCH Update Task Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\"\n}"
+            }
+          }
+        },
+        {
+          "name": "DELETE Task",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "GET Manager Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/dashboard/manager/{{userId}}"
+          }
+        },
+        {
+          "name": "GET Worker Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/dashboard/worker/{{userId}}"
+          }
+        }
+      ]
+    },
+        {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "GET User Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/notifications/user/{{userId}}"
+          }
+        },
+        {
+          "name": "PATCH Mark Notification Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/notifications/{{notificationId}}/read"
+          }
+        },
+        {
+          "name": "PATCH Update Push Token",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userId}}/push-token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expo_push_token\": \"ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "GET All Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/categories"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Locations",
+      "item": [
+        {
+          "name": "POST Update Worker Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/locations",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project_id\": \"{{projectId}}\",\n  \"lat\": 48.1486,\n  \"lng\": 17.1077,\n  \"is_online\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "GET Project Worker Locations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/locations/project/{{projectId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "GET Conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/messages/conversations"
+          }
+        },
+        {
+          "name": "GET Messages Between Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/messages/{{otherUserId}}"
+          }
+        },
+        {
+          "name": "POST Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/messages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": \"{{otherUserId}}\",\n  \"content\": \"Hello!\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uploads",
+      "item": [
+        {
+          "name": "POST Upload Certificate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "pm.collectionVariables.set('certificateId', json.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/uploads/certificate",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "worker_id", "value": "{{userId}}", "type": "text" },
+                { "key": "name", "value": "Elektrikar - osvedcenie", "type": "text" },
+                { "key": "file", "type": "file", "src": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Certificate File",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/uploads/certificate/{{certificateId}}"
+          }
+        },
+        {
+          "name": "GET Certificates by Worker",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/uploads/certificates/worker/{{userId}}"
+          }
+        },
+        {
+          "name": "PATCH Update Certificate Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/uploads/certificates/{{certificateId}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

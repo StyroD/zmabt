@@ -21,6 +21,8 @@ import messagesRouter from './routes/messages'
 import inviteRouter from './routes/invite'
 import { initSocket } from './socket'
 
+import passport from 'passport'
+
 
 
 const app = express()
@@ -44,6 +46,7 @@ app.use('/api/dashboard', dashboardRouter)
 app.use('/api/notifications', notificationsRouter)
 app.use('/api/categories', categoriesRouter)
 app.use('/api/messages', messagesRouter)
+app.use(passport.initialize())
 
 const swaggerDocument = {
   openapi: '3.0.0',

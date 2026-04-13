@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import pool from '../config/db'
 import { v4 as uuidv4 } from 'uuid'
+import { sendNotification } from '../utils/notifications'
 
 export const getTasks = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -130,7 +131,7 @@ export const getTasksByWorkerId = async (req: Request, res: Response): Promise<v
 
 export const assignWorkersToTask = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params
+    const id = req.params.id as string
     const { worker_ids } = req.body as { worker_ids: string[] }
 
     if (!worker_ids?.length) {
@@ -142,6 +143,24 @@ export const assignWorkersToTask = async (req: Request, res: Response): Promise<
     await pool.query(
       `INSERT INTO task_assignments (task_id, worker_id, assigned_at) VALUES ${values} ON CONFLICT DO NOTHING`,
       [id, ...worker_ids]
+    )
+
+    // Get task title for notification
+    const taskResult = await pool.query('SELECT title FROM tasks WHERE id = $1', [id])
+    const taskTitle = taskResult.rows[0]?.title ?? 'A task'
+
+    // Notify each assigned worker
+    await Promise.all(
+      worker_ids.map(workerId =>
+        sendNotification({
+          userId: workerId,
+          type: 'task_assigned',
+          title: 'New task assigned',
+          body: `You have been assigned to: ${taskTitle}`,
+          referenceId: id,
+          referenceType: 'task',
+        })
+      )
     )
 
     res.status(201).json({ message: 'Workers assigned' })

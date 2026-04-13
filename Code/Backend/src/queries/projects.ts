@@ -129,10 +129,10 @@ export const assignWorkerToProject = async (req: Request, res: Response): Promis
     const { worker_id } = req.body
 
     const result = await pool.query(
-      `INSERT INTO project_workers (project_id, worker_id, assigned_at)
-       VALUES ($1, $2, NOW())
-       ON CONFLICT (project_id, worker_id) DO NOTHING
-       RETURNING *`,
+      `INSERT INTO project_workers (project_id, worker_id, joined_at)
+      VALUES ($1, $2, NOW())
+      ON CONFLICT (project_id, worker_id) DO NOTHING
+      RETURNING *`,
       [id, worker_id]
     )
 

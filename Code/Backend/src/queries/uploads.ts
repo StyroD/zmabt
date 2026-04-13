@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import pool from '../config/db'
+import { sendNotification } from '../utils/notifications'
 
 export const uploadCertificate = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -12,7 +13,30 @@ export const uploadCertificate = async (req: Request, res: Response): Promise<vo
        VALUES ($1, $2, $3, $4, $5, 'pending', NOW()) RETURNING *`,
       [worker_id, category_id, name, fileData, mimeType]
     )
-    res.json(result.rows[0])
+    const cert = result.rows[0]
+
+    // Notify the worker's manager
+    const managerResult = await pool.query(
+      `SELECT p.manager_id FROM project_workers pw
+       JOIN projects p ON p.id = pw.project_id
+       WHERE pw.worker_id = $1
+       LIMIT 1`,
+      [worker_id]
+    )
+    const managerId = managerResult.rows[0]?.manager_id
+
+    if (managerId) {
+      await sendNotification({
+        userId: managerId,
+        type: 'certificate_submitted',
+        title: 'Certificate submitted',
+        body: `A worker submitted a certificate: ${name}`,
+        referenceId: cert.id,
+        referenceType: 'certificate',
+      })
+    }
+
+    res.json(cert)
   } catch (err: any) {
     res.status(500).json({ error: err.message })
   }
@@ -72,7 +96,19 @@ export const updateCertificateStatus = async (req: Request, res: Response): Prom
       res.status(404).json({ error: 'Certificate not found' })
       return
     }
-    res.json(result.rows[0])
+    const cert = result.rows[0]
+
+    // Notify the worker about the review result
+    await sendNotification({
+      userId: cert.worker_id,
+      type: 'certificate_reviewed',
+      title: status === 'accepted' ? 'Certificate accepted' : 'Certificate rejected',
+      body: `Your certificate "${cert.name}" has been ${status}`,
+      referenceId: cert.id,
+      referenceType: 'certificate',
+    })
+
+    res.json(cert)
   } catch (err: any) {
     res.status(500).json({ error: err.message })
   }
