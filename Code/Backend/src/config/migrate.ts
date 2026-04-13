@@ -193,6 +193,14 @@ async function migrate(): Promise<void> {
       ALTER TABLE project_photos ADD COLUMN IF NOT EXISTS task_id uuid REFERENCES tasks(id);
     `)
 
+    await pool.query(`
+      ALTER TABLE certificates ADD COLUMN IF NOT EXISTS file_data bytea;
+    `)
+
+    await pool.query(`
+      ALTER TABLE worker_locations ADD CONSTRAINT IF NOT EXISTS worker_project_unique UNIQUE (worker_id, project_id);
+    `)
+
     console.log('✅ Migration completed!')
     process.exit(0)
   } catch (err) {

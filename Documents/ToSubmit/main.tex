@@ -43,15 +43,10 @@
 
 \vfill
 
-\noindent\textbf{Subject:} Mobile and Wireless Technologies --- Fundamentals\\
-\textbf{Subject code:} MTAA\_B\\
-\textbf{Instructor:}Ing. Dominik Šalgovič\\
+\textbf{Subject:} ZMABT\_B\\
+\textbf{Instructor:} Ing. Dominik Šalgovič\\
 \textbf{Authors:} Adam Strelec, Damián Štyrák\\
 \textbf{Field of study:} Computer Science\\
-\textbf{Study programme:} Computer Science\\
-\textbf{Year of study:} second\\
-\textbf{Form of study:} full-time\\
-\textbf{Semester:} spring\\
 \textbf{Academic year:} 2025/26
 \end{titlepage}
 
@@ -560,6 +555,7 @@ Output Conditions   & The message is not sent and an error message is displayed 
 \end{table}
  
 % ---------- UAT 3- ----------
+\clearpage
 \begin{table}[h]
 \centering
 \begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
@@ -669,133 +665,7 @@ The PostgreSQL database uses UUIDs as primary keys. The following tables are cre
 
 \subsection{API Endpoints}
 
-All endpoints (except \texttt{/api/auth/*} and \texttt{/api/invite/register}) require \texttt{Authorization: Bearer <token>}.
-
-\subsubsection*{Auth --- \texttt{/api/auth}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Method} & \textbf{Path} & \textbf{Description} \\
-\midrule
-POST & \texttt{/register}         & Register a new user (email + password) \\
-POST & \texttt{/login}            & Login; returns JWT token \\
-GET  & \texttt{/google}           & Initiate Google OAuth 2.0 flow \\
-GET  & \texttt{/google/callback}  & Google OAuth callback \\
-\bottomrule
-\end{tabular}
-
-\subsubsection*{Users --- \texttt{/api/users}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Method} & \textbf{Path} & \textbf{Description} \\
-\midrule
-POST  & \texttt{/}                  & Create user \\
-GET   & \texttt{/:id}               & Get user by ID \\
-PUT   & \texttt{/:id}               & Update user profile (supports avatar upload) \\
-PATCH & \texttt{/:id/push-token}    & Update FCM push token \\
-\bottomrule
-\end{tabular}
-
-\subsubsection*{Projects --- \texttt{/api/projects}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Method} & \textbf{Path} & \textbf{Description} \\
-\midrule
-POST   & \texttt{/}                          & Create a project \\
-GET    & \texttt{/:id}                        & Get project by ID \\
-PUT    & \texttt{/:id}                        & Update project \\
-DELETE & \texttt{/:id}                        & Delete project \\
-GET    & \texttt{/manager/:managerId}         & Get all projects for a manager \\
-GET    & \texttt{/:id/workers}               & List workers assigned to project \\
-POST   & \texttt{/:id/workers}               & Assign a worker to project \\
-DELETE & \texttt{/:id/workers/:workerId}     & Remove worker from project \\
-\bottomrule
-\end{tabular}
-
-\subsubsection*{Tasks --- \texttt{/api/tasks}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Method} & \textbf{Path} & \textbf{Description} \\
-\midrule
-POST   & \texttt{/}                    & Create a task \\
-GET    & \texttt{/:id}                 & Get task by ID \\
-PUT    & \texttt{/:id}                 & Update task \\
-DELETE & \texttt{/:id}                 & Delete task \\
-PATCH  & \texttt{/:id/status}          & Update task status (\textit{pending / in\_progress / done}) \\
-POST   & \texttt{/:id/workers}         & Assign workers to a task \\
-GET    & \texttt{/project/:id}         & Get all tasks for a project \\
-GET    & \texttt{/worker/:workerId}    & Get all tasks assigned to a worker \\
-\bottomrule
-\end{tabular}
-
-\subsubsection*{Workers --- \texttt{/api/workers}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Method} & \textbf{Path} & \textbf{Description} \\
-\midrule
-GET & \texttt{/:projectId} & Get workers with certificates for a project \\
-\bottomrule
-\end{tabular}
-
-\subsubsection*{Uploads --- \texttt{/api/uploads}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Method} & \textbf{Path} & \textbf{Description} \\
-\midrule
-POST & \texttt{/certificate}      & Upload a skill certificate (multipart/form-data) \\
-GET  & \texttt{/certificate/:id}  & Download certificate binary by ID \\
-\bottomrule
-\end{tabular}
-
-\subsubsection*{Locations --- \texttt{/api/locations}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Method} & \textbf{Path} & \textbf{Description} \\
-\midrule
-POST & \texttt{/}                        & Update worker GPS location \\
-GET  & \texttt{/project/:projectId}     & Get all worker locations for a project \\
-\bottomrule
-\end{tabular}
-
-\subsubsection*{Messages --- \texttt{/api/messages}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Method} & \textbf{Path} & \textbf{Description} \\
-\midrule
-GET  & \texttt{/conversations}   & List all conversations for the logged-in user \\
-POST & \texttt{/}                & Send a message (also emits via Socket.IO) \\
-GET  & \texttt{/:otherUserId}    & Get message history with another user \\
-\bottomrule
-\end{tabular}
-
-\subsubsection*{Notifications --- \texttt{/api/notifications}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Method} & \textbf{Path} & \textbf{Description} \\
-\midrule
-GET   & \texttt{/user/:userId} & Get all notifications for a user \\
-PATCH & \texttt{/:id/read}     & Mark a notification as read \\
-\bottomrule
-\end{tabular}
-
-\subsubsection*{Dashboard --- \texttt{/api/dashboard}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Method} & \textbf{Path} & \textbf{Description} \\
-\midrule
-GET & \texttt{/manager/:id} & Manager stats (projects, task counts, workers) \\
-GET & \texttt{/worker/:id}  & Worker stats (task counts, projects, completed today) \\
-\bottomrule
-\end{tabular}
-
-\subsubsection*{Invite --- \texttt{/api/invite}}
-\begin{tabular}{lll}
-\toprule
-\textbf{Method} & \textbf{Path} & \textbf{Description} \\
-\midrule
-POST & \texttt{/generate}  & Manager generates a one-time invite link \\
-POST & \texttt{/register}  & Worker registers using an invite token (public) \\
-\bottomrule
-\end{tabular}
+The full, up-to-date API reference is available via Swagger UI at \texttt{/api-docs} when the server is running. All endpoints except \texttt{/api/auth/*} and \texttt{/api/invite/register} require an \texttt{Authorization: Bearer <token>} header. The API covers the following resource groups: Auth, Users, Projects, Workers, Tasks, Uploads, Locations, Messages, Notifications, Dashboard, and Invite.
 
 \subsection{Real-time Communication}
 
