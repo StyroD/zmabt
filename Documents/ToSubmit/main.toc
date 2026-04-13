@@ -13,5 +13,6 @@
 \contentsline {subsection}{\numberline {4.3}Architecture}{12}{subsection.4.3}%
 \contentsline {subsection}{\numberline {4.4}Database Schema}{12}{subsection.4.4}%
 \contentsline {subsection}{\numberline {4.5}API Endpoints}{13}{subsection.4.5}%
-\contentsline {subsection}{\numberline {4.6}Real-time Communication}{15}{subsection.4.6}%
-\contentsline {subsection}{\numberline {4.7}Security}{15}{subsection.4.7}%
+\contentsline {subsection}{\numberline {4.6}Real-time Communication}{13}{subsection.4.6}%
+\contentsline {subsection}{\numberline {4.7}Security}{13}{subsection.4.7}%
+\contentsline {section}{\numberline {5}Changes from Original Design}{14}{section.5}%
