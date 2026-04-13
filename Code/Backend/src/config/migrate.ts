@@ -33,6 +33,8 @@ async function migrate(): Promise<void> {
         google_id varchar,
         role varchar,
         avatar_url varchar,
+        avatar bytea,
+        avatar_mime_type varchar,
         fcm_token varchar,
         hourly_rate decimal,
         monthly_salary decimal,
