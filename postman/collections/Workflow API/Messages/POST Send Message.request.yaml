@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/api/messages"
+method: POST
+headers:
+  Authorization: Bearer {{authToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "receiverId": "{{otherUserId}}",
+      "content": "Hello!"
+    }
+order: 3000

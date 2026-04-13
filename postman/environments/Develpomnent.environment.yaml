@@ -1,19 +1,19 @@
 name: Develpomnent
 values:
   - key: baseUrl
-    value: ''
+    value: 'http://localhost:3000'
     enabled: true
   - key: projectId
-    value: ''
+    value: c1000000-0000-0000-0000-000000000001
     enabled: true
   - key: token
-    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNiZjBjNmRiLWY3YjYtNGNmMS1iMmQzLTRlNzE0MTMxZDMzYSIsInJvbGUiOm51bGwsImlhdCI6MTc3NTU2MjgxNn0.L7269UbiPn18pRcDUUxax1EP67FmmAMH_M48LGfM7hM
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNiZjBjNmRiLWY3YjYtNGNmMS1iMmQzLTRlNzE0MTMxZDMzYSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzc1NTY3NjI1fQ.x5UvKp-bWgNy7mZH34uUzr_gu3DryZ5h98Z0qbhWvLQ
     enabled: true
   - key: userId
     value: ''
     enabled: true
   - key: authToken
-    value: ''
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNiZjBjNmRiLWY3YjYtNGNmMS1iMmQzLTRlNzE0MTMxZDMzYSIsInJvbGUiOiJtYW5hZ2VyIiwiaWF0IjoxNzc1NTY3NjI1fQ.x5UvKp-bWgNy7mZH34uUzr_gu3DryZ5h98Z0qbhWvLQ
     enabled: true
   - key: authWorkerToken
     value: ''
