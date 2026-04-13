@@ -189,6 +189,10 @@ async function migrate(): Promise<void> {
       );
     `)
 
+    await pool.query(`
+      ALTER TABLE project_photos ADD COLUMN IF NOT EXISTS task_id uuid REFERENCES tasks(id);
+    `)
+
     console.log('✅ Migration completed!')
     process.exit(0)
   } catch (err) {

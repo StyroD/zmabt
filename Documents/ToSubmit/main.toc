@@ -7,3 +7,11 @@
 \contentsline {subsubsection}{\numberline {2.3.1}Manager}{3}{subsubsection.2.3.1}%
 \contentsline {subsubsection}{\numberline {2.3.2}Worker}{4}{subsubsection.2.3.2}%
 \contentsline {section}{\numberline {3}Acceptance Tests (UAT)}{5}{section.3}%
+\contentsline {section}{\numberline {4}Backend Documentation (Milestone 2)}{10}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Repository and Submission Commit}{10}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Technology Stack}{10}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Architecture}{10}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Database Schema}{11}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}API Endpoints}{12}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}Real-time Communication}{14}{subsection.4.6}%
+\contentsline {subsection}{\numberline {4.7}Security}{14}{subsection.4.7}%
