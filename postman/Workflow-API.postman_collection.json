@@ -11,7 +11,9 @@
     { "key": "projectId", "value": "" },
     { "key": "taskId", "value": "" },
     { "key": "notificationId", "value": "" },
-    { "key": "certificateId", "value": "" }
+    { "key": "certificateId", "value": "" },
+    { "key": "otherUserId", "value": "" },
+    { "key": "inviteToken", "value": "" }
   ],
   "item": [
     {
@@ -72,6 +74,38 @@
             "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": "{{baseUrl}}/api/auth/me"
           }
+        },
+        {
+          "name": "GET Google Auth",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/auth/google"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invite",
+      "item": [
+        {
+          "name": "POST Generate Invite",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/invite/generate"
+          }
+        },
+        {
+          "name": "POST Register with Invite",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/invite/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"username\": \"newworker\",\n  \"email\": \"newworker@workflow.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"New\",\n  \"last_name\": \"Worker\",\n  \"phone\": \"+421900000000\"\n}"
+            }
+          }
         }
       ]
     },
@@ -98,62 +132,36 @@
           "name": "PUT Update User",
           "request": {
             "method": "PUT",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": "{{baseUrl}}/api/users/{{userId}}",
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"first_name\": \"Peter\",\n  \"last_name\": \"Novak\",\n  \"hourly_rate\": \"30\",\n  \"phone\": \"+421900000000\"\n}"
+              "mode": "formdata",
+              "formdata": [
+                { "key": "first_name", "value": "Peter", "type": "text" },
+                { "key": "last_name", "value": "Novak", "type": "text" },
+                { "key": "hourly_rate", "value": "30", "type": "text" },
+                { "key": "phone", "value": "+421900000000", "type": "text" },
+                { "key": "avatar", "type": "file", "src": "" }
+              ]
             }
           }
         },
         {
-        "name": "PATCH Update Push Token",
-        "request": {
-          "method": "PATCH",
-          "header": [
-            { "key": "Authorization", "value": "Bearer {{authToken}}" },
-            { "key": "Content-Type", "value": "application/json" }
-          ],
-          "url": "{{baseUrl}}/api/users/{{userId}}/push-token",
-          "body": {
-            "mode": "raw",
-            "raw": "{\n  \"expo_push_token\": \"ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]\"\n}"
+          "name": "PATCH Update Push Token",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/users/{{userId}}/push-token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expo_push_token\": \"ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]\"\n}"
+            }
           }
         }
-      }
       ]
-    },
-      {
-        "name": "Invite",
-        "item": [
-          {
-            "name": "POST Generate Invite",
-            "request": {
-              "method": "POST",
-              "header": [
-                { "key": "Authorization", "value": "Bearer {{authToken}}" }
-              ],
-              "url": "{{baseUrl}}/api/invite/generate"
-            }
-          },
-          {
-            "name": "POST Register with Invite",
-            "request": {
-              "method": "POST",
-              "header": [
-                { "key": "Content-Type", "value": "application/json" }
-              ],
-              "url": "{{baseUrl}}/api/invite/register",
-              "body": {
-                "mode": "raw",
-                "raw": "{\n  \"token\": \"\",\n  \"username\": \"newworker\",\n  \"email\": \"newworker@workflow.com\",\n  \"password\": \"password123\",\n  \"first_name\": \"New\",\n  \"last_name\": \"Worker\",\n  \"phone\": \"+421900000000\"\n}"
-              }
-            }
-          }
-        ]
     },
     {
       "name": "Workers",
@@ -361,6 +369,21 @@
           }
         },
         {
+          "name": "POST Assign Workers to Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/workers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"worker_ids\": [\"{{userId}}\"]\n}"
+            }
+          }
+        },
+        {
           "name": "DELETE Task",
           "request": {
             "method": "DELETE",
@@ -391,16 +414,14 @@
         }
       ]
     },
-        {
+    {
       "name": "Notifications",
       "item": [
         {
           "name": "GET User Notifications",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": "{{baseUrl}}/api/notifications/user/{{userId}}"
           }
         },
@@ -408,25 +429,8 @@
           "name": "PATCH Mark Notification Read",
           "request": {
             "method": "PATCH",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": "{{baseUrl}}/api/notifications/{{notificationId}}/read"
-          }
-        },
-        {
-          "name": "PATCH Update Push Token",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "url": "{{baseUrl}}/api/users/{{userId}}/push-token",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"expo_push_token\": \"ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]\"\n}"
-            }
           }
         }
       ]
@@ -438,9 +442,7 @@
           "name": "GET All Categories",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": "{{baseUrl}}/api/categories"
           }
         }
@@ -481,9 +483,7 @@
           "name": "GET Conversations",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": "{{baseUrl}}/api/messages/conversations"
           }
         },
@@ -491,9 +491,7 @@
           "name": "GET Messages Between Users",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": "{{baseUrl}}/api/messages/{{otherUserId}}"
           }
         },
@@ -573,6 +571,37 @@
               "mode": "raw",
               "raw": "{\n  \"status\": \"accepted\"\n}"
             }
+          }
+        },
+        {
+          "name": "POST Upload Project Photo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/uploads/photos",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "project_id", "value": "{{projectId}}", "type": "text" },
+                { "key": "photo", "type": "file", "src": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Project Photos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/uploads/photos/project/{{projectId}}"
+          }
+        },
+        {
+          "name": "GET Photo File",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": "{{baseUrl}}/api/uploads/photos/{{certificateId}}"
           }
         }
       ]

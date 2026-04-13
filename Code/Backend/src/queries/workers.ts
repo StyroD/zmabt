@@ -1,26 +1,6 @@
 import { Request, Response } from "express";
 import pool from "../config/db";
 
-export const getAllWorkers = async (_req: Request, res: Response): Promise<void> => {
-  try {
-    const result = await pool.query(`
-      SELECT u.id, u.first_name, u.last_name,
-        COALESCE(
-          json_agg(sc.name) FILTER (WHERE sc.name IS NOT NULL AND c.status = 'accepted'),
-          '[]'
-        ) as certificates
-      FROM users u
-      LEFT JOIN certificates c ON c.worker_id = u.id
-      LEFT JOIN skill_categories sc ON sc.id = c.category_id
-      WHERE u.role = 'worker'
-      GROUP BY u.id, u.first_name, u.last_name
-    `)
-    res.json(result.rows)
-  } catch (err: any) {
-    res.status(500).json({ error: err.message })
-  }
-}
-
 export const getProjectWorkers = async (
   req: Request,
   res: Response,

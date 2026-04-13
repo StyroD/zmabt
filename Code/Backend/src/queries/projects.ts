@@ -3,18 +3,23 @@ import pool from '../config/db'
 import { v4 as uuidv4 } from 'uuid'
 
 
-export const getProjects = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const result = await pool.query('SELECT * FROM projects')
-    res.json(result.rows)
-  } catch (err: any) {
-    res.status(500).json({ error: err.message })
-  }
-}
-
 export const getProjectById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params
+    const user = req.user as { id: string; role: string }
+
+    const access = await pool.query(
+      `SELECT 1 FROM projects WHERE id = $1 AND manager_id = $2
+       UNION
+       SELECT 1 FROM project_workers WHERE project_id = $1 AND worker_id = $2`,
+      [id, user.id]
+    )
+
+    if (access.rows.length === 0) {
+      res.status(403).json({ error: 'Forbidden: you are not part of this project' })
+      return
+    }
+
     const result = await pool.query('SELECT * FROM projects WHERE id = $1', [id])
     res.json(result.rows[0])
   } catch (err: any) {
@@ -36,6 +41,11 @@ export const getProjectByManagerId = async (req: Request, res: Response): Promis
 
 export const createProject = async (req: Request, res: Response): Promise<void> => {
   try{
+    const user = req.user as { id: string; role: string }
+    if (user.role !== 'manager') {
+      res.status(403).json({ error: 'Forbidden: managers only' })
+      return
+    }
     const{
       manager_id,
       title,

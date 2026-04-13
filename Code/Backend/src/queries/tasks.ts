@@ -3,15 +3,6 @@ import pool from '../config/db'
 import { v4 as uuidv4 } from 'uuid'
 import { sendNotification } from '../utils/notifications'
 
-export const getTasks = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const result = await pool.query('SELECT * FROM tasks')
-    res.json(result.rows)
-  } catch (err: any) {
-    res.status(500).json({ error: err.message })
-  }
-}
-
 export const getTasksByProjectId = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params

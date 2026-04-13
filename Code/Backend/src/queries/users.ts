@@ -1,10 +1,6 @@
 import { Request, Response } from 'express'
 import pool from '../config/db'
 
-export const getUsers = async (_req: Request, res: Response): Promise<void> => {
-  const result = await pool.query('SELECT * FROM users')
-  res.json(result.rows)
-}
 
 export const getUserById = async (req: Request, res: Response): Promise<void> => {
   try {
