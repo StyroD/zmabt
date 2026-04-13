@@ -1,3 +1,35 @@
+-- ============================================================
+-- CHANGES FROM ORIGINAL DESIGN
+-- ============================================================
+--
+-- 1. FILE STORAGE — cloud → database (bytea)
+--    Original: file_url VARCHAR stored a URL to a cloud bucket (S3/Cloudinary)
+--    Changed:  file_data BYTEA column added to store the binary directly in the DB.
+--              file_url VARCHAR is repurposed to store the MIME type (e.g. 'image/jpeg').
+--    Affects:  certificates (file_data, file_url), project_photos (file_data, file_url),
+--              users.avatar_url (stores base64 data URI or binary via updateUser upload).
+--    Reason:   No external storage dependency for the prototype.
+--
+-- 2. TASK PHOTOS — removed (redundant)
+--    Original: task_photos table existed alongside project_photos.
+--    Changed:  task_photos table dropped. project_photos has a task_id FK instead,
+--              so a photo can optionally be linked to a task within a project.
+--    Reason:   Duplicate concept — a photo already belongs to a project; task link is optional.
+--
+-- 3. PUSH NOTIFICATIONS — FCM → Expo Push
+--    Original: fcm_token VARCHAR on users stored a Firebase Cloud Messaging token.
+--    Changed:  fcm_token column kept but stores an Expo Push Token (ExponentPushToken[...]).
+--              Backend uses expo-server-sdk instead of firebase-admin for sending.
+--    Reason:   Expo handles cross-platform delivery (iOS/Android) without needing
+--              separate APNs/FCM credentials during development.
+--
+-- NOTE: The ALTER TABLE statements that apply changes 1 and 2 to the live DB are:
+--   ALTER TABLE certificates ADD COLUMN file_data BYTEA;
+--   ALTER TABLE project_photos ADD COLUMN file_data BYTEA;
+--   ALTER TABLE project_photos ADD COLUMN task_id UUID REFERENCES tasks(id);
+--   CREATE UNIQUE INDEX ON worker_locations (worker_id, project_id);
+-- ============================================================
+
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 

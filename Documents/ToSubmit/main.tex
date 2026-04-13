@@ -604,7 +604,7 @@ Output Conditions   & The task is not created and an error message is displayed 
 \midrule
 GitHub repository & \url{https://github.com/StyroD/zmabt} \\
 Submission commit hash & \texttt{5ea53f4a} \\
-Branch & \texttt{adam} \\
+Branch & \texttt{main} \\
 \bottomrule
 \end{tabular}
 
@@ -620,7 +620,7 @@ Database          & PostgreSQL (via \texttt{pg} library, no ORM) \\
 Authentication    & JWT (JSON Web Token) + Google OAuth 2.0 (Passport.js) \\
 Real-time         & Socket.IO (WebSocket) \\
 File uploads      & Multer (multipart/form-data) \\
-Push notifications & FCM (Firebase Cloud Messaging) \\
+Push notifications & Expo push \\
 API docs          & Swagger UI (\texttt{/api-docs}) \\
 \bottomrule
 \end{tabular}
@@ -679,5 +679,33 @@ The server exposes a Socket.IO endpoint authenticated via JWT. Upon connection e
     \item Google OAuth is handled server-side via Passport.js; no client secret is exposed to the frontend.
     \item File uploads are handled in-memory by Multer and stored as binary in the database (\texttt{bytea}), avoiding unauthenticated public file URLs.
 \end{itemize}
+
+%--------------------------------------------------------------
+\section{Changes from Original Design}
+%--------------------------------------------------------------
+
+During implementation several design decisions were revised relative to the original specification. The changes are described below.
+
+\subsection{File Storage: Cloud Upload Replaced by Direct Database Storage}
+
+The original design assumed that uploaded files (worker avatar photos, skill certificates, and project photos) would be stored in an external cloud bucket (e.g.\ S3 or Cloudinary), with only a URL reference persisted in the database.
+
+During implementation this approach was replaced by storing the file binary directly in the PostgreSQL database using the \texttt{bytea} column type. A \texttt{file\_data BYTEA} column was added to the \texttt{certificates} and \texttt{project\_photos} tables, and the \texttt{file\_url} column was repurposed to store the MIME type of the file (e.g.\ \texttt{image/jpeg}). Worker avatars are handled analogously via the user update endpoint.
+
+Files are received in-memory by Multer (\texttt{memoryStorage}) and inserted directly into the database. Retrieval endpoints read the binary, set the correct \texttt{Content-Type} header from the stored MIME type, and stream the bytes to the client.
+
+This eliminates any dependency on an external storage service for the prototype and keeps all data in a single system.
+
+\subsection{Task Photos Table Removed}
+
+The original schema included a dedicated \texttt{task\_photos} table for attaching photo documentation to individual tasks. During implementation this table was identified as redundant: the \texttt{project\_photos} table already covers photo documentation at the project level, and a \texttt{task\_id} foreign key was added to \texttt{project\_photos} to optionally associate a photo with a specific task.
+
+The \texttt{task\_photos} table was therefore dropped. All photo uploads go through the single \texttt{project\_photos} table, with \texttt{task\_id} set when the photo is tied to a particular task and left \texttt{NULL} otherwise.
+
+\subsection{Push Notifications: FCM Replaced by Expo Push}
+
+The original technology stack listed FCM (Firebase Cloud Messaging) with APNs for cross-platform push notifications, which requires separate credentials for Android and iOS.
+
+During implementation this was replaced by the Expo Push Notification service (\texttt{expo-server-sdk} on the backend, \texttt{expo-notifications} on the frontend). Expo abstracts the underlying FCM/APNs delivery and requires only a single Expo Push Token per device. The token is registered by the client via \texttt{PATCH /api/users/:id/push-token} and stored in the \texttt{users.fcm\_token} column (column name retained for compatibility). The backend sends notifications using \texttt{expo.sendPushNotificationsAsync()} after task assignments, task completions, and certificate review events.
 
 \end{document}
