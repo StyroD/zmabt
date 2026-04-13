@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{baseUrl}}/api/uploads/photos"
+method: POST
+headers:
+  Authorization: Bearer {{authToken}}
+body:
+  type: formdata
+  content:
+    - type: text
+      key: project_id
+      value: "{{projectId}}"
+    - type: file
+      key: photo
+      src:
+        - ""
+order: 5000

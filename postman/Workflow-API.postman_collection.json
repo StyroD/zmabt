@@ -13,7 +13,8 @@
     { "key": "notificationId", "value": "" },
     { "key": "certificateId", "value": "" },
     { "key": "otherUserId", "value": "" },
-    { "key": "inviteToken", "value": "" }
+    { "key": "inviteToken", "value": "" },
+    { "key": "workerId", "value": "" }
   ],
   "item": [
     {
@@ -193,7 +194,7 @@
             "url": "{{baseUrl}}/api/projects",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"manager_id\": \"{{userId}}\",\n  \"title\": \"Test Project Bratislava\",\n  \"description\": \"A test construction project\",\n  \"status\": \"pending\",\n  \"deadline\": \"2026-12-01\",\n  \"address\": \"Bratislava, Slovakia\",\n  \"lat\": 48.1486,\n  \"lng\": 17.1077,\n  \"client_name\": \"Test Client\",\n  \"client_phone\": \"+421900000000\",\n  \"client_email\": \"client@test.com\"\n}"
+              "raw": "{\n  \"manager_id\": \"{{userId}}\",\n  \"title\": \"Test Project Bratislava\",\n  \"description\": \"A test construction project\",\n  \"status\": \"in_progress\",\n  \"deadline\": \"2026-12-01\",\n  \"address\": \"Bratislava, Slovakia\",\n  \"lat\": 48.1486,\n  \"lng\": 17.1077,\n  \"client_name\": \"Test Client\",\n  \"client_phone\": \"+421900000000\",\n  \"client_email\": \"client@test.com\"\n}"
             }
           }
         },
@@ -430,7 +431,7 @@
             "url": "{{baseUrl}}/api/locations",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"project_id\": \"{{projectId}}\",\n  \"lat\": 48.1486,\n  \"lng\": 17.1077,\n  \"is_online\": true\n}"
+              "raw": "{\n  \"worker_id\": \"{{workerId}}\",\n  \"project_id\": \"{{projectId}}\",\n  \"lat\": 48.1486,\n  \"lng\": 17.1077,\n  \"is_online\": true\n}"
             }
           }
         },

@@ -3,14 +3,23 @@ url: "{{baseUrl}}/api/users/{{userId}}"
 method: PUT
 headers:
   Authorization: Bearer {{authToken}}
-  Content-Type: application/json
 body:
-  type: text
-  content: |-
-    {
-      "first_name": "Peter",
-      "last_name": "Novak",
-      "hourly_rate": "30",
-      "phone": "+421900000000"
-    }
-order: 3000
+  type: formdata
+  content:
+    - type: text
+      key: first_name
+      value: Peter
+    - type: text
+      key: last_name
+      value: Novak
+    - type: text
+      key: hourly_rate
+      value: "30"
+    - type: text
+      key: phone
+      value: "+421900000000"
+    - type: file
+      key: avatar
+      src:
+        - ""
+order: 2000

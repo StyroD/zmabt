@@ -3,4 +3,4 @@ url: "{{baseUrl}}/api/tasks/worker/{{userId}}"
 method: GET
 headers:
   Authorization: Bearer {{authToken}}
-order: 4000
+order: 3000

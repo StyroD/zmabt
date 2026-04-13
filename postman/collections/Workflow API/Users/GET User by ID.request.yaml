@@ -3,4 +3,4 @@ url: "{{baseUrl}}/api/users/{{userId}}"
 method: GET
 headers:
   Authorization: Bearer {{authToken}}
-order: 2000
+order: 1000

@@ -21,4 +21,4 @@ scripts:
       var json = pm.response.json();
       pm.collectionVariables.set('taskId', json.id);
     language: text/javascript
-order: 2000
+order: 1000
