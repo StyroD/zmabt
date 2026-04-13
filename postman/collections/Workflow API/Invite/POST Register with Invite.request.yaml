@@ -7,7 +7,7 @@ body:
   type: text
   content: |-
     {
-      "token": "",
+      "token": "{{inviteToken}}",
       "username": "newworker",
       "email": "newworker@workflow.com",
       "password": "password123",

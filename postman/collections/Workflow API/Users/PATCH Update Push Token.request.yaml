@@ -10,4 +10,4 @@ body:
     {
       "expo_push_token": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]"
     }
-order: 4000
+order: 3000

@@ -55,6 +55,7 @@ export const getCertificateFile = async (req: Request, res: Response): Promise<v
       return
     }
     res.setHeader('Content-Type', cert.file_url)
+    res.setHeader('Content-Disposition', 'inline')
     res.send(cert.file_data)
   } catch (err: any) {
     res.status(500).json({ error: err.message })
@@ -118,7 +119,14 @@ export const uploadProjectPhoto = async (req: Request, res: Response): Promise<v
     const { project_id, task_id } = req.body
     const uploadedBy = (req.user as { id: string }).id
     const fileData = (req.file as Express.Multer.File).buffer
-    const mimeType = (req.file as Express.Multer.File).mimetype
+    const clientMime = (req.file as Express.Multer.File).mimetype
+
+    // Detect MIME from magic bytes so it's not spoofable/wrong from client
+    let mimeType = clientMime
+    if (fileData[0] === 0xff && fileData[1] === 0xd8) mimeType = 'image/jpeg'
+    else if (fileData[0] === 0x89 && fileData[1] === 0x50) mimeType = 'image/png'
+    else if (fileData[0] === 0x47 && fileData[1] === 0x49) mimeType = 'image/gif'
+    else if (fileData[0] === 0x52 && fileData[1] === 0x49) mimeType = 'image/webp'
 
     const result = await pool.query(
       `INSERT INTO project_photos (project_id, task_id, uploaded_by, file_data, file_url, uploaded_at)
@@ -174,6 +182,7 @@ export const getProjectPhotoFile = async (req: Request, res: Response): Promise<
       return
     }
     res.setHeader('Content-Type', photo.file_url)
+    res.setHeader('Content-Disposition', 'inline')
     res.send(photo.file_data)
   } catch (err: any) {
     res.status(500).json({ error: err.message })

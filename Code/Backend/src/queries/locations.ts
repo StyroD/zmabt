@@ -1,6 +1,5 @@
 import { Request, Response } from 'express'
 import pool from '../config/db'
-import { error } from 'node:console'
 
 export const updateWorkerLocation = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -9,6 +8,16 @@ export const updateWorkerLocation = async (req: Request, res: Response): Promise
 
     if (user.id !== worker_id) {
       res.status(403).json({ error: 'Forbidden: you can only update your own location' })
+      return
+    }
+
+    const membership = await pool.query(
+      `SELECT 1 FROM project_workers WHERE project_id = $1 AND worker_id = $2`,
+      [project_id, worker_id]
+    )
+
+    if (membership.rows.length === 0) {
+      res.status(403).json({ error: 'Forbidden: you are not part of this project' })
       return
     }
 
@@ -51,7 +60,7 @@ export const getProjectWorkerLocations = async (req: Request, res: Response): Pr
     const project = m_result.rows[0]
 
     if (project.manager_id !== user.id) {
-      res.status(403).json({ error: 'Forbidden: the user is not part of the project' })
+      res.status(403).json({ error: 'Forbidden: you are not the manager of this project' })
       return
     }
 

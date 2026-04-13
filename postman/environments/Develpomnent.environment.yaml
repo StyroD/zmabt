@@ -18,3 +18,12 @@ values:
   - key: authWorkerToken
     value: ''
     enabled: true
+  - key: workerId
+    value: ''
+    enabled: true
+  - key: ''
+    value: ''
+    enabled: true
+  - key: otherUs
+    value: ''
+    enabled: true

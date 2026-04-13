@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import {
-  getTasks,
   getTasksByProjectId,
   createTask,
   updateTask,
@@ -12,7 +11,6 @@ import {
 
 const router = Router()
 
-router.get('/', getTasks)
 router.get('/project/:id', getTasksByProjectId)
 router.get('/worker/:workerId', getTasksByWorkerId)
 router.post('/', createTask)
