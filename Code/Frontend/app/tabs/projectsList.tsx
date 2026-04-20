@@ -4,9 +4,10 @@ import { router } from 'expo-router'
 import { ProjectBox } from '@/components/Projects/ProjectBox'
 import { Ionicons } from '@expo/vector-icons'
 import { useEffect, useState } from 'react'
-import { getProjects } from '@/api/endpoints/projects'
+import { getProjectByManagerId } from '@/api/endpoints/projects'
 import { ActivityIndicator } from 'react-native'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
+import * as SecureStore from 'expo-secure-store'
 
 const FILTERS = ['All', 'in_progress', 'pending', 'finished', 'cancelled'] as const
 const filterLabels: Record<string, string> = {
@@ -21,12 +22,23 @@ export default function Projects() {
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState<string>('All')
-
+  const [currentUser, setCurrentUser] = useState<any>(null)
   useEffect(() => {
-    getProjects()
-      .then(res => { setProjects(res.data); setLoading(false) })
-      .catch(err => { console.error(err); setLoading(false) })
-  }, [])
+  const load = async () => {
+    const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
+    setCurrentUser(user)
+    try {
+      const res = await getProjectByManagerId(user.id)
+      setProjects(res.data)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+  load()
+}, [])
+
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '—'
