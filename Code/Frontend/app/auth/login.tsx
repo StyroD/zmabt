@@ -19,8 +19,7 @@ export default function Login() {
     const handleLogin = async () => {
     try {
         const data = await login(email, password)
-        await SecureStore.setItemAsync('token', data.token)
-        await SecureStore.setItemAsync('userId', data.user.id)
+        await SecureStore.setItemAsync('user', JSON.stringify(data.user))
         router.push('/tabs/dashboard')
     } catch (e: any) {
     if (e.response) {
