@@ -1,22 +1,19 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { ProfileField } from '@/components/Profile/ProfileField'
 import { useEffect, useState } from 'react'
 import { Colors } from '@/constants/color'
 import { Ionicons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { CertificateRow } from '@/components/Profile/CertificateRow'
-import { getUserById, getUsers } from '@/api/endpoints/users'
-import { logout } from '@/api/auth'
-import * as SecureStore from 'expo-secure-store'    
-import { useLocalSearchParams } from 'expo-router'
-import { ActivityIndicator } from 'react-native'
+import { getUserById } from '@/api/endpoints/users'
+import * as SecureStore from 'expo-secure-store'
 
 // mode = 'project'  → from project detail: limited view (name, hourly rate, certs)
 // mode = 'full'     → from workers list: full info (address, emergency, etc.)
-// mode = 'own'      → own profile: edit button in top right + logout
+// mode = 'own'      → own profile: edit button + logout
 
-export default function WorkerProfile() {
+export default function Profile() {
     const { userId: paramUserId, projectId, mode } = useLocalSearchParams<{
         userId?: string
         projectId?: string
@@ -24,6 +21,7 @@ export default function WorkerProfile() {
     }>()
 
     const [user, setUser] = useState<any>(null)
+    const [role, setRole] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
 
     const isOwn = mode === 'own' || !paramUserId
@@ -31,35 +29,35 @@ export default function WorkerProfile() {
 
     useEffect(() => {
         const load = async () => {
-            if (paramUserId) {
-                getUserById(paramUserId)
-                    .then(res => { setUser(res.data); setLoading(false) })
-                    .catch(err => { console.error(err); setLoading(false) })
-            } else {
-                getUsers()
-                    .then(res => { setUser(res.data[0]); setLoading(false) })
-                    .catch(err => { console.error(err); setLoading(false) })
+            try {
+                const stored = await SecureStore.getItemAsync('user')
+                const storedUser = stored ? JSON.parse(stored) : null
+                setRole(storedUser?.role ?? null)
+
+                const idToLoad = paramUserId ?? storedUser?.id
+                if (idToLoad) {
+                    const res = await getUserById(idToLoad)
+                    setUser(res.data)
+                }
+            } catch (err) {
+                console.error(err)
+            } finally {
+                setLoading(false)
             }
         }
         load()
     }, [paramUserId])
 
+    const handleLogout = async () => {
+        await SecureStore.deleteItemAsync('token')
+        await SecureStore.deleteItemAsync('userId')
+        await SecureStore.deleteItemAsync('user')
+        router.replace('/auth/login' as any)
+    }
 
     const backRoute = projectId
         ? `/tabs/projectDetail_manager?id=${projectId}`
         : '/tabs/workers'
-
-    if (loading) return <ActivityIndicator size="large" color={Colors.primary} style={{ flex: 1 }} />
-
-    if (!user) {
-        return (
-            <ScreenWrapper title="Profile" backRoute={backRoute}>
-                <Text style={{ color: Colors.textSecondary }}>No user found</Text>
-            </ScreenWrapper>
-        )
-    }
-
-    const certificates = user.certificates ?? []
 
     const editButton = isOwn ? (
         <TouchableOpacity onPress={() => router.push('/edit-profile' as any)}>
@@ -67,25 +65,43 @@ export default function WorkerProfile() {
         </TouchableOpacity>
     ) : undefined
 
+    if (loading) return <ActivityIndicator size="large" color={Colors.primary} style={{ flex: 1 }} />
+
+    if (!user) {
+        return (
+            <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute}>
+                <Text style={{ color: Colors.textSecondary }}>No user found</Text>
+            </ScreenWrapper>
+        )
+    }
+
+    const certificates = user.certificates ?? []
+    const isManager = role === 'manager'
+
     return (
-        <ScreenWrapper title="Profile" backRoute={backRoute} rightElement={editButton}>
+        <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute} rightElement={editButton}>
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 {/* Avatar */}
                 <View style={styles.avatarSection}>
                     <Ionicons name="person-circle" size={90} color={Colors.border} />
-                    <Text style={styles.fullName}>{user.title ? `${user.title} ` : ''}{user.first_name} {user.last_name}</Text>
+                    <Text style={styles.fullName}>
+                        {user.title ? `${user.title} ` : ''}{user.first_name} {user.last_name}
+                    </Text>
+                    <Text style={styles.roleLabel}>{isManager ? 'Manager' : 'Worker'}</Text>
                 </View>
 
-                {/* Basic info — always shown */}
+                {/* Basic info */}
                 <Text style={styles.sectionLabel}>Basic info</Text>
                 <View style={styles.fieldsSection}>
                     <ProfileField label="First name" value={user.first_name} />
                     <ProfileField label="Last name" value={user.last_name} />
-                    <ProfileField label="Hourly rate" value={user.hourly_rate ? `${user.hourly_rate} ${user.currency ?? 'EUR'}/h` : '—'} />
+                    {!isManager && (
+                        <ProfileField label="Hourly rate" value={user.hourly_rate ? `${user.hourly_rate} ${user.currency ?? 'EUR'}/h` : '—'} />
+                    )}
                 </View>
 
-                {/* Full info — shown from workers list or own profile */}
+                {/* Contact + Employment */}
                 {(isFullView || isOwn) && (
                     <>
                         <View style={styles.sectionDivider} />
@@ -96,47 +112,62 @@ export default function WorkerProfile() {
                             <ProfileField label="Address" value={user.address} />
                         </View>
 
-                        <View style={styles.sectionDivider} />
-                        <Text style={styles.sectionLabel}>Employment</Text>
-                        <View style={styles.fieldsSection}>
-                            <ProfileField label="Employment type" value={user.employment_type} />
-                            <ProfileField label="Hired at" value={user.hired_at ? new Date(user.hired_at).toLocaleDateString('sk-SK') : '—'} />
-                            <ProfileField label="Monthly salary" value={user.monthly_salary ? `${user.monthly_salary} ${user.currency ?? 'EUR'}` : '—'} />
-                            <ProfileField label="IBAN" value={user.iban} />
-                        </View>
+                        {!isManager && (
+                            <>
+                                <View style={styles.sectionDivider} />
+                                <Text style={styles.sectionLabel}>Employment</Text>
+                                <View style={styles.fieldsSection}>
+                                    <ProfileField label="Employment type" value={user.employment_type} />
+                                    <ProfileField label="Hired at" value={user.hired_at ? new Date(user.hired_at).toLocaleDateString('sk-SK') : '—'} />
+                                    <ProfileField label="Monthly salary" value={user.monthly_salary ? `${user.monthly_salary} ${user.currency ?? 'EUR'}` : '—'} />
+                                    <ProfileField label="IBAN" value={user.iban} />
+                                </View>
 
-                        <View style={styles.sectionDivider} />
-                        <Text style={styles.sectionLabel}>Emergency contact</Text>
-                        <View style={styles.fieldsSection}>
-                            <ProfileField label="Name" value={user.emergency_contact_name} />
-                            <ProfileField label="Phone" value={user.emergency_contact_phone} />
-                        </View>
+                                <View style={styles.sectionDivider} />
+                                <Text style={styles.sectionLabel}>Emergency contact</Text>
+                                <View style={styles.fieldsSection}>
+                                    <ProfileField label="Name" value={user.emergency_contact_name} />
+                                    <ProfileField label="Phone" value={user.emergency_contact_phone} />
+                                </View>
+                            </>
+                        )}
                     </>
                 )}
 
-                {/* Certificates — always shown */}
-                <View style={styles.sectionDivider} />
-                <Text style={styles.sectionLabel}>Certificates</Text>
-                <View style={styles.certContainer}>
-                    {certificates.length === 0 ? (
-                        <Text style={styles.emptyText}>No certificates</Text>
-                    ) : (
-                        certificates.map((cert: any) => (
-                            <CertificateRow
-                                key={cert.id ?? cert.name}
-                                name={cert.category ?? cert.name}
-                                certified={cert.status === 'accepted' || cert.certified}
-                                onShow={() => router.push('/tabs/certificates')}
-                            />
-                        ))
-                    )}
-                </View>
+                {/* Certificates — workers only */}
+                {!isManager && (
+                    <>
+                        <View style={styles.sectionDivider} />
+                        <Text style={styles.sectionLabel}>Certificates</Text>
+                        <View style={styles.certContainer}>
+                            {certificates.length === 0 ? (
+                                <Text style={styles.emptyText}>No certificates</Text>
+                            ) : (
+                                certificates.map((cert: any) => (
+                                    <CertificateRow
+                                        key={cert.id ?? cert.name}
+                                        name={cert.category ?? cert.name}
+                                        certified={cert.status === 'accepted' || cert.certified}
+                                        onShow={() => router.push({
+                                            pathname: '/tabs/certificate-list' as any,
+                                            params: {
+                                                categoryId: cert.category_id,
+                                                categoryName: cert.category ?? cert.name,
+                                                workerId: user.id,
+                                            },
+                                        })}
+                                    />
+                                ))
+                            )}
+                        </View>
+                    </>
+                )}
 
                 {/* Logout — own profile only */}
                 {isOwn && (
                     <>
                         <View style={styles.sectionDivider} />
-                        <TouchableOpacity style={styles.logoutBtn} /*</>onPress={{handleLogout}}*/>
+                        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
                             <Ionicons name="log-out-outline" size={18} color={Colors.danger} />
                             <Text style={styles.logoutText}>Log out</Text>
                         </TouchableOpacity>
@@ -147,42 +178,6 @@ export default function WorkerProfile() {
             </ScrollView>
         </ScreenWrapper>
     )
-    
-    const handleLogout = async () => {
-        await SecureStore.deleteItemAsync('token')
-        await SecureStore.deleteItemAsync('userId')
-        router.push('/auth/login')
-    }
-    return (
-    <ScreenWrapper title="Profile">
-        <ScrollView showsVerticalScrollIndicator={false}>
-            
-
-            {/* Certificates */}
-            <View style={styles.sectionDivider} />
-            <Text style={styles.sectionLabel}>Certificates</Text>
-            <View style={styles.certContainer}>
-               {/* {certificates.map((cert) => (
-                    <CertificateRow
-                        key={cert.name}
-                        name={cert.name}
-                        certified={cert.certified}
-                        onShow={() => router.push('/tabs/certificates')}
-                    />
-                ))}*/}
-            </View>
-
-            {/* Logout */}
-            <View style={styles.sectionDivider} />
-            <TouchableOpacity style={styles.logoutBtn}>
-                <Ionicons name="log-out-outline" size={18} color={Colors.danger} onPress={handleLogout} />
-                <Text style={styles.logoutText}>Log out</Text>
-            </TouchableOpacity>
-
-            <View style={{ height: 40 }} />
-        </ScrollView>
-    </ScreenWrapper>
-)
 }
 
 const styles = StyleSheet.create({
@@ -195,6 +190,12 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '500',
         color: Colors.textPrimary,
+    },
+    roleLabel: {
+        fontSize: 13,
+        color: Colors.textSecondary,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     fieldsSection: {
         gap: 12,

@@ -15,7 +15,7 @@ export function ScreenWrapper({ title, children, backRoute, rightElement }: Prop
     <View style={styles.container}>
       <View style={styles.header}>
         {backRoute ? (
-          <BackArrow onBackButton={() => router.push(backRoute as any)} />
+          <BackArrow onBackButton={() => router.back()} />
         ) : (
           <View style={styles.placeholder} />
         )}

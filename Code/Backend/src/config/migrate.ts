@@ -99,7 +99,7 @@ async function migrate(): Promise<void> {
       CREATE TABLE IF NOT EXISTS certificates (
         id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         worker_id uuid REFERENCES users(id),
-        category_id uuid REFERENCES skill_categories(id),
+        category_id uuid NOT NULL REFERENCES skill_categories(id),
         name varchar NOT NULL,
         file_url varchar,
         status varchar,
@@ -198,10 +198,19 @@ async function migrate(): Promise<void> {
     `)
 
     await pool.query(`
-      ALTER TABLE worker_locations DROP CONSTRAINT IF EXISTS worker_project_unique;
-      ALTER TABLE worker_locations ADD CONSTRAINT worker_project_unique UNIQUE (worker_id, project_id);
+      ALTER TABLE project_photos ADD COLUMN IF NOT EXISTS file_data bytea;
     `)
 
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'worker_project_unique'
+        ) THEN
+          ALTER TABLE worker_locations ADD CONSTRAINT worker_project_unique UNIQUE (worker_id, project_id);
+        END IF;
+      END$$;
+    `)
     console.log('✅ Migration completed!')
     process.exit(0)
   } catch (err) {

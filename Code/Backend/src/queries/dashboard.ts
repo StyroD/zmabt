@@ -5,6 +5,11 @@ export const getManagerDashboard = async (req: Request, res: Response): Promise<
   try {
     const { id } = req.params
 
+    const userResult = await pool.query(
+      'SELECT first_name, last_name FROM users WHERE id = $1',
+      [id]
+    )
+
     const projectsCount = await pool.query(
       'SELECT COUNT(*) FROM projects WHERE manager_id = $1',
       [id]
@@ -39,6 +44,8 @@ export const getManagerDashboard = async (req: Request, res: Response): Promise<
     )
 
     res.json({
+      first_name: userResult.rows[0]?.first_name,
+      last_name: userResult.rows[0]?.last_name,
       projects_count: parseInt(projectsCount.rows[0].count),
       pending_tasks: parseInt(tasksStats.rows[0].pending_tasks),
       in_progress_tasks: parseInt(tasksStats.rows[0].in_progress_tasks),
@@ -55,8 +62,13 @@ export const getWorkerDashboard = async (req: Request, res: Response): Promise<v
   try {
     const { id } = req.params
 
+    const userResult = await pool.query(
+      'SELECT first_name, last_name FROM users WHERE id = $1',
+      [id]
+    )
+
     const tasksStats = await pool.query(
-      `SELECT 
+      `SELECT
         COUNT(*) FILTER (WHERE status = 'pending') as pending_tasks,
         COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress_tasks,
         COUNT(*) FILTER (WHERE status = 'done') as completed_tasks,
@@ -80,6 +92,8 @@ export const getWorkerDashboard = async (req: Request, res: Response): Promise<v
     )
 
     res.json({
+      first_name: userResult.rows[0]?.first_name,
+      last_name: userResult.rows[0]?.last_name,
       pending_tasks: parseInt(tasksStats.rows[0].pending_tasks),
       in_progress_tasks: parseInt(tasksStats.rows[0].in_progress_tasks),
       completed_tasks: parseInt(tasksStats.rows[0].completed_tasks),

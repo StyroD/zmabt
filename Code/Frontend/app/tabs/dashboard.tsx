@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native'
 import { Colors } from '../../constants/color'
 import { Ionicons } from '@expo/vector-icons'
-import { getUsers } from '@/api/endpoints/users'
+import { getDashboard, getUsers } from '@/api/endpoints/users'
 import { getManagerDashboard, getWorkerDashboard } from '@/api/endpoints/dashboard'
 import { getNotifications, markNotificationAsRead } from '@/api/endpoints/notifications'
 import { router } from 'expo-router'
+import * as SecureStore from 'expo-secure-store'
 
 export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState<any>(null)
@@ -16,8 +17,9 @@ export default function Dashboard() {
   useEffect(() => {
     const load = async () => {
       try {
-        const usersRes = await getUsers()
-        const user = usersRes.data[0]
+        const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
+        const role = user.role
+        const firstName = user.first_name
         setCurrentUser(user)
 
         const dashFn = user.role === 'manager' ? getManagerDashboard : getWorkerDashboard
