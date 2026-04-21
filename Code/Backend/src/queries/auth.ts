@@ -101,7 +101,7 @@ export const googleCallback = [
   (req: Request, res: Response) => {
     const user = req.user as { id: string; role: string }
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET as string)
-    res.redirect(`myapp://auth?token=${token}`)
+    res.redirect(`frontend://auth?token=${token}`)
   }
 ]
 
