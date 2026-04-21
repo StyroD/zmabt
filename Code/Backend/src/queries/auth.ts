@@ -44,15 +44,6 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
   }
 }
 
-export const getMe = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const user = req.user as { id: string }
-    const result = await pool.query('SELECT * FROM users WHERE id = $1', [user.id])
-    res.json(result.rows[0])
-  } catch (err: any) {
-    res.status(500).json({ error: err.message })
-  }
-}
 
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID as string,

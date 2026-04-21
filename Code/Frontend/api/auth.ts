@@ -14,8 +14,6 @@ export const register = async (email: string, password: string) => {
     return response.data
 }
 
-export const getMe = () => client.get('/auth/me')
-
 export const logout = async () => {
     await SecureStore.deleteItemAsync('token')
     await SecureStore.deleteItemAsync('userId')

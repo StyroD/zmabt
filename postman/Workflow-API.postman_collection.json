@@ -160,14 +160,6 @@
       "name": "Workers",
       "item": [
         {
-          "name": "GET All Workers",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
-            "url": "{{baseUrl}}/api/workers"
-          }
-        },
-        {
           "name": "GET Workers by Project",
           "request": {
             "method": "GET",
@@ -180,14 +172,6 @@
     {
       "name": "Projects",
       "item": [
-        {
-          "name": "GET All Projects",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
-            "url": "{{baseUrl}}/api/projects"
-          }
-        },
         {
           "name": "POST Create Project",
           "event": [

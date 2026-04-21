@@ -103,13 +103,6 @@ const swaggerDocument = {
     },
 
     // Users
-    '/api/users': {
-      get: {
-        summary: 'Get all users',
-        tags: ['Users'],
-        responses: { 200: { description: 'List of users' } }
-      }
-    },
     '/api/users/{id}': {
       get: {
         summary: 'Get user by ID',
@@ -130,11 +123,6 @@ const swaggerDocument = {
 
     // Projects
     '/api/projects': {
-      get: {
-        summary: 'Get all projects',
-        tags: ['Projects'],
-        responses: { 200: { description: 'List of projects' } }
-      },
       post: {
         summary: 'Create a project',
         tags: ['Projects'],
@@ -266,13 +254,6 @@ const swaggerDocument = {
     },
 
     // Workers
-    '/api/workers': {
-      get: {
-        summary: 'Get all workers',
-        tags: ['Workers'],
-        responses: { 200: { description: 'List of all workers' } }
-      }
-    },
     '/api/workers/{projectId}': {
       get: {
         summary: 'Get workers by project ID',
@@ -284,11 +265,6 @@ const swaggerDocument = {
 
     // Tasks
     '/api/tasks': {
-      get: {
-        summary: 'Get all tasks',
-        tags: ['Tasks'],
-        responses: { 200: { description: 'List of tasks' } }
-      },
       post: {
         summary: 'Create a task',
         tags: ['Tasks'],
