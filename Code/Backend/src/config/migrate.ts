@@ -198,7 +198,8 @@ async function migrate(): Promise<void> {
     `)
 
     await pool.query(`
-      ALTER TABLE worker_locations ADD CONSTRAINT IF NOT EXISTS worker_project_unique UNIQUE (worker_id, project_id);
+      ALTER TABLE worker_locations DROP CONSTRAINT IF EXISTS worker_project_unique;
+      ALTER TABLE worker_locations ADD CONSTRAINT worker_project_unique UNIQUE (worker_id, project_id);
     `)
 
     console.log('✅ Migration completed!')
