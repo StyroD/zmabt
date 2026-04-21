@@ -99,7 +99,7 @@ async function migrate(): Promise<void> {
       CREATE TABLE IF NOT EXISTS certificates (
         id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         worker_id uuid REFERENCES users(id),
-        category_id uuid REFERENCES skill_categories(id),
+        category_id uuid NOT NULL REFERENCES skill_categories(id),
         name varchar NOT NULL,
         file_url varchar,
         status varchar,

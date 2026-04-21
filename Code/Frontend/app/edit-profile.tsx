@@ -1,58 +1,91 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Colors } from '@/constants/color'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { updateProfile } from '@/api/endpoints/users'
+import { getCategories } from '@/api/endpoints/categories'
 import * as SecureStore from 'expo-secure-store'
 
-const CERTIFICATES = ['Water', 'Heating', 'Electricity', 'Gas']
-
 export default function EditProfile() {
-    const [firstName, setFirstName] = useState('Peter')
-    const [lastName, setLastName] = useState('Novak')
-    const [hourlyRate, setHourlyRate] = useState('25')
+    const [userId, setUserId] = useState<string | null>(null)
+    const [firstName, setFirstName] = useState('')
+    const [lastName, setLastName] = useState('')
+    const [hourlyRate, setHourlyRate] = useState('')
+    const [categories, setCategories] = useState<any[]>([])
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const stored = await SecureStore.getItemAsync('user')
+                const user = stored ? JSON.parse(stored) : null
+                if (user) {
+                    setUserId(user.id)
+                    setFirstName(user.first_name ?? '')
+                    setLastName(user.last_name ?? '')
+                    setHourlyRate(user.hourly_rate?.toString() ?? '')
+                }
+                const catRes = await getCategories()
+                setCategories(catRes.data)
+            } catch (err) {
+                console.error(err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        load()
+    }, [])
 
     const validate = () => {
         const newErrors: Record<string, string> = {}
         if (!firstName.trim()) newErrors.firstName = 'First name is required'
         if (!lastName.trim()) newErrors.lastName = 'Last name is required'
-        if (!hourlyRate.trim() || isNaN(Number(hourlyRate))) newErrors.hourlyRate = 'Valid hourly rate is required'
+        if (hourlyRate && isNaN(Number(hourlyRate))) newErrors.hourlyRate = 'Must be a number'
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
 
     const handleSave = async () => {
-        if (!validate()) return
+        if (!validate() || !userId) return
         setSaving(true)
         try {
-            // TODO: replace 'userId' with actual userId from SecureStore
-            // await updateProfile(userId, { first_name: firstName, last_name: lastName, hourly_rate: hourlyRate })
-            router.push('/tabs/worker-profile')
-        } catch (e) {
+            const res = await updateProfile(userId, {
+                first_name: firstName,
+                last_name: lastName,
+                hourly_rate: hourlyRate ? Number(hourlyRate) : undefined,
+            })
+            const stored = await SecureStore.getItemAsync('user')
+            const user = stored ? JSON.parse(stored) : {}
+            await SecureStore.setItemAsync('user', JSON.stringify({ ...user, ...res }))
+            router.back()
+        } catch {
             Alert.alert('Error', 'Could not save profile. Please try again.')
         } finally {
             setSaving(false)
         }
     }
+
     const handleLogout = async () => {
         await SecureStore.deleteItemAsync('token')
         await SecureStore.deleteItemAsync('userId')
-        router.push('/auth/login')
+        await SecureStore.deleteItemAsync('user')
+        router.replace('/auth/login' as any)
     }
 
     const saveButton = (
-        <TouchableOpacity onPress={handleSave} disabled={saving} style={styles.saveBtn}>
-            <Ionicons name="save-outline" size={18} color={saving ? Colors.textSecondary : Colors.primary} />
-            <Text style={[styles.saveText, saving && { color: Colors.textSecondary }]}>Save</Text>
+        <TouchableOpacity onPress={handleSave} disabled={saving}>
+            <Ionicons name="save-outline" size={22} color={saving ? Colors.textSecondary : Colors.primary} />
         </TouchableOpacity>
     )
 
+    if (loading) return <ActivityIndicator size="large" color={Colors.primary} style={{ flex: 1 }} />
+
     return (
-        <ScreenWrapper title="Edit profile" backRoute="/tabs/profile" rightElement={saveButton}>
+        <ScreenWrapper title="Edit profile" backRoute=".." rightElement={saveButton}>
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 {/* Avatar */}
@@ -85,10 +118,10 @@ export default function EditProfile() {
                 />
                 {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
 
-                <Text style={styles.fieldLabel}>Hourly rate</Text>
+                <Text style={styles.fieldLabel}>Hourly rate (EUR/h)</Text>
                 <TextInput
                     style={[styles.input, errors.hourlyRate && styles.inputError]}
-                    placeholder="25"
+                    placeholder="e.g. 25"
                     placeholderTextColor={Colors.textSecondary}
                     value={hourlyRate}
                     onChangeText={t => { setHourlyRate(t); setErrors(e => ({ ...e, hourlyRate: '' })) }}
@@ -100,12 +133,15 @@ export default function EditProfile() {
                 <View style={styles.sectionDivider} />
                 <Text style={styles.sectionLabel}>Certificates</Text>
                 <View style={styles.certContainer}>
-                    {CERTIFICATES.map((cert, index) => (
-                        <View key={cert} style={[styles.certRow, index === CERTIFICATES.length - 1 && styles.certRowLast]}>
-                            <Text style={styles.certName}>{cert}</Text>
-                            <TouchableOpacity 
+                    {categories.map((cat, index) => (
+                        <View key={cat.id} style={[styles.certRow, index === categories.length - 1 && styles.certRowLast]}>
+                            <Text style={styles.certName}>{cat.name}</Text>
+                            <TouchableOpacity
                                 style={styles.uploadBtn}
-                                onPress={() => router.push(`/uploadCertificate?category=${cert}`)}
+                                onPress={() => router.push({
+                                    pathname: '/uploadCertficate' as any,
+                                    params: { categoryId: cat.id, categoryName: cat.name },
+                                })}
                             >
                                 <Ionicons name="cloud-upload-outline" size={14} color={Colors.primary} />
                                 <Text style={styles.uploadText}>Upload</Text>
@@ -116,8 +152,8 @@ export default function EditProfile() {
 
                 {/* Logout */}
                 <View style={styles.sectionDivider} />
-                <TouchableOpacity style={styles.logoutBtn}>
-                    <Ionicons name="log-out-outline" size={18} color={Colors.danger} onPress={handleLogout}/>
+                <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                    <Ionicons name="log-out-outline" size={18} color={Colors.danger} />
                     <Text style={styles.logoutText}>Log out</Text>
                 </TouchableOpacity>
 
@@ -128,16 +164,6 @@ export default function EditProfile() {
 }
 
 const styles = StyleSheet.create({
-    saveBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-    },
-    saveText: {
-        color: Colors.primary,
-        fontSize: 14,
-        fontWeight: '500',
-    },
     avatarSection: {
         alignItems: 'center',
         paddingVertical: 20,
@@ -222,7 +248,7 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     uploadText: {
-        color: Colors.textSecondary,
+        color: Colors.primary,
         textDecorationLine: 'underline',
         fontSize: 14,
     },

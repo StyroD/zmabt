@@ -13,6 +13,7 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
               'id', c.id,
               'name', c.name,
               'category', sc.name,
+              'category_id', c.category_id,
               'status', c.status,
               'submitted_at', c.submitted_at
             )

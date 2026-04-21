@@ -28,6 +28,8 @@ export default function TabsLayout() {
       <Tabs.Screen name="create-project" options={{ title: 'Create project', tabBarIcon: ({ color, size }) => <Ionicons name="create" size={size} color={color} /> }} />
       <Tabs.Screen name="task-list" options={{ title: 'Task list', tabBarIcon: ({ color, size }) => <FontAwesome name="tasks" size={24} color={color} /> }} />
       <Tabs.Screen name="create-task" options={{ title: 'Create task', tabBarIcon: ({ color, size }) => <FontAwesome name="tasks" size={24} color={color} /> }} />
+      <Tabs.Screen name="certificate-list" options={{ title: 'Certificates', href: null }} />
+      <Tabs.Screen name="certificate-view" options={{ title: 'Certificate', href: null }} />
 
     </Tabs>
   )

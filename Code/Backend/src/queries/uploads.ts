@@ -5,12 +5,23 @@ import { sendNotification } from '../utils/notifications'
 export const uploadCertificate = async (req: Request, res: Response): Promise<void> => {
   try {
     const { worker_id, category_id, name } = req.body
+
+    if (!category_id) {
+      res.status(400).json({ error: 'category_id is required' })
+      return
+    }
+
     const fileData = (req.file as Express.Multer.File).buffer
-    const mimeType = (req.file as Express.Multer.File).mimetype
+    const clientMime = (req.file as Express.Multer.File).mimetype
+
+    let mimeType = clientMime
+    if (fileData[0] === 0xff && fileData[1] === 0xd8) mimeType = 'image/jpeg'
+    else if (fileData[0] === 0x89 && fileData[1] === 0x50) mimeType = 'image/png'
+    else if (fileData[0] === 0x25 && fileData[1] === 0x50) mimeType = 'application/pdf'
 
     const result = await pool.query(
       `INSERT INTO certificates (worker_id, category_id, name, file_data, file_url, status, submitted_at)
-       VALUES ($1, $2, $3, $4, $5, 'pending', NOW()) RETURNING *`,
+       VALUES ($1, $2, $3, $4, $5, 'pending', NOW()) RETURNING id, worker_id, category_id, name, file_url, status, reviewed_by, reviewed_at, submitted_at`,
       [worker_id, category_id, name, fileData, mimeType]
     )
     const cert = result.rows[0]
@@ -66,11 +77,12 @@ export const getCertificatesByWorker = async (req: Request, res: Response): Prom
   try {
     const { workerId } = req.params
     const result = await pool.query(
-      `SELECT c.*, sc.name as category_name 
+      `SELECT c.id, c.worker_id, c.category_id, c.name, c.file_url, c.status,
+              c.reviewed_by, c.reviewed_at, c.submitted_at, sc.name as category_name
        FROM certificates c
        JOIN skill_categories sc ON c.category_id = sc.id
        WHERE c.worker_id = $1
-       ORDER BY c.submitted_at DESC`,
+       ORDER BY sc.name, c.submitted_at DESC`,
       [workerId]
     )
     res.json(result.rows)
