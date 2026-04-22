@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native'
-import { Colors } from '../../constants/color'
+import { useColors } from '@/contexts/ThemeContext'
 import { Ionicons } from '@expo/vector-icons'
-import { getDashboard, getUsers } from '@/api/endpoints/users'
 import { getManagerDashboard, getWorkerDashboard } from '@/api/endpoints/dashboard'
 import { getNotifications, markNotificationAsRead } from '@/api/endpoints/notifications'
 import { router } from 'expo-router'
 import * as SecureStore from 'expo-secure-store'
 
 export default function Dashboard() {
+  const Colors = useColors()
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [stats, setStats] = useState<any>(null)
   const [notifications, setNotifications] = useState<any[]>([])
@@ -18,8 +18,6 @@ export default function Dashboard() {
     const load = async () => {
       try {
         const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
-        const role = user.role
-        const firstName = user.first_name
         setCurrentUser(user)
 
         const dashFn = user.role === 'manager' ? getManagerDashboard : getWorkerDashboard
@@ -43,6 +41,178 @@ export default function Dashboard() {
     markNotificationAsRead(id).catch(err => console.error(err))
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
   }
+
+  const styles = StyleSheet.create({
+    center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: Colors.background,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: Colors.background,
+      padding: 16,
+      paddingTop: 56,
+    },
+    title: {
+      fontSize: 30,
+      fontWeight: '500',
+      color: Colors.textPrimary,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: Colors.border,
+      marginTop: 8,
+      marginBottom: 20,
+    },
+    profileCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.surface,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: 14,
+      padding: 16,
+      gap: 14,
+      marginBottom: 24,
+    },
+    profileInfo: {
+      flex: 1,
+    },
+    profileName: {
+      fontSize: 18,
+      fontWeight: '500',
+      color: Colors.textPrimary,
+    },
+    profileRole: {
+      fontSize: 13,
+      color: Colors.textSecondary,
+      marginTop: 2,
+    },
+    onlineBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: Colors.successBg,
+      borderWidth: 1,
+      borderColor: Colors.successBorder,
+      borderRadius: 20,
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+    },
+    onlineDot: {
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+      backgroundColor: Colors.online,
+    },
+    onlineText: {
+      fontSize: 12,
+      color: Colors.success,
+    },
+    sectionLabel: {
+      fontSize: 13,
+      color: Colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: 10,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginBottom: 24,
+    },
+    statTile: {
+      width: '47.5%',
+      backgroundColor: Colors.surface,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: 12,
+      padding: 16,
+      gap: 6,
+    },
+    statValue: {
+      fontSize: 28,
+      fontWeight: '500',
+      color: Colors.textPrimary,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: Colors.textSecondary,
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 24,
+    },
+    actionBtn: {
+      flex: 1,
+      backgroundColor: Colors.surface,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: 12,
+      padding: 14,
+      alignItems: 'center',
+      gap: 8,
+    },
+    actionText: {
+      fontSize: 12,
+      color: Colors.textPrimary,
+    },
+    notifList: {
+      backgroundColor: Colors.surface,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: 12,
+      overflow: 'hidden',
+    },
+    notifItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 14,
+      gap: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    notifRead: {
+      opacity: 0.5,
+    },
+    notifLeft: {
+      width: 24,
+      alignItems: 'center',
+    },
+    notifContent: {
+      flex: 1,
+    },
+    notifMessage: {
+      fontSize: 14,
+      color: Colors.textPrimary,
+      fontWeight: '500',
+    },
+    notifMessageRead: {
+      fontWeight: '400',
+    },
+    notifTime: {
+      fontSize: 12,
+      color: Colors.textSecondary,
+      marginTop: 2,
+    },
+    unreadDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: Colors.primary,
+    },
+    emptyText: {
+      fontSize: 13,
+      color: Colors.textSecondary,
+      fontStyle: 'italic',
+      padding: 16,
+      textAlign: 'center',
+    },
+  })
 
   if (loading) {
     return (
@@ -83,7 +253,6 @@ export default function Dashboard() {
       <Text style={styles.title}>Dashboard</Text>
       <View style={styles.divider} />
 
-      {/* Profile card */}
       <View style={styles.profileCard}>
         <Ionicons name="person-circle" size={54} color={Colors.primary} />
         <View style={styles.profileInfo}>
@@ -96,7 +265,6 @@ export default function Dashboard() {
         </View>
       </View>
 
-      {/* Stats grid */}
       <Text style={styles.sectionLabel}>Overview</Text>
       <View style={styles.statsGrid}>
         {statTiles.map(tile => (
@@ -108,7 +276,6 @@ export default function Dashboard() {
         ))}
       </View>
 
-      {/* Quick actions */}
       <Text style={styles.sectionLabel}>Quick actions</Text>
       <View style={styles.actionsRow}>
         <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/tabs/projectsList')}>
@@ -132,7 +299,6 @@ export default function Dashboard() {
         </TouchableOpacity>
       </View>
 
-      {/* Notifications */}
       <Text style={styles.sectionLabel}>Recent notifications</Text>
       <View style={styles.notifList}>
         {notifications.length === 0 ? (
@@ -165,175 +331,3 @@ export default function Dashboard() {
     </ScrollView>
   )
 }
-
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.background,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    padding: 16,
-    paddingTop: 56,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '500',
-    color: Colors.textPrimary,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 14,
-    padding: 16,
-    gap: 14,
-    marginBottom: 24,
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: Colors.textPrimary,
-  },
-  profileRole: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  onlineBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: Colors.successBg,
-    borderWidth: 1,
-    borderColor: Colors.successBorder,
-    borderRadius: 20,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-  },
-  onlineDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: Colors.online,
-  },
-  onlineText: {
-    fontSize: 12,
-    color: Colors.success,
-  },
-  sectionLabel: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 24,
-  },
-  statTile: {
-    width: '47.5%',
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    padding: 16,
-    gap: 6,
-  },
-  statValue: {
-    fontSize: 28,
-    fontWeight: '500',
-    color: Colors.textPrimary,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 24,
-  },
-  actionBtn: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    padding: 14,
-    alignItems: 'center',
-    gap: 8,
-  },
-  actionText: {
-    fontSize: 12,
-    color: Colors.textPrimary,
-  },
-  notifList: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  notifItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  notifRead: {
-    opacity: 0.5,
-  },
-  notifLeft: {
-    width: 24,
-    alignItems: 'center',
-  },
-  notifContent: {
-    flex: 1,
-  },
-  notifMessage: {
-    fontSize: 14,
-    color: Colors.textPrimary,
-    fontWeight: '500',
-  },
-  notifMessageRead: {
-    fontWeight: '400',
-  },
-  notifTime: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.primary,
-  },
-  emptyText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    fontStyle: 'italic',
-    padding: 16,
-    textAlign: 'center',
-  },
-})

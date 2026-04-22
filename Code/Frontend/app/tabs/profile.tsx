@@ -2,18 +2,15 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { ProfileField } from '@/components/Profile/ProfileField'
 import { useEffect, useState } from 'react'
-import { Colors } from '@/constants/color'
+import { useColors } from '@/contexts/ThemeContext'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
 import { CertificateRow } from '@/components/Profile/CertificateRow'
 import { getUserById } from '@/api/endpoints/users'
 import * as SecureStore from 'expo-secure-store'
 
-// mode = 'project'  → from project detail: limited view (name, hourly rate, certs)
-// mode = 'full'     → from workers list: full info (address, emergency, etc.)
-// mode = 'own'      → own profile: edit button + logout
-
 export default function Profile() {
+    const Colors = useColors()
     const { userId: paramUserId, projectId, mode } = useLocalSearchParams<{
         userId?: string
         projectId?: string
@@ -65,6 +62,72 @@ export default function Profile() {
         </TouchableOpacity>
     ) : undefined
 
+    const styles = StyleSheet.create({
+        avatarSection: {
+            alignItems: 'center',
+            paddingVertical: 20,
+            gap: 6,
+        },
+        fullName: {
+            fontSize: 18,
+            fontWeight: '500',
+            color: Colors.textPrimary,
+        },
+        roleLabel: {
+            fontSize: 13,
+            color: Colors.textSecondary,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+        },
+        fieldsSection: {
+            gap: 12,
+        },
+        sectionDivider: {
+            height: 1,
+            backgroundColor: Colors.border,
+            marginVertical: 20,
+        },
+        sectionLabel: {
+            fontSize: 13,
+            color: Colors.textSecondary,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+            marginBottom: 8,
+        },
+        certContainer: {
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 12,
+            paddingHorizontal: 16,
+            minHeight: 48,
+            justifyContent: 'center',
+        },
+        emptyText: {
+            fontSize: 13,
+            color: Colors.textSecondary,
+            fontStyle: 'italic',
+            paddingVertical: 12,
+            textAlign: 'center',
+        },
+        logoutBtn: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            borderWidth: 1,
+            borderColor: Colors.dangerBorder,
+            backgroundColor: Colors.dangerBg,
+            borderRadius: 12,
+            padding: 14,
+        },
+        logoutText: {
+            color: Colors.danger,
+            fontSize: 16,
+            fontWeight: '500',
+        },
+    })
+
     if (loading) return <ActivityIndicator size="large" color={Colors.primary} style={{ flex: 1 }} />
 
     if (!user) {
@@ -82,7 +145,6 @@ export default function Profile() {
         <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute} rightElement={editButton}>
             <ScrollView showsVerticalScrollIndicator={false}>
 
-                {/* Avatar */}
                 <View style={styles.avatarSection}>
                     <Ionicons name="person-circle" size={90} color={Colors.border} />
                     <Text style={styles.fullName}>
@@ -91,7 +153,6 @@ export default function Profile() {
                     <Text style={styles.roleLabel}>{isManager ? 'Manager' : 'Worker'}</Text>
                 </View>
 
-                {/* Basic info */}
                 <Text style={styles.sectionLabel}>Basic info</Text>
                 <View style={styles.fieldsSection}>
                     <ProfileField label="First name" value={user.first_name} />
@@ -101,7 +162,6 @@ export default function Profile() {
                     )}
                 </View>
 
-                {/* Contact + Employment */}
                 {(isFullView || isOwn) && (
                     <>
                         <View style={styles.sectionDivider} />
@@ -134,7 +194,6 @@ export default function Profile() {
                     </>
                 )}
 
-                {/* Certificates — workers only */}
                 {!isManager && (
                     <>
                         <View style={styles.sectionDivider} />
@@ -163,7 +222,6 @@ export default function Profile() {
                     </>
                 )}
 
-                {/* Logout — own profile only */}
                 {isOwn && (
                     <>
                         <View style={styles.sectionDivider} />
@@ -179,69 +237,3 @@ export default function Profile() {
         </ScreenWrapper>
     )
 }
-
-const styles = StyleSheet.create({
-    avatarSection: {
-        alignItems: 'center',
-        paddingVertical: 20,
-        gap: 6,
-    },
-    fullName: {
-        fontSize: 18,
-        fontWeight: '500',
-        color: Colors.textPrimary,
-    },
-    roleLabel: {
-        fontSize: 13,
-        color: Colors.textSecondary,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    fieldsSection: {
-        gap: 12,
-    },
-    sectionDivider: {
-        height: 1,
-        backgroundColor: Colors.border,
-        marginVertical: 20,
-    },
-    sectionLabel: {
-        fontSize: 13,
-        color: Colors.textSecondary,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-        marginBottom: 8,
-    },
-    certContainer: {
-        backgroundColor: Colors.surface,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        minHeight: 48,
-        justifyContent: 'center',
-    },
-    emptyText: {
-        fontSize: 13,
-        color: Colors.textSecondary,
-        fontStyle: 'italic',
-        paddingVertical: 12,
-        textAlign: 'center',
-    },
-    logoutBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        borderWidth: 1,
-        borderColor: Colors.dangerBorder,
-        backgroundColor: Colors.dangerBg,
-        borderRadius: 12,
-        padding: 14,
-    },
-    logoutText: {
-        color: Colors.danger,
-        fontSize: 16,
-        fontWeight: '500',
-    },
-})

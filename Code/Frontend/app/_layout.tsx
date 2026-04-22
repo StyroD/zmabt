@@ -1,12 +1,27 @@
 import { Stack, Redirect } from 'expo-router'
 import { useState, useEffect } from 'react'
-import { View, ActivityIndicator } from 'react-native'
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
-import { Colors } from '@/constants/color'
-import { SafeAreaProvider} from 'react-native-safe-area-context'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { ThemeProvider } from '@/contexts/ThemeContext'
+import { NetworkProvider, useNetwork } from '@/contexts/NetworkContext'
+import { darkColors } from '@/constants/themes'
 
+function OfflineBanner() {
+    const { isOnline, pendingCount } = useNetwork()
+    if (isOnline) return null
+    return (
+        <View style={styles.banner}>
+            <Text style={styles.bannerText}>
+                {pendingCount > 0
+                    ? `Offline — ${pendingCount} change${pendingCount > 1 ? 's' : ''} queued`
+                    : 'No internet connection'}
+            </Text>
+        </View>
+    )
+}
 
-export default function RootLayout() {
+function AppContent() {
     const [isLoading, setLoading] = useState(true)
     const [isLoggedIn, setLoggedIn] = useState(false)
 
@@ -22,21 +37,45 @@ export default function RootLayout() {
     if (isLoading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+                <ActivityIndicator size="large" color={darkColors.primary} />
             </View>
-        )
-    }
-    if (isLoggedIn) {
-        return (
-            <SafeAreaProvider>
-                <Redirect href="/tabs/dashboard" />
-            </SafeAreaProvider>
         )
     }
 
     return (
-        <SafeAreaProvider>
-            <Stack screenOptions={{ headerShown: false }} />
-        </SafeAreaProvider>
+        <>
+            <OfflineBanner />
+            {isLoggedIn ? (
+                <Redirect href="/tabs/dashboard" />
+            ) : (
+                <Stack screenOptions={{ headerShown: false }} />
+            )}
+        </>
     )
 }
+
+export default function RootLayout() {
+    return (
+        <ThemeProvider>
+            <SafeAreaProvider>
+                <NetworkProvider>
+                    <AppContent />
+                </NetworkProvider>
+            </SafeAreaProvider>
+        </ThemeProvider>
+    )
+}
+
+const styles = StyleSheet.create({
+    banner: {
+        backgroundColor: '#B91C1C',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        alignItems: 'center',
+    },
+    bannerText: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '500',
+    },
+})

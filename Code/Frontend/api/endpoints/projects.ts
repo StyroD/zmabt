@@ -3,6 +3,7 @@ import client from "../client"
 export const getProjects = () => client.get('/projects')
 export const getProjectById = (id: string) => client.get(`/projects/${id}`)
 export const getProjectByManagerId = (managerId: string) => client.get(`/projects/manager/${managerId}`)
+export const getProjectsByWorkerId = (workerId: string) => client.get(`/projects/worker/${workerId}`)
 
 export const createProject = (data: {
   manager_id: string

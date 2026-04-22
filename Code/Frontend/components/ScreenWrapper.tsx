@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native'
-import { Colors } from '@/constants/color'
+import { useColors } from '@/contexts/ThemeContext'
 import { BackArrow } from '@/components/BackArrow'
 import { router } from 'expo-router'
 
@@ -11,6 +11,35 @@ type Props = {
 }
 
 export function ScreenWrapper({ title, children, backRoute, rightElement }: Props) {
+  const Colors = useColors()
+  const styles = StyleSheet.create({
+    container: {
+      backgroundColor: Colors.background,
+      flex: 1,
+      padding: 16,
+      paddingTop: 56,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    placeholder: {
+      width: 40,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: '500',
+      color: Colors.textPrimary,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: Colors.border,
+      marginTop: 8,
+    },
+  })
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -29,31 +58,3 @@ export function ScreenWrapper({ title, children, backRoute, rightElement }: Prop
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-    container: {
-        backgroundColor: Colors.background,
-        flex: 1,
-        padding: 16,
-        paddingTop: 56,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    placeholder: {
-        width: 40,
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: '500',
-        color: Colors.textPrimary,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: Colors.border,
-        marginTop: 8,
-    },
-})

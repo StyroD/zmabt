@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Alert } from 'react-native'
-import { Colors } from '../../constants/color'
+import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useEffect, useState } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker'
@@ -9,16 +9,14 @@ import { Ionicons } from '@expo/vector-icons'
 import { getProjectWorkers } from '@/api/endpoints/workers'
 import { createTask, assignWorkersToTask } from '@/api/endpoints/tasks'
 import { getCategories } from '@/api/endpoints/categories'
+import { useNetwork } from '@/contexts/NetworkContext'
+import { addToQueue } from '@/utils/offlineQueue'
 
 const PRIORITIES = ['low', 'medium', 'high']
 const priorityLabels: Record<string, string> = { low: 'Low', medium: 'Medium', high: 'High' }
-const priorityColors: Record<string, { bg: string; border: string; text: string }> = {
-    low:    { bg: Colors.neutralBg, border: Colors.neutralBorder, text: Colors.neutral },
-    medium: { bg: Colors.warningBg, border: Colors.warningBorder, text: Colors.warning },
-    high:   { bg: Colors.dangerBg,  border: Colors.dangerBorder,  text: Colors.danger  },
-}
 
 export default function CreateTask() {
+    const Colors = useColors()
     const { projectId, projectTitle } = useLocalSearchParams()
     const [workers, setWorkers] = useState<any[]>([])
     const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
@@ -33,6 +31,13 @@ export default function CreateTask() {
     const [assignedWorkers, setAssignedWorkers] = useState<string[]>([])
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [submitting, setSubmitting] = useState(false)
+    const { isOnline } = useNetwork()
+
+    const priorityColors = {
+        low:    { bg: Colors.neutralBg, border: Colors.neutralBorder, text: Colors.neutral },
+        medium: { bg: Colors.warningBg, border: Colors.warningBorder, text: Colors.warning },
+        high:   { bg: Colors.dangerBg,  border: Colors.dangerBorder,  text: Colors.danger  },
+    }
 
     const formatDate = (date: Date) =>
         date.toLocaleDateString('sk-SK', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -50,6 +55,20 @@ export default function CreateTask() {
         if (!validate()) return
         setSubmitting(true)
         try {
+            if (!isOnline) {
+                await addToQueue('TASK_CREATE', {
+                    project_id: projectId as string,
+                    title,
+                    description,
+                    category_id: categoryId,
+                    priority,
+                    deadline: deadline!.toISOString().split('T')[0],
+                    workerIds: assignedWorkers,
+                })
+                Alert.alert('Saved offline', 'Task will be created when you reconnect.')
+                router.back()
+                return
+            }
             const task = await createTask({
                 project_id: projectId as string,
                 title,
@@ -93,10 +112,113 @@ export default function CreateTask() {
             .catch(err => console.error(err))
     }, [projectId])
 
+    const styles = StyleSheet.create({
+        breadcrumb: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 4,
+            marginBottom: 12,
+            paddingBottom: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: Colors.border,
+        },
+        breadcrumbText: { fontSize: 12, color: Colors.textSecondary },
+        breadcrumbCurrent: { fontSize: 12, color: Colors.textPrimary, fontWeight: '500' },
+        sectionLabel: {
+            fontSize: 13,
+            color: Colors.textSecondary,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+            marginTop: 20,
+            marginBottom: 8,
+        },
+        fieldLabel: { fontSize: 13, color: Colors.textSecondary, marginBottom: 6, marginTop: 14 },
+        required: { color: Colors.danger },
+        input: {
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 10,
+            padding: 12,
+            fontSize: 15,
+            color: Colors.textPrimary,
+        },
+        inputError: { borderColor: Colors.danger },
+        errorText: { fontSize: 12, color: Colors.danger, marginTop: 4 },
+        textArea: { height: 100, textAlignVertical: 'top' },
+        pickerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+        pickerText: { fontSize: 15, color: Colors.textPrimary, flex: 1 },
+        dropdown: {
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 10,
+            marginTop: 4,
+            overflow: 'hidden',
+        },
+        dropdownItem: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: Colors.border,
+        },
+        dropdownItemActive: { backgroundColor: Colors.primaryLight },
+        dropdownText: { fontSize: 14, color: Colors.textPrimary },
+        dateBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+        dateText: { fontSize: 15, color: Colors.textPrimary },
+        confirmBtn: {
+            backgroundColor: Colors.primary,
+            borderRadius: 10,
+            padding: 10,
+            alignItems: 'center',
+            marginTop: 8,
+        },
+        confirmText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '500' },
+        priorityRow: { flexDirection: 'row', gap: 10 },
+        priorityBtn: {
+            flex: 1,
+            paddingVertical: 10,
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            alignItems: 'center',
+            backgroundColor: Colors.surface,
+        },
+        priorityText: { fontSize: 14, color: Colors.textSecondary },
+        emptyText: { fontSize: 13, color: Colors.textSecondary, fontStyle: 'italic', paddingVertical: 8 },
+        workerBox: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 12,
+            padding: 14,
+            marginTop: 8,
+        },
+        workerSelected: {
+            borderColor: Colors.primary,
+            backgroundColor: Colors.primaryLight,
+        },
+        workerInfo: { flex: 1 },
+        workerName: { fontSize: 15, fontWeight: '500', color: Colors.textPrimary },
+        workerCerts: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+        submitButton: {
+            backgroundColor: Colors.primary,
+            borderRadius: 10,
+            padding: 14,
+            alignItems: 'center',
+            marginTop: 24,
+        },
+        submitText: { color: Colors.textPrimary, fontSize: 16, fontWeight: '500' },
+    })
+
     return (
         <ScreenWrapper title='New task' backRoute={`/tabs/projectDetail_manager?id=${projectId}`}>
 
-            {/* Breadcrumb */}
             <View style={styles.breadcrumb}>
                 <Ionicons name="folder-outline" size={12} color={Colors.textSecondary} />
                 <Text style={styles.breadcrumbText}>{projectTitle ?? 'Project'}</Text>
@@ -191,7 +313,7 @@ export default function CreateTask() {
                 <Text style={styles.fieldLabel}>Priority</Text>
                 <View style={styles.priorityRow}>
                     {PRIORITIES.map(p => {
-                        const pc = priorityColors[p]
+                        const pc = priorityColors[p as keyof typeof priorityColors]
                         const active = priority === p
                         return (
                             <TouchableOpacity
@@ -205,7 +327,6 @@ export default function CreateTask() {
                     })}
                 </View>
 
-                {/* Assigned workers */}
                 <Text style={styles.sectionLabel}>Assigned workers</Text>
                 {assignedWorkers.length === 0 ? (
                     <Text style={styles.emptyText}>No workers assigned yet</Text>
@@ -257,107 +378,3 @@ export default function CreateTask() {
         </ScreenWrapper>
     )
 }
-
-const styles = StyleSheet.create({
-    breadcrumb: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        marginBottom: 12,
-        paddingBottom: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
-    },
-    breadcrumbText: { fontSize: 12, color: Colors.textSecondary },
-    breadcrumbCurrent: { fontSize: 12, color: Colors.textPrimary, fontWeight: '500' },
-    sectionLabel: {
-        fontSize: 13,
-        color: Colors.textSecondary,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-        marginTop: 20,
-        marginBottom: 8,
-    },
-    fieldLabel: { fontSize: 13, color: Colors.textSecondary, marginBottom: 6, marginTop: 14 },
-    required: { color: Colors.danger },
-    input: {
-        backgroundColor: Colors.surface,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 10,
-        padding: 12,
-        fontSize: 15,
-        color: Colors.textPrimary,
-    },
-    inputError: { borderColor: Colors.danger },
-    errorText: { fontSize: 12, color: Colors.danger, marginTop: 4 },
-    textArea: { height: 100, textAlignVertical: 'top' },
-    pickerBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    pickerText: { fontSize: 15, color: Colors.textPrimary, flex: 1 },
-    dropdown: {
-        backgroundColor: Colors.surface,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 10,
-        marginTop: 4,
-        overflow: 'hidden',
-    },
-    dropdownItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.border,
-    },
-    dropdownItemActive: { backgroundColor: Colors.primaryLight },
-    dropdownText: { fontSize: 14, color: Colors.textPrimary },
-    dateBtn: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    dateText: { fontSize: 15, color: Colors.textPrimary },
-    confirmBtn: {
-        backgroundColor: Colors.primary,
-        borderRadius: 10,
-        padding: 10,
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    confirmText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '500' },
-    priorityRow: { flexDirection: 'row', gap: 10 },
-    priorityBtn: {
-        flex: 1,
-        paddingVertical: 10,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        alignItems: 'center',
-        backgroundColor: Colors.surface,
-    },
-    priorityText: { fontSize: 14, color: Colors.textSecondary },
-    emptyText: { fontSize: 13, color: Colors.textSecondary, fontStyle: 'italic', paddingVertical: 8 },
-    workerBox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        backgroundColor: Colors.surface,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 12,
-        padding: 14,
-        marginTop: 8,
-    },
-    workerSelected: {
-        borderColor: Colors.primary,
-        backgroundColor: Colors.primaryLight,
-    },
-    workerInfo: { flex: 1 },
-    workerName: { fontSize: 15, fontWeight: '500', color: Colors.textPrimary },
-    workerCerts: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-    submitButton: {
-        backgroundColor: Colors.primary,
-        borderRadius: 10,
-        padding: 14,
-        alignItems: 'center',
-        marginTop: 24,
-    },
-    submitText: { color: Colors.textPrimary, fontSize: 16, fontWeight: '500' },
-})

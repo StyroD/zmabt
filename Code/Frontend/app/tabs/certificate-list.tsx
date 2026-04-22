@@ -2,11 +2,12 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { useLocalSearchParams, router } from 'expo-router'
 import { useEffect, useState } from 'react'
 import * as SecureStore from 'expo-secure-store'
-import { Colors } from '../../constants/color'
+import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { getCertificatesByWorker } from '@/api/endpoints/uploads'
 
 export default function CertificateList() {
+  const Colors = useColors()
   const { workerId, categoryId, categoryName } = useLocalSearchParams<{
     workerId: string
     categoryId: string
@@ -41,6 +42,35 @@ export default function CertificateList() {
     })
   }
 
+  const styles = StyleSheet.create({
+    list: {
+      paddingTop: 16,
+    },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 18,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    certName: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: Colors.textPrimary,
+    },
+    pdfLink: {
+      fontSize: 14,
+      color: Colors.textPrimary,
+      textDecorationLine: 'underline',
+    },
+    empty: {
+      color: Colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 40,
+    },
+  })
+
   return (
     <ScreenWrapper title={categoryName ?? 'Certificates'} backRoute="..">
       {loading ? (
@@ -64,32 +94,3 @@ export default function CertificateList() {
     </ScreenWrapper>
   )
 }
-
-const styles = StyleSheet.create({
-  list: {
-    paddingTop: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  certName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  pdfLink: {
-    fontSize: 14,
-    color: Colors.textPrimary,
-    textDecorationLine: 'underline',
-  },
-  empty: {
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 40,
-  },
-})

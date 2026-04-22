@@ -5,10 +5,11 @@ import * as SecureStore from 'expo-secure-store'
 import * as WebBrowser from 'expo-web-browser'
 import * as FileSystem from 'expo-file-system/legacy'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
-import { Colors } from '../../constants/color'
+import { useColors } from '@/contexts/ThemeContext'
 import client from '@/api/client'
 
 export default function CertificateView() {
+  const Colors = useColors()
   const { certId, certName, mimeType } = useLocalSearchParams<{
     certId: string
     certName: string
@@ -50,6 +51,24 @@ export default function CertificateView() {
     load()
   }, [certId])
 
+  const styles = StyleSheet.create({
+    image: {
+      flex: 1,
+      width: '100%',
+    },
+    info: {
+      color: Colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 40,
+    },
+    error: {
+      color: Colors.danger,
+      textAlign: 'center',
+      marginTop: 40,
+      paddingHorizontal: 16,
+    },
+  })
+
   return (
     <ScreenWrapper title={certName ?? 'Certificate'} backRoute="..">
       {loading ? (
@@ -66,21 +85,3 @@ export default function CertificateView() {
     </ScreenWrapper>
   )
 }
-
-const styles = StyleSheet.create({
-  image: {
-    flex: 1,
-    width: '100%',
-  },
-  info: {
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 40,
-  },
-  error: {
-    color: Colors.danger,
-    textAlign: 'center',
-    marginTop: 40,
-    paddingHorizontal: 16,
-  },
-})

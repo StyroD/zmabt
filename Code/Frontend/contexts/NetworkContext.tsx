@@ -1,0 +1,100 @@
+import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
+import NetInfo from '@react-native-community/netinfo'
+import { getQueue, removeFromQueue, incrementRetries, QueuedOperation } from '@/utils/offlineQueue'
+import { createTask, updateTaskStatus, deleteTask, assignWorkersToTask } from '@/api/endpoints/tasks'
+
+interface NetworkContextValue {
+  isOnline: boolean
+  pendingCount: number
+  syncQueue: () => Promise<void>
+}
+
+const NetworkContext = createContext<NetworkContextValue>({
+  isOnline: true,
+  pendingCount: 0,
+  syncQueue: async () => {},
+})
+
+export function useNetwork() {
+  return useContext(NetworkContext)
+}
+
+async function executeOperation(op: QueuedOperation): Promise<void> {
+  switch (op.type) {
+    case 'TASK_CREATE': {
+      const { workerIds, ...taskData } = op.payload
+      const res = await createTask(taskData)
+      if (workerIds?.length > 0) {
+        await assignWorkersToTask(res.data.id, workerIds)
+      }
+      break
+    }
+    case 'TASK_STATUS_UPDATE':
+      await updateTaskStatus(op.payload.taskId, op.payload.status)
+      break
+    case 'TASK_DELETE':
+      await deleteTask(op.payload.taskId)
+      break
+  }
+}
+
+export function NetworkProvider({ children }: { children: React.ReactNode }) {
+  const [isOnline, setIsOnline] = useState(true)
+  const [pendingCount, setPendingCount] = useState(0)
+  const isSyncing = useRef(false)
+  const wasOffline = useRef(false)
+
+  const refreshPendingCount = useCallback(async () => {
+    const queue = await getQueue()
+    setPendingCount(queue.length)
+  }, [])
+
+  const syncQueue = useCallback(async () => {
+    if (isSyncing.current) return
+    isSyncing.current = true
+    try {
+      const queue = await getQueue()
+      for (const op of queue) {
+        if (op.retries >= 3) {
+          await removeFromQueue(op.id)
+          continue
+        }
+        try {
+          await executeOperation(op)
+          await removeFromQueue(op.id)
+        } catch (err: any) {
+          // 404 = entity no longer exists on server, discard silently
+          if (err?.response?.status === 404) {
+            await removeFromQueue(op.id)
+          } else {
+            await incrementRetries(op.id)
+          }
+        }
+      }
+    } finally {
+      isSyncing.current = false
+      await refreshPendingCount()
+    }
+  }, [refreshPendingCount])
+
+  useEffect(() => {
+    refreshPendingCount()
+
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const online = !!state.isConnected && !!state.isInternetReachable
+      setIsOnline(online)
+      if (online && wasOffline.current) {
+        syncQueue()
+      }
+      wasOffline.current = !online
+    })
+
+    return unsubscribe
+  }, [syncQueue, refreshPendingCount])
+
+  return (
+    <NetworkContext.Provider value={{ isOnline, pendingCount, syncQueue }}>
+      {children}
+    </NetworkContext.Provider>
+  )
+}

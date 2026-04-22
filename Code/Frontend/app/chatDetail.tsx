@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native"
-import { Colors } from "@/constants/color"
+import { useColors } from "@/contexts/ThemeContext"
 import { useLocalSearchParams, router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { useState, useRef, useEffect } from "react"
@@ -18,6 +18,7 @@ type Message = {
 }
 
 export default function ChatDetail() {
+  const Colors = useColors()
   const { userId, name } = useLocalSearchParams<{ userId: string; name: string }>()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -47,8 +48,6 @@ export default function ChatDetail() {
         setMessages(messagesRes.data)
         socketRef.current = socket
 
-        // Only handle incoming messages from the other person.
-        // Own messages are added optimistically in sendMessage.
         socket.on('new_message', (msg: Message) => {
           if (!mounted) return
           if (msg.sender_id === currentUserIdRef.current) return
@@ -78,7 +77,6 @@ export default function ChatDetail() {
     const text = input.trim()
     if (!text) return
 
-    // Add optimistically so it appears immediately
     const optimistic: Message = {
       id: `tmp-${Date.now()}`,
       sender_id: currentUserIdRef.current,
@@ -90,9 +88,119 @@ export default function ChatDetail() {
     setInput('')
     scrollToBottom()
 
-    // Save to DB via REST — this is what makes it persist and show in conversations
     postMessage(userId, text).catch(err => console.error('Failed to send:', err))
   }
+
+  const styles = StyleSheet.create({
+    center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+    },
+    backButton: {
+      width: 40,
+      alignItems: 'flex-start',
+    },
+    userInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    avatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: Colors.surfaceElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarText: {
+      color: Colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    userName: {
+      color: Colors.textPrimary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    divider: {
+      height: 1,
+      backgroundColor: Colors.border,
+      marginHorizontal: 16,
+    },
+    messagesList: {
+      padding: 16,
+      gap: 8,
+    },
+    messageRow: {
+      flexDirection: 'row',
+      marginVertical: 4,
+    },
+    messageRowOwn: {
+      justifyContent: 'flex-end',
+    },
+    messageRowOther: {
+      justifyContent: 'flex-start',
+    },
+    bubble: {
+      maxWidth: '75%',
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 16,
+    },
+    bubbleOwn: {
+      backgroundColor: Colors.primary,
+      borderBottomRightRadius: 4,
+    },
+    bubbleOther: {
+      backgroundColor: Colors.surfaceElevated,
+      borderBottomLeftRadius: 4,
+    },
+    messageText: {
+      fontSize: 14,
+    },
+    messageTextOwn: {
+      color: '#fff',
+    },
+    messageTextOther: {
+      color: Colors.textPrimary,
+    },
+    inputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      gap: 10,
+      borderTopWidth: 1,
+      borderTopColor: Colors.border,
+    },
+    input: {
+      flex: 1,
+      backgroundColor: Colors.surface,
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      color: Colors.textPrimary,
+      fontSize: 14,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    sendButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: Colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  })
 
   if (loading) {
     return (
@@ -164,114 +272,3 @@ export default function ChatDetail() {
     </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  backButton: {
-    width: 40,
-    alignItems: 'flex-start',
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    color: Colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  userName: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginHorizontal: 16,
-  },
-  messagesList: {
-    padding: 16,
-    gap: 8,
-  },
-  messageRow: {
-    flexDirection: 'row',
-    marginVertical: 4,
-  },
-  messageRowOwn: {
-    justifyContent: 'flex-end',
-  },
-  messageRowOther: {
-    justifyContent: 'flex-start',
-  },
-  bubble: {
-    maxWidth: '75%',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 16,
-  },
-  bubbleOwn: {
-    backgroundColor: Colors.primary,
-    borderBottomRightRadius: 4,
-  },
-  bubbleOther: {
-    backgroundColor: Colors.surfaceElevated,
-    borderBottomLeftRadius: 4,
-  },
-  messageText: {
-    fontSize: 14,
-  },
-  messageTextOwn: {
-    color: '#fff',
-  },
-  messageTextOther: {
-    color: Colors.textPrimary,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    gap: 10,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    color: Colors.textPrimary,
-    fontSize: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-})

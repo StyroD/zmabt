@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Platform } from 'react-native'
-import { Colors } from '../../constants/color'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Alert } from 'react-native'
+import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useState } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker'
@@ -17,14 +17,9 @@ const statusLabels: Record<string, string> = {
     finished: 'Finished',
     cancelled: 'Cancelled',
 }
-const statusColors: Record<string, { bg: string; border: string; text: string }> = {
-    in_progress: { bg: Colors.successBg, border: Colors.successBorder, text: Colors.success },
-    pending:     { bg: Colors.warningBg, border: Colors.warningBorder, text: Colors.warning },
-    finished:    { bg: Colors.neutralBg, border: Colors.neutralBorder, text: Colors.neutral },
-    cancelled:   { bg: Colors.dangerBg,  border: Colors.dangerBorder,  text: Colors.danger  },
-}
 
 export default function CreateProject() {
+    const Colors = useColors()
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [deadline, setDeadline] = useState<Date | null>(null)
@@ -39,6 +34,13 @@ export default function CreateProject() {
     const [clientEmail, setClientEmail] = useState('')
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [submitting, setSubmitting] = useState(false)
+
+    const statusColors = {
+        in_progress: { bg: Colors.successBg, border: Colors.successBorder, text: Colors.success },
+        pending:     { bg: Colors.warningBg, border: Colors.warningBorder, text: Colors.warning },
+        finished:    { bg: Colors.neutralBg, border: Colors.neutralBorder, text: Colors.neutral },
+        cancelled:   { bg: Colors.dangerBg,  border: Colors.dangerBorder,  text: Colors.danger  },
+    }
 
     const formatDate = (date: Date) =>
         date.toLocaleDateString('sk-SK', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -82,11 +84,91 @@ export default function CreateProject() {
         }
     }
 
+    const styles = StyleSheet.create({
+        sectionLabel: {
+            fontSize: 13,
+            color: Colors.textSecondary,
+            marginTop: 16,
+            marginBottom: 4,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+        },
+        fieldLabel: {
+            fontSize: 13,
+            color: Colors.textSecondary,
+            marginBottom: 6,
+            marginTop: 12,
+        },
+        required: { color: Colors.danger },
+        input: {
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 10,
+            padding: 12,
+            fontSize: 15,
+            color: Colors.textPrimary,
+        },
+        inputError: { borderColor: Colors.danger },
+        errorText: { fontSize: 12, color: Colors.danger, marginTop: 4 },
+        textArea: { height: 100, textAlignVertical: 'top' },
+        row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+        dateText: { fontSize: 15, color: Colors.textPrimary },
+        coordRow: { flexDirection: 'row', gap: 12, marginTop: 0 },
+        half: { flex: 1 },
+        sectionDivider: { height: 1, backgroundColor: Colors.border, marginTop: 20 },
+        statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
+        statusChip: {
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 20,
+            paddingVertical: 6,
+            paddingHorizontal: 14,
+            backgroundColor: Colors.surface,
+        },
+        statusChipText: { fontSize: 13, color: Colors.textSecondary },
+        mapToggle: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.primary,
+            borderRadius: 10,
+            padding: 12,
+            marginTop: 8,
+        },
+        mapToggleText: { flex: 1, fontSize: 14, color: Colors.primary },
+        map: {
+            height: 200,
+            borderRadius: 10,
+            marginTop: 10,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            overflow: 'hidden',
+        },
+        confirmBtn: {
+            backgroundColor: Colors.primary,
+            borderRadius: 10,
+            padding: 10,
+            alignItems: 'center',
+            marginTop: 8,
+        },
+        confirmText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '500' },
+        submitButton: {
+            backgroundColor: Colors.primary,
+            borderRadius: 10,
+            padding: 14,
+            alignItems: 'center',
+            marginTop: 24,
+        },
+        submitText: { color: Colors.textPrimary, fontSize: 16, fontWeight: '500' },
+    })
+
     return (
         <ScreenWrapper title='New project' backRoute='/tabs/projectsList'>
             <ScrollView showsVerticalScrollIndicator={false}>
 
-                {/* Project info */}
                 <Text style={styles.sectionLabel}>Project info</Text>
 
                 <Text style={styles.fieldLabel}>Title <Text style={styles.required}>*</Text></Text>
@@ -143,7 +225,7 @@ export default function CreateProject() {
                 <Text style={styles.fieldLabel}>Status</Text>
                 <View style={styles.statusRow}>
                     {STATUSES.map(s => {
-                        const sc = statusColors[s]
+                        const sc = statusColors[s as keyof typeof statusColors]
                         const active = status === s
                         return (
                             <TouchableOpacity
@@ -159,7 +241,6 @@ export default function CreateProject() {
 
                 <View style={styles.sectionDivider} />
 
-                {/* Location */}
                 <Text style={styles.sectionLabel}>Location</Text>
 
                 <Text style={styles.fieldLabel}>Address <Text style={styles.required}>*</Text></Text>
@@ -220,7 +301,6 @@ export default function CreateProject() {
 
                 <View style={styles.sectionDivider} />
 
-                {/* Client */}
                 <Text style={styles.sectionLabel}>Client</Text>
 
                 <Text style={styles.fieldLabel}>Name <Text style={styles.required}>*</Text></Text>
@@ -275,84 +355,3 @@ export default function CreateProject() {
         </ScreenWrapper>
     )
 }
-
-const styles = StyleSheet.create({
-    sectionLabel: {
-        fontSize: 13,
-        color: Colors.textSecondary,
-        marginTop: 16,
-        marginBottom: 4,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    fieldLabel: {
-        fontSize: 13,
-        color: Colors.textSecondary,
-        marginBottom: 6,
-        marginTop: 12,
-    },
-    required: { color: Colors.danger },
-    input: {
-        backgroundColor: Colors.surface,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 10,
-        padding: 12,
-        fontSize: 15,
-        color: Colors.textPrimary,
-    },
-    inputError: { borderColor: Colors.danger },
-    errorText: { fontSize: 12, color: Colors.danger, marginTop: 4 },
-    textArea: { height: 100, textAlignVertical: 'top' },
-    row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    dateText: { fontSize: 15, color: Colors.textPrimary },
-    coordRow: { flexDirection: 'row', gap: 12, marginTop: 0 },
-    half: { flex: 1 },
-    sectionDivider: { height: 1, backgroundColor: Colors.border, marginTop: 20 },
-    statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
-    statusChip: {
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 20,
-        paddingVertical: 6,
-        paddingHorizontal: 14,
-        backgroundColor: Colors.surface,
-    },
-    statusChipText: { fontSize: 13, color: Colors.textSecondary },
-    mapToggle: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        backgroundColor: Colors.surface,
-        borderWidth: 1,
-        borderColor: Colors.primary,
-        borderRadius: 10,
-        padding: 12,
-        marginTop: 8,
-    },
-    mapToggleText: { flex: 1, fontSize: 14, color: Colors.primary },
-    map: {
-        height: 200,
-        borderRadius: 10,
-        marginTop: 10,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        overflow: 'hidden',
-    },
-    confirmBtn: {
-        backgroundColor: Colors.primary,
-        borderRadius: 10,
-        padding: 10,
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    confirmText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '500' },
-    submitButton: {
-        backgroundColor: Colors.primary,
-        borderRadius: 10,
-        padding: 14,
-        alignItems: 'center',
-        marginTop: 24,
-    },
-    submitText: { color: Colors.textPrimary, fontSize: 16, fontWeight: '500' },
-})
