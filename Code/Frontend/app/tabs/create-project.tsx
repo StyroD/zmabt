@@ -9,6 +9,7 @@ import AntDesign from '@expo/vector-icons/AntDesign'
 import { Ionicons } from '@expo/vector-icons'
 import { getUsers } from '@/api/endpoints/users'
 import { createProject } from '@/api/endpoints/projects'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const STATUSES = ['in_progress', 'pending', 'finished', 'cancelled']
 const statusLabels: Record<string, string> = {
@@ -20,6 +21,7 @@ const statusLabels: Record<string, string> = {
 
 export default function CreateProject() {
     const Colors = useColors()
+    const insets = useSafeAreaInsets()
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [deadline, setDeadline] = useState<Date | null>(null)
@@ -167,7 +169,7 @@ export default function CreateProject() {
 
     return (
         <ScreenWrapper title='New project' backRoute='/tabs/projectsList'>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
                 <Text style={styles.sectionLabel}>Project info</Text>
 
@@ -350,7 +352,7 @@ export default function CreateProject() {
                     <Text style={styles.submitText}>{submitting ? 'Creating...' : 'Create project'}</Text>
                 </TouchableOpacity>
 
-                <View style={{ height: 40 }} />
+                <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
             </ScrollView>
         </ScreenWrapper>
     )

@@ -8,6 +8,7 @@ import AntDesign from '@expo/vector-icons/AntDesign'
 import { getTasksByProjectId } from '@/api/endpoints/tasks'
 import { TaskBox } from '@/components/TaskBox'
 import { logScreenView } from '@/utils/firebase'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const STATUSES = ['all', 'pending', 'in_progress', 'done']
 const PRIORITIES = ['all', 'low', 'medium', 'high']
@@ -28,6 +29,7 @@ const priorityLabels: Record<string, string> = {
 
 export default function TaskList() {
   const Colors = useColors()
+  const insets = useSafeAreaInsets()
   const { projectId, projectTitle } = useLocalSearchParams()
 
   const [tasks, setTasks] = useState<any[]>([])
@@ -247,7 +249,7 @@ export default function TaskList() {
             />
           ))
         )}
-        <View style={{ height: 30 }} />
+        <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
       </ScrollView>
     </ScreenWrapper>
   )

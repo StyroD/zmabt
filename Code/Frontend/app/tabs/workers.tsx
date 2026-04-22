@@ -5,9 +5,11 @@ import { useEffect, useState, useMemo } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { getAllWorkers } from '@/api/endpoints/workers'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function Workers() {
   const Colors = useColors()
+  const insets = useSafeAreaInsets()
   const [workers, setWorkers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -157,7 +159,7 @@ export default function Workers() {
                   <Ionicons name="person-outline" size={22} color={Colors.textSecondary} />
                 </View>
                 <View style={styles.info}>
-                  <Text style={styles.name}>
+                  <Text style={styles.name} numberOfLines={1}>
                     {worker.first_name && worker.last_name
                       ? `${worker.first_name} ${worker.last_name}`
                       : worker.username}
@@ -183,7 +185,7 @@ export default function Workers() {
             )
           })
         )}
-        <View style={{ height: 40 }} />
+        <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
       </ScrollView>
     </ScreenWrapper>
   )

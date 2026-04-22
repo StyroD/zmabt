@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { getProjectByManagerId, getProjectsByWorkerId } from '@/api/endpoints/projects'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import * as SecureStore from 'expo-secure-store'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const FILTERS = ['All', 'in_progress', 'pending', 'finished', 'cancelled'] as const
 const filterLabels: Record<string, string> = {
@@ -19,6 +20,7 @@ const filterLabels: Record<string, string> = {
 
 export default function Projects() {
   const Colors = useColors()
+  const insets = useSafeAreaInsets()
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState<string>('All')
@@ -148,7 +150,7 @@ export default function Projects() {
             />
           ))
         )}
-        <View style={{ height: 40 }} />
+        <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
       </ScrollView>
     </ScreenWrapper>
   )

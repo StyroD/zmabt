@@ -10,9 +10,11 @@ import { getProjectWorkers } from '@/api/endpoints/workers'
 import { getTasksByProjectId } from '@/api/endpoints/tasks'
 import * as SecureStore from 'expo-secure-store'
 import client from '@/api/client'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function ProjectDetailWorker() {
   const Colors = useColors()
+  const insets = useSafeAreaInsets()
   const { id } = useLocalSearchParams<{ id: string }>()
   const [project, setProject] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])
@@ -241,7 +243,7 @@ export default function ProjectDetailWorker() {
           </TouchableOpacity>
         ))}
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
       </ScrollView>
     </ScreenWrapper>
   )

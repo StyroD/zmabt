@@ -9,10 +9,12 @@ import { getProjectById, deleteProject, assignWorkerToProject } from '@/api/endp
 import { getProjectWorkers, getAllWorkers } from '@/api/endpoints/workers'
 import { getTasksByProjectId } from '@/api/endpoints/tasks'
 import { useLocalSearchParams, router } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 
 export default function ProjectDetail() {
   const Colors = useColors()
+  const insets = useSafeAreaInsets()
   const { id } = useLocalSearchParams()
 
   const [currentProject, setProject] = useState<any>(null)
@@ -450,7 +452,7 @@ export default function ProjectDetail() {
           <Text style={styles.mapText}>View map</Text>
         </TouchableOpacity>
 
-        <View style={{ height: 30 }} />
+        <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
       </ScrollView>
 
       <Modal visible={assignModalVisible} animationType="slide" transparent onRequestClose={() => setAssignModalVisible(false)}>

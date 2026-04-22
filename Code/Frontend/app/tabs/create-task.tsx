@@ -12,12 +12,14 @@ import { getCategories } from '@/api/endpoints/categories'
 import { useNetwork } from '@/contexts/NetworkContext'
 import { addToQueue } from '@/utils/offlineQueue'
 import { logTaskCreated } from '@/utils/firebase'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const PRIORITIES = ['low', 'medium', 'high']
 const priorityLabels: Record<string, string> = { low: 'Low', medium: 'Medium', high: 'High' }
 
 export default function CreateTask() {
     const Colors = useColors()
+    const insets = useSafeAreaInsets()
     const { projectId, projectTitle } = useLocalSearchParams()
     const [workers, setWorkers] = useState<any[]>([])
     const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
@@ -229,7 +231,7 @@ export default function CreateTask() {
                 <Text style={styles.breadcrumbCurrent}>New task</Text>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
                 <Text style={styles.fieldLabel}>Title <Text style={styles.required}>*</Text></Text>
                 <TextInput
@@ -376,7 +378,7 @@ export default function CreateTask() {
                     <Text style={styles.submitText}>{submitting ? 'Saving...' : 'Save task'}</Text>
                 </TouchableOpacity>
 
-                <View style={{ height: 40 }} />
+                <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
             </ScrollView>
         </ScreenWrapper>
     )

@@ -35,7 +35,7 @@ export function ProfileField({ label, value }: Props) {
         <View style={styles.container}>
             <Text style={styles.label}>{label}</Text>
             <View style={styles.field}>
-                <Text style={styles.value}>{value ?? '—'}</Text>
+                <Text style={styles.value} numberOfLines={2}>{value ?? '—'}</Text>
             </View>
         </View>
     )

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native"
 import { useColors } from "@/contexts/ThemeContext"
 import { LogBox } from "@/components/Auth/LogBox"
 import { useState } from 'react'
@@ -146,6 +146,7 @@ export default function Login() {
 
     return (
         <ScreenWrapper title="Login">
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
             <View style={styles.card}>
                 <Text style={styles.title}>Login</Text>
                 <LogBox placeholder="Enter your email" label="Email" value={email} onChangeText={setEmail} />
@@ -178,6 +179,7 @@ export default function Login() {
 
                 {logError ? <Text style={styles.error}>{logError}</Text> : null}
             </View>
+            </ScrollView>
         </ScreenWrapper>
     )
 }

@@ -8,9 +8,11 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { CertificateRow } from '@/components/Profile/CertificateRow'
 import { getUserById } from '@/api/endpoints/users'
 import * as SecureStore from 'expo-secure-store'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function Profile() {
     const Colors = useColors()
+    const insets = useSafeAreaInsets()
     const { userId: paramUserId, projectId, mode } = useLocalSearchParams<{
         userId?: string
         projectId?: string
@@ -232,7 +234,7 @@ export default function Profile() {
                     </>
                 )}
 
-                <View style={{ height: 40 }} />
+                <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
             </ScrollView>
         </ScreenWrapper>
     )

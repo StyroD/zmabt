@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import * as SecureStore from 'expo-secure-store'
 import * as Location from 'expo-location'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getProjectByManagerId, getProjectsByWorkerId } from '@/api/endpoints/projects'
 import { getProjectWorkerLocations, updateWorkerLocation } from '@/api/endpoints/locations'
 
@@ -17,6 +18,7 @@ const BRATISLAVA: Region = {
 
 export default function MapScreen() {
   const Colors = useColors()
+  const insets = useSafeAreaInsets()
   const [user, setUser] = useState<any>(null)
   const [projects, setProjects] = useState<any[]>([])
   const [selected, setSelected] = useState<any>(null)
@@ -128,7 +130,7 @@ export default function MapScreen() {
       backgroundColor: Colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: Colors.border,
-      paddingTop: 56,
+      paddingTop: Math.max(insets.top, 16) + 8,
     },
     selectorContent: {
       paddingHorizontal: 16,
@@ -194,7 +196,7 @@ export default function MapScreen() {
     },
     badge: {
       position: 'absolute',
-      bottom: 24,
+      bottom: Math.max(insets.bottom, 8) + 16,
       alignSelf: 'center',
       flexDirection: 'row',
       alignItems: 'center',
@@ -217,7 +219,7 @@ export default function MapScreen() {
     },
     checkInBtn: {
       position: 'absolute',
-      bottom: 24,
+      bottom: Math.max(insets.bottom, 8) + 16,
       alignSelf: 'center',
       flexDirection: 'row',
       alignItems: 'center',

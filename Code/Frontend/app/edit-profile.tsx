@@ -236,7 +236,7 @@ export default function EditProfile() {
 
     return (
         <ScreenWrapper title="Edit profile" backRoute=".." rightElement={saveButton}>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
                 <View style={styles.avatarSection}>
                     {avatarUri

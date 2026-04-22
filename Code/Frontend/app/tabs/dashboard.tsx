@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useColors } from '@/contexts/ThemeContext'
 import { Ionicons } from '@expo/vector-icons'
 import { getManagerDashboard, getWorkerDashboard } from '@/api/endpoints/dashboard'
@@ -44,6 +45,8 @@ export default function Dashboard() {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
   }
 
+  const insets = useSafeAreaInsets()
+
   const styles = StyleSheet.create({
     center: {
       flex: 1,
@@ -55,7 +58,7 @@ export default function Dashboard() {
       flex: 1,
       backgroundColor: Colors.background,
       padding: 16,
-      paddingTop: 56,
+      paddingTop: Math.max(insets.top, 16) + 8,
     },
     title: {
       fontSize: 30,
@@ -320,7 +323,7 @@ export default function Dashboard() {
                 />
               </View>
               <View style={styles.notifContent}>
-                <Text style={[styles.notifMessage, n.read && styles.notifMessageRead]}>{n.title ?? n.body}</Text>
+                <Text style={[styles.notifMessage, n.read && styles.notifMessageRead]} numberOfLines={2}>{n.title ?? n.body}</Text>
                 <Text style={styles.notifTime}>{new Date(n.sent_at).toLocaleDateString('sk-SK')}</Text>
               </View>
               {!n.read && <View style={styles.unreadDot} />}
@@ -329,7 +332,7 @@ export default function Dashboard() {
         )}
       </View>
 
-      <View style={{ height: 40 }} />
+      <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
     </ScrollView>
   )
 }
