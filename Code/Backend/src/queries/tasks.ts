@@ -136,7 +136,7 @@ export const assignWorkersToTask = async (req: Request, res: Response): Promise<
     }
 
     // Get task to check category
-    const taskResult = await pool.query('SELECT id, title, category_id FROM tasks WHERE id = $1', [id])
+    const taskResult = await pool.query('SELECT id, title, category_id, project_id FROM tasks WHERE id = $1', [id])
     if (taskResult.rows.length === 0) {
       res.status(404).json({ error: 'Task not found' })
       return
@@ -184,6 +184,7 @@ export const assignWorkersToTask = async (req: Request, res: Response): Promise<
           body: `You have been assigned to: ${task.title}`,
           referenceId: id,
           referenceType: 'task',
+          extraData: { projectId: task.project_id },
         })
       )
     )
