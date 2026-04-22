@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import pool from '../config/db'
 import { v4 as uuidv4 } from 'uuid'
+import { createAuditLog } from '../utils/audit'
 
 
 export const getProjectById = async (req: Request, res: Response): Promise<void> => {
@@ -22,6 +23,22 @@ export const getProjectById = async (req: Request, res: Response): Promise<void>
 
     const result = await pool.query('SELECT * FROM projects WHERE id = $1', [id])
     res.json(result.rows[0])
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+export const getProjectsByWorkerId = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { workerId } = req.params
+    const result = await pool.query(
+      `SELECT p.* FROM projects p
+       JOIN project_workers pw ON p.id = pw.project_id
+       WHERE pw.worker_id = $1
+       ORDER BY p.created_at DESC`,
+      [workerId]
+    )
+    res.json(result.rows)
   } catch (err: any) {
     res.status(500).json({ error: err.message })
   }
@@ -62,10 +79,15 @@ export const createProject = async (req: Request, res: Response): Promise<void> 
     const id = uuidv4()
 
     const result = await pool.query(`INSERT INTO projects (id, manager_id, title, description,status,deadline, address,lat,lng,client_name,client_phone,client_email, created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, NOW()) RETURNING *`,[id, manager_id, title, description, status || 'pending', deadline, address,lat,lng,client_name,client_phone,client_email])
+    void createAuditLog({ actorId: user.id, action: 'create', targetType: 'project', targetId: result.rows[0].id, newValue: title })
     res.status(201).json(result.rows[0])
   }
-  catch (err:any){
-    res.status(500).json({error:err.message})
+  catch (err: any) {
+    if (err.code === '23505') {
+      res.status(409).json({ error: 'A project with this title already exists' })
+    } else {
+      res.status(500).json({ error: err.message })
+    }
   }
 }
 
@@ -107,6 +129,8 @@ export const updateProject = async (req: Request, res: Response): Promise<void> 
       return
     }
 
+    const user = req.user as { id: string; role: string }
+    void createAuditLog({ actorId: user.id, action: 'update', targetType: 'project', targetId: id as string })
     res.json(result.rows[0])
   } catch (err: any) {
     res.status(500).json({ error: err.message })
@@ -127,6 +151,8 @@ export const deleteProject = async (req: Request, res: Response): Promise<void> 
       return
     }
 
+    const user = req.user as { id: string; role: string }
+    void createAuditLog({ actorId: user.id, action: 'delete', targetType: 'project', targetId: id as string, oldValue: result.rows[0].title })
     res.json({ message: 'Project deleted', project: result.rows[0] })
   } catch (err: any) {
     res.status(500).json({ error: err.message })

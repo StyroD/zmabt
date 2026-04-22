@@ -19,6 +19,7 @@ import authMiddleware from './middleware/auth'
 import locationsRouter from './routes/locations'
 import messagesRouter from './routes/messages'
 import inviteRouter from './routes/invite'
+import auditRouter from './routes/audit'
 import { initSocket } from './socket'
 
 import passport from 'passport'
@@ -46,6 +47,7 @@ app.use('/api/dashboard', dashboardRouter)
 app.use('/api/notifications', notificationsRouter)
 app.use('/api/categories', categoriesRouter)
 app.use('/api/messages', messagesRouter)
+app.use('/api/audit-logs', auditRouter)
 app.use(passport.initialize())
 
 const swaggerDocument = {
@@ -492,7 +494,7 @@ const swaggerDocument = {
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'ok' })
 })
 

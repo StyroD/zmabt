@@ -27,6 +27,11 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
       lng
     } = req.body
 
+    if (!project_id || !title?.trim()) {
+      res.status(400).json({ error: 'project_id and title are required' })
+      return
+    }
+
     const id = uuidv4()
 
     const result = await pool.query(
