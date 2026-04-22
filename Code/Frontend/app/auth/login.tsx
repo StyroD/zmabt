@@ -11,7 +11,7 @@ import client from "@/api/client";
 
 WebBrowser.maybeCompleteAuthSession()
 
-const GOOGLE_BASE = 'https://blasphemy-wrongness-letdown.ngrok-free.dev/api'
+const GOOGLE_BASE = 'https://blasphemy-wrongness-letdown.ngrok-free.dev'
 
 export default function Login() {
     const [email, setEmail] = useState('');

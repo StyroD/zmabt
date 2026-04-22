@@ -8,6 +8,9 @@ const API_BASE = (client.defaults.baseURL ?? 'http://localhost:3000/api').replac
 export const getCertificatesByWorker = (workerId: string) =>
   client.get(`/uploads/certificates/worker/${workerId}`)
 
+export const getProjectPhotos = (projectId: string) =>
+  client.get(`/uploads/photos/project/${projectId}`)
+
 export const downloadCertificateFile = async (id: string): Promise<string> => {
   const token = await SecureStore.getItemAsync('token')
   const cacheDir = FileSystem.cacheDirectory ?? 'file:///tmp/'

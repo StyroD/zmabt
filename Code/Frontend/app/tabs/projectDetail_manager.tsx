@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native'
 import { Colors } from '../../constants/color'
 import { Box } from '@/components/ProjectDetailManager/Box'
 import { Ionicons } from '@expo/vector-icons'
@@ -9,10 +9,14 @@ import { getProjectById } from '@/api/endpoints/projects'
 import { ActivityIndicator } from 'react-native'
 import { getProjectWorkers } from '@/api/endpoints/workers'
 import { getTasksByProjectId } from '@/api/endpoints/tasks'
+import { getProjectPhotos } from '@/api/endpoints/uploads'
 import { useLocalSearchParams } from 'expo-router'
 import { router } from 'expo-router'
 import { useRef } from 'react'
+import * as SecureStore from 'expo-secure-store'
+import client from '@/api/client'
 
+const API_BASE = (client.defaults.baseURL ?? '').replace(/\/$/, '')
 
 export default function ProjectDetail() {
 
@@ -22,6 +26,8 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true)
   const [workers, setWorkers] = useState<any[]>([])
   const [tasks, setTasks] = useState<any[]>([])
+  const [photos, setPhotos] = useState<any[]>([])
+  const [token, setToken] = useState<string | null>(null)
   const scrollRef = useRef<ScrollView>(null)
 
 
@@ -41,7 +47,7 @@ export default function ProjectDetail() {
     scrollRef.current?.scrollTo({ y: 0, animated: false })
   }, [id])
 
-  //Project workers + tasks
+  //Project workers, tasks + photos
   useEffect(() => {
     if (!currentProject) return
     getProjectWorkers(currentProject.id)
@@ -50,6 +56,10 @@ export default function ProjectDetail() {
     getTasksByProjectId(currentProject.id)
       .then(res => setTasks(res.data))
       .catch(err => console.error(err))
+    getProjectPhotos(currentProject.id)
+      .then(res => setPhotos(res.data))
+      .catch(err => console.error(err))
+    SecureStore.getItemAsync('token').then(setToken)
   }, [currentProject])
 
   if (loading) {
@@ -91,7 +101,6 @@ export default function ProjectDetail() {
 
 
 
-  const photos = ['1', '2', '3', '4']
 
   return (
     <ScreenWrapper title='Project detail' backRoute='/tabs/projectsList'>
@@ -170,11 +179,13 @@ export default function ProjectDetail() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
 
 
-          {photos.map((p, index) => (
-            <View key={`photo-${index}`} style={styles.photoBox}>
-              <Ionicons name="image-outline" size={28} color={Colors.textSecondary} />
-              <Text style={styles.photoText}>Photo</Text>
-            </View>
+          {photos.map((p) => (
+            <Image
+              key={p.id}
+              source={{ uri: `${API_BASE}/uploads/photos/${p.id}`, headers: { Authorization: `Bearer ${token}` } }}
+              style={styles.photoBox}
+              resizeMode="cover"
+            />
           ))}
           <TouchableOpacity style={[styles.photoBox, styles.addPhotoBox]}>
             <AntDesign name="plus" size={24} color={Colors.primary} />
