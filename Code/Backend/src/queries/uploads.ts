@@ -169,12 +169,13 @@ export const getProjectPhotos = async (req: Request, res: Response): Promise<voi
 
     const result = await pool.query(query, values)
 
-    // Convert file_data to base64
     const photos = result.rows.map(photo => ({
-      ...photo,
-      file_data: photo.file_data ? photo.file_data.toString('base64') : null
+      id: photo.id,
+      project_id: photo.project_id,
+      task_id: photo.task_id,
+      uploaded_by: photo.uploaded_by,
+      uploaded_at: photo.uploaded_at,
     }))
-
     res.json(photos)
   } catch (err: any) {
     res.status(500).json({ error: err.message })
