@@ -1,13 +1,14 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
-import { Colors } from '../../constants/color'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useState, useEffect, useMemo } from 'react'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import AntDesign from '@expo/vector-icons/AntDesign'
-import { ActivityIndicator } from 'react-native'
 import { getTasksByProjectId } from '@/api/endpoints/tasks'
 import { TaskBox } from '@/components/TaskBox'
+import { logScreenView } from '@/utils/firebase'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const STATUSES = ['all', 'pending', 'in_progress', 'done']
 const PRIORITIES = ['all', 'low', 'medium', 'high']
@@ -27,6 +28,8 @@ const priorityLabels: Record<string, string> = {
 }
 
 export default function TaskList() {
+  const Colors = useColors()
+  const insets = useSafeAreaInsets()
   const { projectId, projectTitle } = useLocalSearchParams()
 
   const [tasks, setTasks] = useState<any[]>([])
@@ -47,6 +50,7 @@ export default function TaskList() {
   const activeFilterCount = [statusFilter, priorityFilter].filter(f => f !== 'all').length
 
   useEffect(() => {
+    logScreenView('TaskList').catch(() => {})
     getTasksByProjectId(projectId as string)
       .then(res => {
         setTasks(res.data)
@@ -57,6 +61,85 @@ export default function TaskList() {
         setLoading(false)
       })
   }, [projectId])
+
+  const styles = StyleSheet.create({
+    center: {
+      flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background,
+    },
+    toolbar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+      marginBottom: 4,
+    },
+    filterBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      backgroundColor: Colors.surface,
+    },
+    filterActive: {
+      borderColor: Colors.primary,
+      backgroundColor: Colors.primaryLight,
+    },
+    filterText: {
+      fontSize: 13,
+      color: Colors.textSecondary,
+    },
+    filterTextActive: {
+      color: Colors.primary,
+    },
+    clearBtn: {
+      padding: 6,
+    },
+    dropdown: {
+      backgroundColor: Colors.surface,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: 10,
+      marginBottom: 8,
+      overflow: 'hidden',
+    },
+    dropdownItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    dropdownText: {
+      fontSize: 14,
+      color: Colors.textPrimary,
+    },
+    dropdownTextActive: {
+      color: Colors.primary,
+      fontWeight: '500',
+    },
+    emptyState: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 60,
+      gap: 12,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: Colors.textSecondary,
+    },
+    clearFiltersText: {
+      fontSize: 14,
+      color: Colors.primary,
+      textDecorationLine: 'underline',
+    },
+  })
 
   if (loading) {
     return (
@@ -77,7 +160,6 @@ export default function TaskList() {
       }
     >
       <View style={styles.toolbar}>
-        {/* Status filter */}
         <TouchableOpacity
           style={[styles.filterBtn, statusFilter !== 'all' && styles.filterActive]}
           onPress={() => { setShowStatusPicker(!showStatusPicker); setShowPriorityPicker(false) }}
@@ -89,7 +171,6 @@ export default function TaskList() {
           <AntDesign name={showStatusPicker ? 'up' : 'down'} size={10} color={Colors.textSecondary} />
         </TouchableOpacity>
 
-        {/* Priority filter */}
         <TouchableOpacity
           style={[styles.filterBtn, priorityFilter !== 'all' && styles.filterActive]}
           onPress={() => { setShowPriorityPicker(!showPriorityPicker); setShowStatusPicker(false) }}
@@ -101,7 +182,6 @@ export default function TaskList() {
           <AntDesign name={showPriorityPicker ? 'up' : 'down'} size={10} color={Colors.textSecondary} />
         </TouchableOpacity>
 
-        {/* Clear filters */}
         {activeFilterCount > 0 && (
           <TouchableOpacity
             style={styles.clearBtn}
@@ -112,7 +192,6 @@ export default function TaskList() {
         )}
       </View>
 
-      {/* Status dropdown */}
       {showStatusPicker && (
         <View style={styles.dropdown}>
           {STATUSES.map(s => (
@@ -130,7 +209,6 @@ export default function TaskList() {
         </View>
       )}
 
-      {/* Priority dropdown */}
       {showPriorityPicker && (
         <View style={styles.dropdown}>
           {PRIORITIES.map(p => (
@@ -165,90 +243,14 @@ export default function TaskList() {
               onStatusChange={() => {
                 setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'done' } : t))
               }}
+              onDelete={(id) => {
+                setTasks(prev => prev.filter(t => t.id !== id))
+              }}
             />
           ))
         )}
-        <View style={{ height: 30 }} />
+        <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
       </ScrollView>
     </ScreenWrapper>
   )
 }
-
-const styles = StyleSheet.create({
-  center: {
-    flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background,
-  },
-  toolbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    marginBottom: 4,
-  },
-  filterBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  filterActive: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primaryLight,
-  },
-  filterText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
-  filterTextActive: {
-    color: Colors.primary,
-  },
-  clearBtn: {
-    padding: 6,
-  },
-  dropdown: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    marginBottom: 8,
-    overflow: 'hidden',
-  },
-  dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  dropdownText: {
-    fontSize: 14,
-    color: Colors.textPrimary,
-  },
-  dropdownTextActive: {
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
-  clearFiltersText: {
-    fontSize: 14,
-    color: Colors.primary,
-    textDecorationLine: 'underline',
-  },
-})

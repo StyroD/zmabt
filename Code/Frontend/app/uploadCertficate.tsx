@@ -6,10 +6,12 @@ import * as DocumentPicker from 'expo-document-picker'
 import * as SecureStore from 'expo-secure-store'
 import { Ionicons } from '@expo/vector-icons'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
-import { Colors } from '@/constants/color'
+import { useColors } from '@/contexts/ThemeContext'
 import client from '@/api/client'
+import { logCertificateUploaded, recordError } from '@/utils/firebase'
 
 export default function UploadCertificate() {
+    const Colors = useColors()
     const { categoryId, categoryName, workerId: paramWorkerId } = useLocalSearchParams<{
         categoryId: string
         categoryName: string
@@ -82,9 +84,11 @@ export default function UploadCertificate() {
                 headers: { 'Content-Type': 'multipart/form-data' },
             })
 
+            logCertificateUploaded().catch(() => {})
             Alert.alert('Success', 'Certificate submitted for review')
             router.back()
         } catch (err: any) {
+            recordError(err instanceof Error ? err : new Error(String(err)), 'confirmUpload').catch(() => {})
             Alert.alert('Error', err?.response?.data?.error ?? 'Upload failed')
         } finally {
             setUploading(false)
@@ -92,6 +96,127 @@ export default function UploadCertificate() {
     }
 
     const isPdf = file?.mimeType === 'application/pdf' || file?.name?.endsWith('.pdf')
+
+    const styles = StyleSheet.create({
+        infoText: {
+            color: Colors.textSecondary,
+            fontSize: 13,
+            marginBottom: 6,
+        },
+        senderName: {
+            fontSize: 28,
+            fontWeight: '700',
+            color: Colors.textPrimary,
+            marginBottom: 12,
+        },
+        nameInput: {
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 10,
+            padding: 12,
+            fontSize: 15,
+            color: Colors.textPrimary,
+            marginBottom: 16,
+        },
+        uploadArea: {
+            flex: 1,
+            backgroundColor: Colors.surface,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: 280,
+            marginBottom: 20,
+        },
+        previewImage: {
+            width: '100%',
+            height: '100%',
+            borderRadius: 12,
+        },
+        pdfPreview: {
+            alignItems: 'center',
+            gap: 12,
+            padding: 20,
+        },
+        pdfName: {
+            color: Colors.textPrimary,
+            textAlign: 'center',
+            fontSize: 14,
+        },
+        submitBtn: {
+            backgroundColor: Colors.primary,
+            borderRadius: 12,
+            padding: 16,
+            alignItems: 'center',
+        },
+        submitBtnDisabled: {
+            opacity: 0.4,
+        },
+        submitText: {
+            color: Colors.textPrimary,
+            fontWeight: '600',
+            fontSize: 16,
+        },
+        overlay: {
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 24,
+        },
+        modal: {
+            backgroundColor: Colors.surface,
+            borderRadius: 16,
+            padding: 24,
+            width: '100%',
+            gap: 16,
+        },
+        modalTitle: {
+            fontSize: 22,
+            fontWeight: '600',
+            color: Colors.textPrimary,
+            textAlign: 'center',
+        },
+        modalBody: {
+            fontSize: 14,
+            color: Colors.textSecondary,
+            textAlign: 'center',
+            lineHeight: 20,
+        },
+        modalButtons: {
+            flexDirection: 'row',
+            gap: 12,
+            marginTop: 4,
+        },
+        continueBtn: {
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 10,
+            padding: 12,
+        },
+        cancelBtn: {
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 10,
+            padding: 12,
+        },
+        btnText: {
+            color: Colors.textPrimary,
+            fontWeight: '500',
+        },
+    })
 
     return (
         <ScreenWrapper title="Certificates" backRoute="..">
@@ -106,7 +231,6 @@ export default function UploadCertificate() {
                 onChangeText={setCertName}
             />
 
-            {/* Upload area */}
             <TouchableOpacity style={styles.uploadArea} onPress={handlePickPress}>
                 {file ? (
                     isPdf ? (
@@ -122,7 +246,6 @@ export default function UploadCertificate() {
                 )}
             </TouchableOpacity>
 
-            {/* Submit button */}
             <TouchableOpacity
                 style={[styles.submitBtn, !file && styles.submitBtnDisabled]}
                 onPress={handleUpload}
@@ -135,7 +258,6 @@ export default function UploadCertificate() {
                 )}
             </TouchableOpacity>
 
-            {/* Confirmation modal */}
             <Modal visible={modalVisible} transparent animationType="fade">
                 <View style={styles.overlay}>
                     <View style={styles.modal}>
@@ -159,124 +281,3 @@ export default function UploadCertificate() {
         </ScreenWrapper>
     )
 }
-
-const styles = StyleSheet.create({
-    infoText: {
-        color: Colors.textSecondary,
-        fontSize: 13,
-        marginBottom: 6,
-    },
-    senderName: {
-        fontSize: 28,
-        fontWeight: '700',
-        color: Colors.textPrimary,
-        marginBottom: 12,
-    },
-    nameInput: {
-        backgroundColor: Colors.surface,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 10,
-        padding: 12,
-        fontSize: 15,
-        color: Colors.textPrimary,
-        marginBottom: 16,
-    },
-    uploadArea: {
-        flex: 1,
-        backgroundColor: Colors.surface,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: 280,
-        marginBottom: 20,
-    },
-    previewImage: {
-        width: '100%',
-        height: '100%',
-        borderRadius: 12,
-    },
-    pdfPreview: {
-        alignItems: 'center',
-        gap: 12,
-        padding: 20,
-    },
-    pdfName: {
-        color: Colors.textPrimary,
-        textAlign: 'center',
-        fontSize: 14,
-    },
-    submitBtn: {
-        backgroundColor: Colors.primary,
-        borderRadius: 12,
-        padding: 16,
-        alignItems: 'center',
-    },
-    submitBtnDisabled: {
-        opacity: 0.4,
-    },
-    submitText: {
-        color: Colors.textPrimary,
-        fontWeight: '600',
-        fontSize: 16,
-    },
-    overlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 24,
-    },
-    modal: {
-        backgroundColor: Colors.surface,
-        borderRadius: 16,
-        padding: 24,
-        width: '100%',
-        gap: 16,
-    },
-    modalTitle: {
-        fontSize: 22,
-        fontWeight: '600',
-        color: Colors.textPrimary,
-        textAlign: 'center',
-    },
-    modalBody: {
-        fontSize: 14,
-        color: Colors.textSecondary,
-        textAlign: 'center',
-        lineHeight: 20,
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        gap: 12,
-        marginTop: 4,
-    },
-    continueBtn: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 6,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 10,
-        padding: 12,
-    },
-    cancelBtn: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 6,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 10,
-        padding: 12,
-    },
-    btnText: {
-        color: Colors.textPrimary,
-        fontWeight: '500',
-    },
-})

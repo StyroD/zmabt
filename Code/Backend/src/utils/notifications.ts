@@ -13,6 +13,7 @@ export const sendNotification = async ({
   body,
   referenceId,
   referenceType,
+  extraData = {},
 }: {
   userId: string
   type: NotificationType
@@ -20,6 +21,7 @@ export const sendNotification = async ({
   body: string
   referenceId: string
   referenceType: string
+  extraData?: Record<string, any>
 }): Promise<void> => {
   await pool.query(
     `INSERT INTO notifications (id, user_id, type, title, body, reference_id, reference_type, read, sent_at)
@@ -41,7 +43,7 @@ export const sendNotification = async ({
     sound: 'default',
     title,
     body,
-    data: { referenceId, referenceType, type },
+    data: { referenceId, referenceType, type, ...extraData },
   }
 
   try {

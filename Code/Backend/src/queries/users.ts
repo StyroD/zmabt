@@ -47,12 +47,16 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
 }
 
 export const createUser = async (req: Request, res: Response): Promise<void> => {
-  const { name, email } = req.body
-  const result = await pool.query(
-    'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
-    [name, email]
-  )
-  res.json(result.rows[0])
+  try {
+    const { name, email } = req.body
+    const result = await pool.query(
+      'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
+      [name, email]
+    )
+    res.json(result.rows[0])
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
 }
 
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
@@ -65,45 +69,31 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       return
     }
 
-    const fields = ['first_name', 'last_name', 'hourly_rate', 'currency', 'phone', 'email']
-    const updates: string[] = []
-    const values: any[] = []
+    const { first_name, last_name, phone, address, avatar_url, fcm_token } = req.body
 
-    fields.forEach(field => {
-      if (req.body[field] !== undefined) {
-        updates.push(`${field} = $${updates.length + 1}`)
-        values.push(req.body[field])
-      }
-    })
+    let query = `UPDATE users SET
+      first_name = COALESCE($1, first_name),
+      last_name = COALESCE($2, last_name),
+      phone = COALESCE($3, phone),
+      address = COALESCE($4, address),
+      avatar_url = COALESCE($5, avatar_url),
+      fcm_token = COALESCE($6, fcm_token)`
 
-    // Handle avatar from multer memory storage
+    const values: any[] = [first_name, last_name, phone, address, avatar_url, fcm_token]
+
     if (req.file) {
-      updates.push(`avatar = $${updates.length + 1}`)
-      values.push(req.file.buffer) // raw bytes → bytea
-    }
-
-    if (updates.length === 0) {
-      res.status(400).json({ error: 'No fields provided to update' })
-      return
+      let mimeType = req.file.mimetype
+      const b = req.file.buffer
+      if (b[0] === 0xff && b[1] === 0xd8) mimeType = 'image/jpeg'
+      else if (b[0] === 0x89 && b[1] === 0x50) mimeType = 'image/png'
+      values.push(b, mimeType)
+      query += `, avatar = $${values.length - 1}, avatar_mime_type = $${values.length}`
     }
 
     values.push(id)
-    //const result = await pool.query(
-      //`UPDATE users SET ${updates.join(', ')} WHERE id = $${values.length} RETURNING *`,
-      //values
-    const { first_name, last_name, phone, address, avatar_url, fcm_token } = req.body
+    query += ` WHERE id = $${values.length} RETURNING *`
 
-    const result = await pool.query(
-      `UPDATE users SET
-        first_name = COALESCE($1, first_name),
-        last_name = COALESCE($2, last_name),
-        phone = COALESCE($3, phone),
-        address = COALESCE($4, address),
-        avatar_url = COALESCE($5, avatar_url),
-        fcm_token = COALESCE($6, fcm_token)
-       WHERE id = $7 RETURNING *`,
-      [first_name, last_name, phone, address, avatar_url, fcm_token, id]
-    )
+    const result = await pool.query(query, values)
 
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'User not found' })
@@ -111,8 +101,9 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     }
 
     const updatedUser = result.rows[0]
+    delete updatedUser.password_hash
+    delete updatedUser.google_id
 
-    // Convert avatar bytes to base64 for response
     if (updatedUser.avatar) {
       updatedUser.avatar = updatedUser.avatar.toString('base64')
     }

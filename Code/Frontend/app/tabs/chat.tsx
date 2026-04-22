@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   ActivityIndicator, Modal, TextInput, Pressable,
 } from "react-native"
-import { Colors } from "@/constants/color"
+import { useColors } from "@/contexts/ThemeContext"
 import { router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { useEffect, useState, useCallback } from "react"
@@ -27,9 +27,56 @@ type User = {
 }
 
 function ConversationItem({ item, currentUserId }: { item: Conversation; currentUserId: string }) {
+  const Colors = useColors()
   const initials = item.name.split(' ').map((n: string) => n[0]).join('')
   const isOwn = item.sender_id === currentUserId
   const preview = isOwn ? `You: ${item.last_message}` : item.last_message
+
+  const styles = StyleSheet.create({
+    item: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+      gap: 12,
+    },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: Colors.surfaceElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarText: {
+      color: Colors.textPrimary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    itemContent: {
+      flex: 1,
+      gap: 3,
+    },
+    itemHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    itemName: {
+      color: Colors.textPrimary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    timestamp: {
+      color: Colors.textSecondary,
+      fontSize: 12,
+    },
+    lastMessage: {
+      color: Colors.textSecondary,
+      fontSize: 13,
+    },
+  })
 
   return (
     <TouchableOpacity
@@ -68,6 +115,7 @@ function NewConversationModal({
   currentUserId: string
   onClose: () => void
 }) {
+  const Colors = useColors()
   const [users, setUsers] = useState<User[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
@@ -92,6 +140,87 @@ function NewConversationModal({
       params: { userId: user.id, name: user.username },
     })
   }
+
+  const styles = StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    sheet: {
+      backgroundColor: Colors.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingHorizontal: 16,
+      paddingBottom: 32,
+      maxHeight: '75%',
+    },
+    sheetHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    sheetTitle: {
+      color: Colors.textPrimary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      marginTop: 12,
+      marginBottom: 4,
+    },
+    searchInput: {
+      flex: 1,
+      paddingVertical: 10,
+      color: Colors.textPrimary,
+      fontSize: 14,
+    },
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: Colors.surfaceElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarText: {
+      color: Colors.textPrimary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    itemName: {
+      color: Colors.textPrimary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    userRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    userRole: {
+      color: Colors.textSecondary,
+      fontSize: 12,
+      textTransform: 'capitalize',
+      marginTop: 2,
+    },
+    empty: {
+      color: Colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 40,
+      fontSize: 14,
+    },
+  })
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -150,6 +279,7 @@ function NewConversationModal({
 }
 
 export default function ChatList() {
+  const Colors = useColors()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentUserId, setCurrentUserId] = useState('')
   const [loading, setLoading] = useState(true)
@@ -178,6 +308,23 @@ export default function ChatList() {
       return () => { active = false }
     }, [])
   )
+
+  const styles = StyleSheet.create({
+    list: {
+      paddingTop: 12,
+    },
+    center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    empty: {
+      color: Colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 40,
+      fontSize: 14,
+    },
+  })
 
   if (loading) {
     return (
@@ -215,118 +362,3 @@ export default function ChatList() {
     </ScreenWrapper>
   )
 }
-
-const styles = StyleSheet.create({
-  list: {
-    paddingTop: 12,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  empty: {
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 40,
-    fontSize: 14,
-  },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    gap: 12,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  itemContent: {
-    flex: 1,
-    gap: 3,
-  },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  itemName: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  timestamp: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
-  lastMessage: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-  },
-  // Modal
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  sheet: {
-    backgroundColor: Colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-    maxHeight: '75%',
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  sheetTitle: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 10,
-    color: Colors.textPrimary,
-    fontSize: 14,
-  },
-  userRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  userRole: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    textTransform: 'capitalize',
-    marginTop: 2,
-  },
-})

@@ -1,32 +1,40 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Colors } from "@/constants/color";
-import { LogBox } from "@/components/Auth/LogBox";
-import { useState } from 'react';
-import { router } from "expo-router";
-import { ScreenWrapper } from '@/components/ScreenWrapper';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native"
+import { useColors } from "@/contexts/ThemeContext"
+import { LogBox } from "@/components/Auth/LogBox"
+import { useState } from 'react'
+import { router } from "expo-router"
+import { ScreenWrapper } from '@/components/ScreenWrapper'
 import * as SecureStore from 'expo-secure-store'
 import * as WebBrowser from 'expo-web-browser'
-import { login } from "@/api/auth";
-import client from "@/api/client";
+import * as Linking from 'expo-linking'
+import { AntDesign } from '@expo/vector-icons'
+import { login } from "@/api/auth"
+import { getUserById } from "@/api/endpoints/users"
+import { logLogin, setCrashlyticsUser } from "@/utils/firebase"
 
-WebBrowser.maybeCompleteAuthSession()
-
-const GOOGLE_BASE = 'https://blasphemy-wrongness-letdown.ngrok-free.dev'
+const GOOGLE_AUTH_URL = 'http://localhost:3000/api/auth/google'
 
 export default function Login() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [logError, setLogError] = useState('');
+    const Colors = useColors()
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [logError, setLogError] = useState('')
+    const [googleLoading, setGoogleLoading] = useState(false)
 
     const handleLogin = async () => {
         try {
             const data = await login(email, password)
-            await SecureStore.setItemAsync('token', data.token)
             await SecureStore.setItemAsync('user', JSON.stringify(data.user))
+            logLogin('email').catch(() => {})
+            setCrashlyticsUser(data.user.id, data.user.role).catch(() => {})
             router.push('/tabs/dashboard')
         } catch (e: any) {
-            if (e.response?.status === 401) {
-                setLogError('Invalid email or password')
+            if (e.response) {
+                if (e.response.status === 401) {
+                    setLogError('Invalid email or password')
+                } else {
+                    setLogError('Something went wrong')
+                }
             } else {
                 setLogError('Something went wrong')
             }
@@ -34,104 +42,144 @@ export default function Login() {
     }
 
     const handleGoogleLogin = async () => {
+        setGoogleLoading(true)
         setLogError('')
-        const result = await WebBrowser.openAuthSessionAsync(
-            `${GOOGLE_BASE}/auth/google`,
-            'frontend://auth'
-        )
-        if (result.type !== 'success') return
-
-        const url = result.url
-        const token = url.match(/[?&]token=([^&]+)/)?.[1]
-        if (!token) {
-            setLogError('Google sign-in failed')
-            return
-        }
-
         try {
+            const redirectUri = 'frontend://auth'
+            const result = await WebBrowser.openAuthSessionAsync(GOOGLE_AUTH_URL, redirectUri)
+
+            if (result.type !== 'success') return
+
+            const parsed = Linking.parse(result.url)
+            const token = parsed.queryParams?.token as string | undefined
+            const userId = parsed.queryParams?.userId as string | undefined
+
+            if (!token || !userId) {
+                setLogError('Google login failed — missing credentials')
+                return
+            }
+
             await SecureStore.setItemAsync('token', token)
-            const res = await client.get('/auth/me', {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-            await SecureStore.setItemAsync('user', JSON.stringify(res.data))
-            router.replace('/tabs/dashboard')
+            await SecureStore.setItemAsync('userId', userId)
+
+            const userRes = await getUserById(userId)
+            await SecureStore.setItemAsync('user', JSON.stringify(userRes.data))
+            logLogin('google').catch(() => {})
+            setCrashlyticsUser(userId, userRes.data.role).catch(() => {})
+            router.push('/tabs/dashboard')
         } catch {
-            setLogError('Could not load user after Google sign-in')
+            setLogError('Google login failed. Try again.')
+        } finally {
+            setGoogleLoading(false)
         }
     }
 
+    const styles = StyleSheet.create({
+        card: {
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 16,
+            padding: 24,
+            width: '100%',
+            gap: 16,
+        },
+        title: {
+            fontSize: 24,
+            fontWeight: '600',
+            color: Colors.textPrimary,
+            marginBottom: 8,
+        },
+        button: {
+            backgroundColor: Colors.primary,
+            paddingVertical: 14,
+            borderRadius: 8,
+            alignItems: 'center',
+            width: '100%',
+        },
+        buttonText: {
+            color: Colors.surface,
+            fontWeight: '600',
+            fontSize: 16,
+        },
+        dividerRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+        },
+        dividerLine: {
+            flex: 1,
+            height: 1,
+            backgroundColor: Colors.border,
+        },
+        dividerText: {
+            fontSize: 13,
+            color: Colors.textSecondary,
+        },
+        googleButton: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 8,
+            paddingVertical: 14,
+            backgroundColor: Colors.surface,
+        },
+        googleButtonText: {
+            color: Colors.textPrimary,
+            fontWeight: '500',
+            fontSize: 15,
+        },
+        link: {
+            color: Colors.primary,
+            textAlign: 'center',
+            fontSize: 14,
+        },
+        error: {
+            color: Colors.danger,
+            fontSize: 14,
+            textAlign: 'center',
+        },
+    })
+
     return (
         <ScreenWrapper title="Login">
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
             <View style={styles.card}>
                 <Text style={styles.title}>Login</Text>
                 <LogBox placeholder="Enter your email" label="Email" value={email} onChangeText={setEmail} />
                 <LogBox placeholder="Enter your password" label="Password" value={password} onChangeText={setPassword} secureTextEntry={true} icon="eye-off" />
                 <View style={{ flexDirection: 'row', gap: 16 }}>
                     <TouchableOpacity onPress={() => router.push('/auth/sign')}>
-                        <Text style={styles.link}>Dont have an account?</Text>
+                        <Text style={styles.link}>Don't have an account?</Text>
                     </TouchableOpacity>
                 </View>
                 <TouchableOpacity style={styles.button} onPress={handleLogin}>
                     <Text style={styles.buttonText}>Login</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
-                    <Text style={styles.googleButtonText}>Sign in with Google</Text>
+
+                <View style={styles.dividerRow}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>or</Text>
+                    <View style={styles.dividerLine} />
+                </View>
+
+                <TouchableOpacity
+                    style={[styles.googleButton, googleLoading && { opacity: 0.6 }]}
+                    onPress={handleGoogleLogin}
+                    disabled={googleLoading}
+                >
+                    <AntDesign name="google" size={18} color="#DB4437" />
+                    <Text style={styles.googleButtonText}>
+                        {googleLoading ? 'Opening Google…' : 'Continue with Google'}
+                    </Text>
                 </TouchableOpacity>
+
                 {logError ? <Text style={styles.error}>{logError}</Text> : null}
             </View>
+            </ScrollView>
         </ScreenWrapper>
     )
 }
-
-const styles = StyleSheet.create({
-    card: {
-        backgroundColor: Colors.surface,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 16,
-        padding: 24,
-        width: '100%',
-        gap: 16,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: '600',
-        color: Colors.textPrimary,
-        marginBottom: 8,
-    },
-    button: {
-        backgroundColor: Colors.primary,
-        paddingVertical: 14,
-        borderRadius: 8,
-        alignItems: 'center',
-        width: '100%',
-    },
-    buttonText: {
-        color: Colors.surface,
-        fontWeight: '600',
-        fontSize: 16,
-    },
-    googleButton: {
-        borderWidth: 1,
-        borderColor: Colors.border,
-        paddingVertical: 14,
-        borderRadius: 8,
-        alignItems: 'center',
-        width: '100%',
-    },
-    googleButtonText: {
-        color: Colors.textPrimary,
-        fontWeight: '600',
-        fontSize: 16,
-    },
-    link: {
-        color: Colors.primary,
-        textAlign: 'center',
-        fontSize: 14,
-    },
-    error: {
-        color: Colors.danger,
-        fontSize: 14,
-        textAlign: 'center',
-    },
-});
