@@ -11,6 +11,7 @@ import { createTask, assignWorkersToTask } from '@/api/endpoints/tasks'
 import { getCategories } from '@/api/endpoints/categories'
 import { useNetwork } from '@/contexts/NetworkContext'
 import { addToQueue } from '@/utils/offlineQueue'
+import { logTaskCreated } from '@/utils/firebase'
 
 const PRIORITIES = ['low', 'medium', 'high']
 const priorityLabels: Record<string, string> = { low: 'Low', medium: 'Medium', high: 'High' }
@@ -65,6 +66,7 @@ export default function CreateTask() {
                     deadline: deadline!.toISOString().split('T')[0],
                     workerIds: assignedWorkers,
                 })
+                logTaskCreated(projectId as string).catch(() => {})
                 Alert.alert('Saved offline', 'Task will be created when you reconnect.')
                 router.back()
                 return
@@ -80,6 +82,7 @@ export default function CreateTask() {
             if (assignedWorkers.length > 0) {
                 await assignWorkersToTask(task.data.id, assignedWorkers)
             }
+            logTaskCreated(projectId as string).catch(() => {})
             router.back()
         } catch (err: any) {
             Alert.alert('Error', err?.response?.data?.error ?? 'Failed to create task')

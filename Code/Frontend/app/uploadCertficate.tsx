@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useColors } from '@/contexts/ThemeContext'
 import client from '@/api/client'
+import { logCertificateUploaded, recordError } from '@/utils/firebase'
 
 export default function UploadCertificate() {
     const Colors = useColors()
@@ -83,9 +84,11 @@ export default function UploadCertificate() {
                 headers: { 'Content-Type': 'multipart/form-data' },
             })
 
+            logCertificateUploaded().catch(() => {})
             Alert.alert('Success', 'Certificate submitted for review')
             router.back()
         } catch (err: any) {
+            recordError(err instanceof Error ? err : new Error(String(err)), 'confirmUpload').catch(() => {})
             Alert.alert('Error', err?.response?.data?.error ?? 'Upload failed')
         } finally {
             setUploading(false)

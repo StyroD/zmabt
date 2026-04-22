@@ -5,6 +5,7 @@ import { useState } from "react"
 import { updateTaskStatus, deleteTask } from "@/api/endpoints/tasks"
 import { useNetwork } from "@/contexts/NetworkContext"
 import { addToQueue } from "@/utils/offlineQueue"
+import { logTaskDone, recordError } from "@/utils/firebase"
 
 const formatDate = (dateString: string) => {
   if (!dateString) return '—'
@@ -41,14 +42,14 @@ export function TaskBox({ task, onStatusChange, onDelete }: { task: any; onStatu
     try {
       if (!isOnline) {
         await addToQueue('TASK_STATUS_UPDATE', { taskId: task.id, status: 'done' })
-        setStatus('done')
-        onStatusChange?.()
       } else {
         await updateTaskStatus(task.id, 'done')
-        setStatus('done')
-        onStatusChange?.()
       }
+      logTaskDone(task.id).catch(() => {})
+      setStatus('done')
+      onStatusChange?.()
     } catch (err: any) {
+      recordError(err instanceof Error ? err : new Error(String(err)), 'handleMarkDone').catch(() => {})
       Alert.alert('Error', err?.response?.data?.error ?? 'Failed to update status')
     } finally {
       setMarking(false)

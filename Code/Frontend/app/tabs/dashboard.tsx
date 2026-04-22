@@ -6,6 +6,7 @@ import { getManagerDashboard, getWorkerDashboard } from '@/api/endpoints/dashboa
 import { getNotifications, markNotificationAsRead } from '@/api/endpoints/notifications'
 import { router } from 'expo-router'
 import * as SecureStore from 'expo-secure-store'
+import { logScreenView } from '@/utils/firebase'
 
 export default function Dashboard() {
   const Colors = useColors()
@@ -16,6 +17,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const load = async () => {
+      logScreenView('Dashboard').catch(() => {})
       try {
         const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
         setCurrentUser(user)

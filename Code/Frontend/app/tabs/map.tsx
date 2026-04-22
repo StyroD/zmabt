@@ -4,6 +4,7 @@ import { useColors } from '@/contexts/ThemeContext'
 import { useEffect, useRef, useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import * as SecureStore from 'expo-secure-store'
+import * as Location from 'expo-location'
 import { getProjectByManagerId, getProjectsByWorkerId } from '@/api/endpoints/projects'
 import { getProjectWorkerLocations, updateWorkerLocation } from '@/api/endpoints/locations'
 
@@ -22,6 +23,7 @@ export default function MapScreen() {
   const [workerLocations, setWorkerLocations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [checkingIn, setCheckingIn] = useState(false)
+  const [locationPermission, setLocationPermission] = useState(false)
   const userCoordsRef = useRef<{ lat: number; lng: number } | null>(null)
   const mapRef = useRef<MapView>(null)
   const refreshRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -29,6 +31,9 @@ export default function MapScreen() {
   useEffect(() => {
     const load = async () => {
       try {
+        const { status } = await Location.requestForegroundPermissionsAsync()
+        setLocationPermission(status === 'granted')
+
         const stored = await SecureStore.getItemAsync('user')
         const u = stored ? JSON.parse(stored) : null
         setUser(u)
@@ -79,8 +84,12 @@ export default function MapScreen() {
   }, [selected, user])
 
   const handleCheckIn = async () => {
+    if (!locationPermission) {
+      Alert.alert('Location permission required', 'Please grant location access in device settings to check in.')
+      return
+    }
     if (!userCoordsRef.current) {
-      Alert.alert('Location unavailable', 'Enable location in device settings and wait a moment for GPS to lock.')
+      Alert.alert('Location unavailable', 'Wait a moment for GPS to lock and try again.')
       return
     }
     if (!selected) {
@@ -261,8 +270,8 @@ export default function MapScreen() {
         ref={mapRef}
         style={styles.map}
         initialRegion={BRATISLAVA}
-        showsUserLocation={!isManager}
-        showsMyLocationButton={!isManager}
+        showsUserLocation={!isManager && locationPermission}
+        showsMyLocationButton={!isManager && locationPermission}
         onUserLocationChange={e => {
           const coords = e.nativeEvent.coordinate
           if (coords) {

@@ -1,6 +1,8 @@
 import client from '../client'
 
 export const getUsers = () => client.get('/users')
+export const updatePushToken = (userId: string, token: string) =>
+  client.patch(`/users/${userId}/push-token`, { token })
 export const getUserById = (id: string) => client.get(`/users/${id}`)
 
 export const getDashboard= async (userId: string) => {
