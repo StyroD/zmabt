@@ -9,6 +9,10 @@ import { CertificateRow } from '@/components/Profile/CertificateRow'
 import { getUserById } from '@/api/endpoints/users'
 import * as SecureStore from 'expo-secure-store'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useFocusEffect } from 'expo-router'
+import { useCallback } from 'react'
+import { getAvatarUrl } from '@/api/endpoints/users'
+import { Image } from 'react-native'
 
 export default function Profile() {
     const Colors = useColors()
@@ -19,6 +23,9 @@ export default function Profile() {
         mode?: 'project' | 'full' | 'own'
     }>()
 
+    const [avatarUri, setAvatarUri] = useState<string | null>(null)
+
+
     const [user, setUser] = useState<any>(null)
     const [role, setRole] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
@@ -26,26 +33,34 @@ export default function Profile() {
     const isOwn = mode === 'own' || !paramUserId
     const isFullView = mode === 'full'
 
-    useEffect(() => {
+    useFocusEffect(useCallback(() => {
+        let active = true
         const load = async () => {
+            setAvatarUri(null)
             try {
                 const stored = await SecureStore.getItemAsync('user')
                 const storedUser = stored ? JSON.parse(stored) : null
+                if (!active) return
                 setRole(storedUser?.role ?? null)
 
                 const idToLoad = paramUserId ?? storedUser?.id
                 if (idToLoad) {
                     const res = await getUserById(idToLoad)
+                    if (!active) return
                     setUser(res.data)
+                    if (res.data.has_avatar) {
+                        setAvatarUri(getAvatarUrl(res.data.id))
+                    }
                 }
             } catch (err) {
                 console.error(err)
             } finally {
-                setLoading(false)
+                if (active) setLoading(false)
             }
         }
         load()
-    }, [paramUserId])
+        return () => { active = false }
+    }, [paramUserId]))
 
     const handleLogout = async () => {
         await SecureStore.deleteItemAsync('token')
@@ -148,7 +163,14 @@ export default function Profile() {
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 <View style={styles.avatarSection}>
-                    <Ionicons name="person-circle" size={90} color={Colors.border} />
+                   {avatarUri
+                        ? <Image
+                            source={{ uri: avatarUri }}
+                            style={{ width: 90, height: 90, borderRadius: 45 }}
+                            onError={(e) => console.log('avatar image error:', e.nativeEvent.error)}
+                        />
+                        : <Ionicons name="person-circle" size={90} color={Colors.border} />
+                    }
                     <Text style={styles.fullName}>
                         {user.title ? `${user.title} ` : ''}{user.first_name} {user.last_name}
                     </Text>
@@ -173,8 +195,6 @@ export default function Profile() {
                             <ProfileField label="Email" value={user.email} />
                             <ProfileField label="Address" value={user.address} />
                         </View>
-
-                        {!isManager && (
                             <>
                                 <View style={styles.sectionDivider} />
                                 <Text style={styles.sectionLabel}>Employment</Text>
@@ -191,8 +211,17 @@ export default function Profile() {
                                     <ProfileField label="Name" value={user.emergency_contact_name} />
                                     <ProfileField label="Phone" value={user.emergency_contact_phone} />
                                 </View>
+
+                                {user.notes ? (
+                                    <>
+                                        <View style={styles.sectionDivider} />
+                                        <Text style={styles.sectionLabel}>Notes</Text>
+                                        <View style={styles.fieldsSection}>
+                                            <ProfileField label="Notes" value={user.notes} />
+                                        </View>
+                                    </>
+                                ) : null}
                             </>
-                        )}
                     </>
                 )}
 

@@ -35,6 +35,7 @@ app.use(express.json())
 
 app.use('/api/auth', authRouter)
 app.use('/api/invite', inviteRouter)
+app.use('/api/users', usersRouter)
 app.use(authMiddleware)
 app.use('/api/users', usersRouter)
 app.use('/api/projects', projectsRouter)

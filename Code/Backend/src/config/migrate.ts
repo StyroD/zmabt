@@ -32,7 +32,6 @@ async function migrate(): Promise<void> {
         password_hash varchar,
         google_id varchar,
         role varchar,
-        avatar_url varchar,
         avatar bytea,
         avatar_mime_type varchar,
         fcm_token varchar,
@@ -217,6 +216,7 @@ async function migrate(): Promise<void> {
     console.error('❌ Migration error:', err)
     process.exit(1)
   }
+   
 }
 
 migrate()

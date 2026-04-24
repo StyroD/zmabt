@@ -20,16 +20,32 @@ export const updateProfile = async (userId: string, data: object) => {
   return response.data;
 };
 
-export const updateProfileWithAvatar = async (userId: string, data: Record<string, any>, avatarUri?: string) => {
-  const formData = new FormData()
-  Object.entries(data).forEach(([key, val]) => {
-    if (val !== undefined && val !== null) formData.append(key, String(val))
-  })
-  if (avatarUri) {
-    formData.append('avatar', { uri: avatarUri, name: 'avatar.jpg', type: 'image/jpeg' } as any)
-  }
-  const response = await client.put(`/users/${userId}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
-  return response.data
+export const updateProfileWithAvatar = async (
+    id: string,
+    data: Record<string, any>,
+    avatarUri: string,
+) => {
+    const form = new FormData()
+
+    Object.entries(data).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+            form.append(key, String(value))
+        }
+    })
+
+    const filename = avatarUri.split('/').pop() ?? 'avatar.jpg'
+    const ext = filename.split('.').pop()?.toLowerCase()
+    const mime = ext === 'png' ? 'image/png' : 'image/jpeg'
+
+    form.append('avatar', { uri: avatarUri, name: filename, type: mime } as any)
+
+    const res = await client.put(`/users/${id}`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return res.data
+}
+
+export const getAvatarUrl = (userId: string): string => {
+    const base = (client.defaults.baseURL ?? '').replace(/\/$/, '')
+    return `${base}/users/${userId}/avatar?t=${Date.now()}`
 }

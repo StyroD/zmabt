@@ -11,14 +11,17 @@ import { updatePushToken } from '@/api/endpoints/users'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { setCrashlyticsUser } from '@/utils/firebase'
 
-// Show notifications as banners when the app is in the foreground
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-    }),
-})
+try {
+    Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: true,
+            shouldShowBanner: true,
+            shouldShowList: true,
+        }),
+    })
+} catch { /* not supported in Expo Go */ }
 
 function getRouteFromNotificationData(data: Record<string, any>): string {
     const { type, projectId } = data ?? {}
@@ -59,8 +62,9 @@ async function registerPushToken() {
 
     if (status !== 'granted') return
 
-    const tokenData = await Notifications.getExpoPushTokenAsync()
-    await updatePushToken(userId, tokenData.data).catch(() => {/* best-effort */})
+    const tokenData = await Notifications.getExpoPushTokenAsync().catch(() => null)
+    if (!tokenData) return
+    await updatePushToken(userId, tokenData.data).catch(() => {})
 }
 
 function OfflineBanner() {

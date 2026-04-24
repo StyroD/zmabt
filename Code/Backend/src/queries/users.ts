@@ -31,15 +31,14 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
       res.status(404).json({ error: 'User not found' })
       return
     }
-
-    // Remove sensitive fields
+    user.has_avatar = !!user.avatar
+    delete user.avatar
+    delete user.avatar_mime_type
     delete user.password_hash
     delete user.google_id
-    delete user.iban
+    delete user.avatar
+    delete user.avatar_mime_type
 
-    if (user.avatar) {
-      user.avatar = user.avatar.toString('base64')
-    }
     res.json(user)
   } catch (err: any) {
     res.status(500).json({ error: err.message })
@@ -60,58 +59,81 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 }
 
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params
-    const user = req.user as { id: string; role: string }
+    try {
+        const { id } = req.params
+        const user = req.user as { id: string; role: string }
 
-    if (user.id !== id) {
-      res.status(403).json({ error: 'Forbidden' })
-      return
+        if (user.id !== id) {
+            res.status(403).json({ error: 'Forbidden' })
+            return
+        }
+
+        const {
+            first_name, last_name, phone, address,
+            fcm_token, hourly_rate, emergency_contact_name,
+            emergency_contact_phone, iban, notes,
+        } = req.body
+
+        const values: any[] = [
+            first_name ?? null,
+            last_name ?? null,
+            phone ?? null,
+            address ?? null,
+            fcm_token ?? null,
+            hourly_rate ?? null,
+            emergency_contact_name ?? null,
+            emergency_contact_phone ?? null,
+            iban ?? null,
+            notes ?? null,
+        ]
+
+        let avatarClause = ''
+        if (req.file) {
+            let mime = req.file.mimetype
+            const b = req.file.buffer
+            if (b[0] === 0xff && b[1] === 0xd8) mime = 'image/jpeg'
+            else if (b[0] === 0x89 && b[1] === 0x50) mime = 'image/png'
+            values.push(b, mime)
+            avatarClause = `, avatar = $${values.length - 1}, avatar_mime_type = $${values.length}`
+        }
+
+        values.push(id)
+        const idParam = `$${values.length}`
+
+        const query = `
+          UPDATE users SET
+              first_name              = $1,
+              last_name               = $2,
+              phone                   = $3,
+              address                 = $4,
+              fcm_token               = COALESCE($5, fcm_token),
+              hourly_rate             = $6,
+              emergency_contact_name  = $7,
+              emergency_contact_phone = $8,
+              iban                    = $9,
+              notes                   = $10
+              ${avatarClause}
+          WHERE id = ${idParam}
+          RETURNING *
+      `
+
+        const result = await pool.query(query, values)
+
+        if (result.rows.length === 0) {
+            res.status(404).json({ error: 'User not found' })
+            return
+        }
+
+        const updated = result.rows[0]
+        delete updated.password_hash
+        delete updated.google_id
+        delete updated.avatar
+        delete updated.avatar_mime_type
+
+        res.json(updated)
+    } catch (err: any) {
+        res.status(500).json({ error: err.message })
     }
-
-    const { first_name, last_name, phone, address, avatar_url, fcm_token } = req.body
-
-    let query = `UPDATE users SET
-      first_name = COALESCE($1, first_name),
-      last_name = COALESCE($2, last_name),
-      phone = COALESCE($3, phone),
-      address = COALESCE($4, address),
-      avatar_url = COALESCE($5, avatar_url),
-      fcm_token = COALESCE($6, fcm_token)`
-
-    const values: any[] = [first_name, last_name, phone, address, avatar_url, fcm_token]
-
-    if (req.file) {
-      let mimeType = req.file.mimetype
-      const b = req.file.buffer
-      if (b[0] === 0xff && b[1] === 0xd8) mimeType = 'image/jpeg'
-      else if (b[0] === 0x89 && b[1] === 0x50) mimeType = 'image/png'
-      values.push(b, mimeType)
-      query += `, avatar = $${values.length - 1}, avatar_mime_type = $${values.length}`
-    }
-
-    values.push(id)
-    query += ` WHERE id = $${values.length} RETURNING *`
-
-    const result = await pool.query(query, values)
-
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'User not found' })
-      return
-    }
-
-    const updatedUser = result.rows[0]
-    delete updatedUser.password_hash
-    delete updatedUser.google_id
-
-    if (updatedUser.avatar) {
-      updatedUser.avatar = updatedUser.avatar.toString('base64')
-    }
-
-    res.json(updatedUser)
-  } catch (err: any) {
-    res.status(500).json({ error: err.message })
-  }
 }
 
 export const updatePushToken = async (req: Request, res: Response): Promise<void> => {
@@ -128,11 +150,13 @@ export const updatePushToken = async (req: Request, res: Response): Promise<void
       'UPDATE users SET fcm_token = $1 WHERE id = $2 RETURNING id, fcm_token',
       [expo_push_token, id]
     )
+    
 
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'User not found' })
       return
     }
+
 
     res.json({ message: 'Push token updated', user: result.rows[0] })
   } catch (err: any) {

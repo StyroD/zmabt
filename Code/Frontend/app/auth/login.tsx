@@ -11,6 +11,7 @@ import { AntDesign } from '@expo/vector-icons'
 import { login } from "@/api/auth"
 import { getUserById } from "@/api/endpoints/users"
 import { logLogin, setCrashlyticsUser } from "@/utils/firebase"
+import { saveUser } from "@/utils/secureUser"
 
 const GOOGLE_AUTH_URL = 'http://localhost:3000/api/auth/google'
 
@@ -24,7 +25,7 @@ export default function Login() {
     const handleLogin = async () => {
         try {
             const data = await login(email, password)
-            await SecureStore.setItemAsync('user', JSON.stringify(data.user))
+            await saveUser(data.user)
             logLogin('email').catch(() => {})
             setCrashlyticsUser(data.user.id, data.user.role).catch(() => {})
             router.push('/tabs/dashboard')
@@ -63,7 +64,7 @@ export default function Login() {
             await SecureStore.setItemAsync('userId', userId)
 
             const userRes = await getUserById(userId)
-            await SecureStore.setItemAsync('user', JSON.stringify(userRes.data))
+            await saveUser(userRes.data)
             logLogin('google').catch(() => {})
             setCrashlyticsUser(userId, userRes.data.role).catch(() => {})
             router.push('/tabs/dashboard')
