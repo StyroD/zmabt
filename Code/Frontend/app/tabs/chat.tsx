@@ -1,16 +1,18 @@
 import { ScreenWrapper } from "@/components/ScreenWrapper"
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Modal, TextInput, Pressable,
+  ActivityIndicator, Modal, TextInput, Pressable, KeyboardAvoidingView, Platform,
 } from "react-native"
 import { useColors } from "@/contexts/ThemeContext"
 import { router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useFocusEffect } from "@react-navigation/native"
 import { getConversations } from "@/api/endpoints/messages"
 import { getUsers } from "@/api/endpoints/users"
+import { getSocket } from "@/api/socket"
 import * as SecureStore from "expo-secure-store"
+import type { Socket } from "socket.io-client"
 
 type Conversation = {
   other_user_id: string
@@ -22,6 +24,8 @@ type Conversation = {
 
 type User = {
   id: string
+  first_name: string
+  last_name: string
   username: string
   role: string
 }
@@ -129,15 +133,18 @@ function NewConversationModal({
       .finally(() => setLoading(false))
   }, [visible, currentUserId])
 
+  const displayName = (u: User) =>
+    (u.first_name || u.last_name) ? `${u.first_name} ${u.last_name}`.trim() : u.username
+
   const filtered = search.trim()
-    ? users.filter(u => u.username.toLowerCase().includes(search.toLowerCase()))
+    ? users.filter(u => displayName(u).toLowerCase().includes(search.toLowerCase()))
     : users
 
   const openChat = (user: User) => {
     onClose()
     router.push({
       pathname: '/chatDetail' as any,
-      params: { userId: user.id, name: user.username },
+      params: { userId: user.id, name: displayName(user) },
     })
   }
 
@@ -224,8 +231,12 @@ function NewConversationModal({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={styles.sheet}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <Pressable style={styles.backdrop} onPress={onClose} />
+        <View style={styles.sheet}>
         <View style={styles.sheetHeader}>
           <Text style={styles.sheetTitle}>New Conversation</Text>
           <TouchableOpacity onPress={onClose}>
@@ -252,14 +263,15 @@ function NewConversationModal({
             data={filtered}
             keyExtractor={u => u.id}
             renderItem={({ item }) => {
-              const initials = item.username.split(' ').map((n: string) => n[0]).join('')
+              const name = displayName(item)
+              const initials = name.split(' ').map((n: string) => n[0]).filter(Boolean).join('').toUpperCase()
               return (
                 <TouchableOpacity style={styles.userRow} onPress={() => openChat(item)}>
                   <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{initials.toUpperCase()}</Text>
+                    <Text style={styles.avatarText}>{initials}</Text>
                   </View>
                   <View>
-                    <Text style={styles.itemName}>{item.username}</Text>
+                    <Text style={styles.itemName}>{name}</Text>
                     <Text style={styles.userRole}>{item.role}</Text>
                   </View>
                 </TouchableOpacity>
@@ -273,7 +285,8 @@ function NewConversationModal({
             keyboardShouldPersistTaps="handled"
           />
         )}
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   )
 }
@@ -284,6 +297,8 @@ export default function ChatList() {
   const [currentUserId, setCurrentUserId] = useState('')
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const currentUserIdRef = useRef('')
+  const socketRef = useRef<Socket | null>(null)
 
   useFocusEffect(
     useCallback(() => {
@@ -296,6 +311,7 @@ export default function ChatList() {
             getConversations(),
           ])
           if (!active) return
+          currentUserIdRef.current = userId ?? ''
           setCurrentUserId(userId ?? '')
           setConversations(res.data)
         } catch (err) {
@@ -308,6 +324,34 @@ export default function ChatList() {
       return () => { active = false }
     }, [])
   )
+
+  useEffect(() => {
+    let mounted = true
+    getSocket().then(socket => {
+      if (!mounted) return
+      socketRef.current = socket
+      socket.on('new_message', (msg: { sender_id: string; receiver_id: string; content: string; sent_at: string; sender_name?: string }) => {
+        if (!mounted) return
+        const uid = currentUserIdRef.current
+        const otherUserId = msg.sender_id === uid ? msg.receiver_id : msg.sender_id
+        setConversations(prev => {
+          const existing = prev.find(c => c.other_user_id === otherUserId)
+          const updated: Conversation = {
+            other_user_id: otherUserId,
+            name: existing?.name ?? '',
+            last_message: msg.content,
+            timestamp: msg.sent_at,
+            sender_id: msg.sender_id,
+          }
+          return [updated, ...prev.filter(c => c.other_user_id !== otherUserId)]
+        })
+      })
+    }).catch(() => {})
+    return () => {
+      mounted = false
+      socketRef.current?.off('new_message')
+    }
+  }, [])
 
   const styles = StyleSheet.create({
     list: {
