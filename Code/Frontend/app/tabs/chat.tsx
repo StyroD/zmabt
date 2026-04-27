@@ -7,7 +7,7 @@ import { useColors } from "@/contexts/ThemeContext"
 import { router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { useEffect, useState, useCallback, useRef } from "react"
-import { useFocusEffect } from "@react-navigation/native"
+import { useFocusEffect, useNavigation } from "@react-navigation/native"
 import { getConversations } from "@/api/endpoints/messages"
 import { getUsers } from "@/api/endpoints/users"
 import { getSocket } from "@/api/socket"
@@ -30,9 +30,19 @@ type User = {
   role: string
 }
 
-function ConversationItem({ item, currentUserId }: { item: Conversation; currentUserId: string }) {
+function ConversationItem({
+  item,
+  currentUserId,
+  unread,
+  onOpen,
+}: {
+  item: Conversation
+  currentUserId: string
+  unread: boolean
+  onOpen: (userId: string) => void
+}) {
   const Colors = useColors()
-  const initials = item.name.split(' ').map((n: string) => n[0]).join('')
+  const initials = item.name.split(' ').map((n: string) => n[0]).filter(Boolean).join('').toUpperCase()
   const isOwn = item.sender_id === currentUserId
   const preview = isOwn ? `You: ${item.last_message}` : item.last_message
 
@@ -70,27 +80,36 @@ function ConversationItem({ item, currentUserId }: { item: Conversation; current
     itemName: {
       color: Colors.textPrimary,
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: unread ? '700' : '600',
     },
     timestamp: {
-      color: Colors.textSecondary,
+      color: unread ? Colors.primary : Colors.textSecondary,
       fontSize: 12,
+      fontWeight: unread ? '600' : '400',
     },
     lastMessage: {
-      color: Colors.textSecondary,
+      color: unread ? Colors.textPrimary : Colors.textSecondary,
       fontSize: 13,
+      fontWeight: unread ? '500' : '400',
+    },
+    unreadDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: Colors.primary,
     },
   })
 
   return (
     <TouchableOpacity
       style={styles.item}
-      onPress={() =>
+      onPress={() => {
+        onOpen(item.other_user_id)
         router.push({
           pathname: '/chatDetail' as any,
           params: { userId: item.other_user_id, name: item.name },
         })
-      }
+      }}
     >
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{initials}</Text>
@@ -106,6 +125,7 @@ function ConversationItem({ item, currentUserId }: { item: Conversation; current
         </View>
         <Text style={styles.lastMessage} numberOfLines={1}>{preview}</Text>
       </View>
+      {unread && <View style={styles.unreadDot} />}
     </TouchableOpacity>
   )
 }
@@ -293,12 +313,19 @@ function NewConversationModal({
 
 export default function ChatList() {
   const Colors = useColors()
+  const navigation = useNavigation()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentUserId, setCurrentUserId] = useState('')
+  const [unreadIds, setUnreadIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const currentUserIdRef = useRef('')
   const socketRef = useRef<Socket | null>(null)
+  const readIdsRef = useRef<Set<string>>(new Set())
+
+  useEffect(() => {
+    navigation.setOptions({ tabBarBadge: unreadIds.size > 0 ? unreadIds.size : undefined })
+  }, [unreadIds.size])
 
   useFocusEffect(
     useCallback(() => {
@@ -313,7 +340,17 @@ export default function ChatList() {
           if (!active) return
           currentUserIdRef.current = userId ?? ''
           setCurrentUserId(userId ?? '')
-          setConversations(res.data)
+          const convs: Conversation[] = res.data
+          setConversations(convs)
+          // mark conversations whose last message is from the other person as unread
+          setUnreadIds(prev => {
+            const next = new Set(prev)
+            convs.forEach(c => {
+              if (c.sender_id !== (userId ?? '') && !readIdsRef.current.has(c.other_user_id))
+                next.add(c.other_user_id)
+            })
+            return next
+          })
         } catch (err) {
           console.error(err)
         } finally {
@@ -345,6 +382,11 @@ export default function ChatList() {
           }
           return [updated, ...prev.filter(c => c.other_user_id !== otherUserId)]
         })
+        // mark as unread only if the message is from someone else
+        if (msg.sender_id !== uid) {
+          readIdsRef.current.delete(otherUserId)
+          setUnreadIds(prev => new Set(prev).add(otherUserId))
+        }
       })
     }).catch(() => {})
     return () => {
@@ -352,6 +394,15 @@ export default function ChatList() {
       socketRef.current?.off('new_message')
     }
   }, [])
+
+  const markRead = (otherUserId: string) => {
+    readIdsRef.current.add(otherUserId)
+    setUnreadIds(prev => {
+      const next = new Set(prev)
+      next.delete(otherUserId)
+      return next
+    })
+  }
 
   const styles = StyleSheet.create({
     list: {
@@ -392,7 +443,14 @@ export default function ChatList() {
       <FlatList
         data={conversations}
         keyExtractor={item => item.other_user_id}
-        renderItem={({ item }) => <ConversationItem item={item} currentUserId={currentUserId} />}
+        renderItem={({ item }) => (
+            <ConversationItem
+              item={item}
+              currentUserId={currentUserId}
+              unread={unreadIds.has(item.other_user_id)}
+              onOpen={markRead}
+            />
+          )}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={<Text style={styles.empty}>No conversations yet</Text>}
