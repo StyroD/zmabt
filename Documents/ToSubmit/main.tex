@@ -603,13 +603,8 @@ Output Conditions   & The task is not created and an error message is displayed 
 \textbf{Item} & \textbf{Value} \\
 \midrule
 GitHub repository & \url{https://github.com/StyroD/zmabt} \\
-<<<<<<< Updated upstream
 Submission commit hash & \texttt{5ea53f4a} \\
 Branch & \texttt{adam} \\
-=======
-Submission commit hash & \texttt{71b9265} \\
-Branch & \texttt{main} \\
->>>>>>> Stashed changes
 \bottomrule
 \end{tabular}
 
@@ -625,7 +620,7 @@ Database          & PostgreSQL (via \texttt{pg} library, no ORM) \\
 Authentication    & JWT (JSON Web Token) + Google OAuth 2.0 (Passport.js) \\
 Real-time         & Socket.IO (WebSocket) \\
 File uploads      & Multer (multipart/form-data) \\
-Push notifications & FCM (Firebase Cloud Messaging) \\
+Push notifications & Expo push \\
 API docs          & Swagger UI (\texttt{/api-docs}) \\
 \bottomrule
 \end{tabular}
@@ -670,7 +665,7 @@ The PostgreSQL database uses UUIDs as primary keys. The following tables are cre
 
 \subsection{API Endpoints}
 
-The full, up-to-date API reference is available via Swagger UI at \texttt{/api-docs} when the server is running. All endpoints except \texttt{/api/auth/*} and \texttt{/api/invite/register} require an \texttt{Authorization: Bearer <token>} header. The API covers the following resource groups: Auth, Users, Projects, Workers, Tasks, Uploads, Locations, Messages, Notifications, Dashboard, and Invite.
+The full API reference is available via Swagger UI at \texttt{/api-docs}. All endpoints except \texttt{/api/auth/*} and \texttt{/api/invite/register} require a Bearer JWT token.
 
 \subsection{Real-time Communication}
 
@@ -684,5 +679,21 @@ The server exposes a Socket.IO endpoint authenticated via JWT. Upon connection e
     \item Google OAuth is handled server-side via Passport.js; no client secret is exposed to the frontend.
     \item File uploads are handled in-memory by Multer and stored as binary in the database (\texttt{bytea}), avoiding unauthenticated public file URLs.
 \end{itemize}
+
+%--------------------------------------------------------------
+\section{Changes from Original Design}
+%--------------------------------------------------------------
+
+\begin{tabularx}{\textwidth}{|l|X|X|}
+\hline
+\textbf{Area} & \textbf{Original} & \textbf{Implemented} \\
+\hline
+File storage & External cloud bucket (S3 / Cloudinary) & Binary stored directly in PostgreSQL (\texttt{bytea}); no external dependency \\
+\hline
+Task photos & Separate \texttt{task\_photos} table & Dropped; \texttt{task\_id} FK added to \texttt{project\_photos} instead \\
+\hline
+Push notifications & FCM + APNs (separate credentials) & Expo Push (\texttt{expo-server-sdk}); single token per device, abstracts FCM/APNs \\
+\hline
+\end{tabularx}
 
 \end{document}
