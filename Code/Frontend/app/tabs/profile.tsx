@@ -170,6 +170,7 @@ export default function Profile() {
 
                 <Text style={styles.sectionLabel}>Basic info</Text>
                 <View style={styles.fieldsSection}>
+                    {user.title ? <ProfileField label="Title" value={user.title} /> : null}
                     <ProfileField label="First name" value={user.first_name} />
                     <ProfileField label="Last name" value={user.last_name} />
                     {canSeeHourlyRate && (

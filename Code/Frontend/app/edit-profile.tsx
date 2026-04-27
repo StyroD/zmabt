@@ -14,6 +14,7 @@ export default function EditProfile() {
     const { theme, toggleTheme } = useTheme()
     const [userId, setUserId] = useState<string | null>(null)
     const [role, setRole] = useState<string | null>(null)
+    const [title, setTitle] = useState('')
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
     const [hourlyRate, setHourlyRate] = useState('')
@@ -32,6 +33,7 @@ export default function EditProfile() {
                 if (user) {
                     setUserId(user.id)
                     setRole(user.role ?? null)
+                    setTitle(user.title ?? '')
                     setFirstName(user.first_name ?? '')
                     setLastName(user.last_name ?? '')
                     setHourlyRate(user.hourly_rate?.toString() ?? '')
@@ -83,6 +85,7 @@ export default function EditProfile() {
         setSaving(true)
         try {
             const res = await updateProfileWithAvatar(userId, {
+                title: title,
                 first_name: firstName,
                 last_name: lastName,
                 hourly_rate: hourlyRate ? Number(hourlyRate) : undefined,
@@ -260,6 +263,15 @@ export default function EditProfile() {
                         <Text style={styles.changePhotoText}>Change photo</Text>
                     </TouchableOpacity>
                 </View>
+
+                <Text style={styles.fieldLabel}>Title</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="e.g. Ing., Mgr., Dr."
+                    placeholderTextColor={Colors.textSecondary}
+                    value={title}
+                    onChangeText={setTitle}
+                />
 
                 <Text style={styles.fieldLabel}>First name</Text>
                 <TextInput
