@@ -59,8 +59,12 @@ async function registerPushToken() {
 
     if (status !== 'granted') return
 
-    const tokenData = await Notifications.getExpoPushTokenAsync()
-    await updatePushToken(userId, tokenData.data).catch(() => {/* best-effort */})
+    try {
+        const tokenData = await Notifications.getExpoPushTokenAsync()
+        await updatePushToken(userId, tokenData.data).catch(() => {})
+    } catch {
+        // getExpoPushTokenAsync requires an EAS projectId — skip in dev/Expo Go
+    }
 }
 
 function OfflineBanner() {

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { ProfileField } from '@/components/Profile/ProfileField'
 import { useEffect, useState } from 'react'
@@ -146,14 +146,17 @@ export default function Profile() {
     const certificates = user.certificates ?? []
     const viewedUserIsManager = user.role === 'manager'
     const viewerIsManager = viewerRole === 'manager'
-    const canSeeHourlyRate = !viewedUserIsManager && (isOwn || viewerIsManager)
+    const canSeeHourlyRate = isOwn || (!viewedUserIsManager && viewerIsManager)
 
     return (
         <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute} rightElement={editButton}>
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 <View style={styles.avatarSection}>
-                    <Ionicons name="person-circle" size={90} color={Colors.border} />
+                    {user.avatar
+                        ? <Image source={{ uri: `data:${user.avatar_mime_type ?? 'image/jpeg'};base64,${user.avatar}` }} style={{ width: 90, height: 90, borderRadius: 45 }} />
+                        : <Ionicons name="person-circle" size={90} color={Colors.border} />
+                    }
                     <Text style={styles.fullName}>
                         {user.title ? `${user.title} ` : ''}{user.first_name} {user.last_name}
                     </Text>
@@ -179,7 +182,7 @@ export default function Profile() {
                             <ProfileField label="Address" value={user.address} />
                         </View>
 
-                        {!viewedUserIsManager && (
+                        {(isOwn || !viewedUserIsManager) && (
                             <>
                                 <View style={styles.sectionDivider} />
                                 <Text style={styles.sectionLabel}>Employment</Text>

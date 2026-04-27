@@ -293,7 +293,7 @@ export default function Dashboard() {
             <Text style={styles.actionText}>Workers</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/tabs/certificates' as any)}>
+          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/tabs/profile?mode=own' as any)}>
             <Ionicons name="ribbon-outline" size={20} color={Colors.primary} />
             <Text style={styles.actionText}>Certificates</Text>
           </TouchableOpacity>

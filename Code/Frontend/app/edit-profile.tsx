@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useColors, useTheme } from '@/contexts/ThemeContext'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
-import { updateProfileWithAvatar } from '@/api/endpoints/users'
+import { updateProfileWithAvatar, getUserById } from '@/api/endpoints/users'
 import { getCategories } from '@/api/endpoints/categories'
 import * as SecureStore from 'expo-secure-store'
 import * as ImagePicker from 'expo-image-picker'
@@ -13,10 +13,12 @@ export default function EditProfile() {
     const Colors = useColors()
     const { theme, toggleTheme } = useTheme()
     const [userId, setUserId] = useState<string | null>(null)
+    const [role, setRole] = useState<string | null>(null)
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
     const [hourlyRate, setHourlyRate] = useState('')
     const [avatarUri, setAvatarUri] = useState<string | null>(null)
+    const [savedAvatarDataUri, setSavedAvatarDataUri] = useState<string | null>(null)
     const [categories, setCategories] = useState<any[]>([])
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [loading, setLoading] = useState(true)
@@ -29,9 +31,17 @@ export default function EditProfile() {
                 const user = stored ? JSON.parse(stored) : null
                 if (user) {
                     setUserId(user.id)
+                    setRole(user.role ?? null)
                     setFirstName(user.first_name ?? '')
                     setLastName(user.last_name ?? '')
                     setHourlyRate(user.hourly_rate?.toString() ?? '')
+                }
+                if (user?.id) {
+                    const userRes = await getUserById(user.id)
+                    const fetched = userRes.data
+                    if (fetched.avatar) {
+                        setSavedAvatarDataUri(`data:${fetched.avatar_mime_type ?? 'image/jpeg'};base64,${fetched.avatar}`)
+                    }
                 }
                 const catRes = await getCategories()
                 setCategories(catRes.data)
@@ -241,6 +251,8 @@ export default function EditProfile() {
                 <View style={styles.avatarSection}>
                     {avatarUri
                         ? <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+                        : savedAvatarDataUri
+                        ? <Image source={{ uri: savedAvatarDataUri }} style={styles.avatarImage} />
                         : <Ionicons name="person-circle" size={90} color={Colors.border} />
                     }
                     <TouchableOpacity style={styles.changePhotoBtn} onPress={handlePickAvatar}>
@@ -301,25 +313,29 @@ export default function EditProfile() {
                     />
                 </View>
 
-                <View style={styles.sectionDivider} />
-                <Text style={styles.sectionLabel}>Certificates</Text>
-                <View style={styles.certContainer}>
-                    {categories.map((cat, index) => (
-                        <View key={cat.id} style={[styles.certRow, index === categories.length - 1 && styles.certRowLast]}>
-                            <Text style={styles.certName}>{cat.name}</Text>
-                            <TouchableOpacity
-                                style={styles.uploadBtn}
-                                onPress={() => router.push({
-                                    pathname: '/uploadCertficate' as any,
-                                    params: { categoryId: cat.id, categoryName: cat.name },
-                                })}
-                            >
-                                <Ionicons name="cloud-upload-outline" size={14} color={Colors.primary} />
-                                <Text style={styles.uploadText}>Upload</Text>
-                            </TouchableOpacity>
+                {role !== 'manager' && (
+                    <>
+                        <View style={styles.sectionDivider} />
+                        <Text style={styles.sectionLabel}>Certificates</Text>
+                        <View style={styles.certContainer}>
+                            {categories.map((cat, index) => (
+                                <View key={cat.id} style={[styles.certRow, index === categories.length - 1 && styles.certRowLast]}>
+                                    <Text style={styles.certName}>{cat.name}</Text>
+                                    <TouchableOpacity
+                                        style={styles.uploadBtn}
+                                        onPress={() => router.push({
+                                            pathname: '/uploadCertficate' as any,
+                                            params: { categoryId: cat.id, categoryName: cat.name },
+                                        })}
+                                    >
+                                        <Ionicons name="cloud-upload-outline" size={14} color={Colors.primary} />
+                                        <Text style={styles.uploadText}>Upload</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
                         </View>
-                    ))}
-                </View>
+                    </>
+                )}
 
                 <View style={styles.sectionDivider} />
                 <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
