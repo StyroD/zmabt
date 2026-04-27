@@ -25,6 +25,9 @@ export default function Login() {
     const handleLogin = async () => {
         try {
             const data = await login(email, password)
+            await SecureStore.setItemAsync('token', data.token) 
+            await SecureStore.setItemAsync('userId', data.user.id)
+
             await saveUser(data.user)
             logLogin('email').catch(() => {})
             setCrashlyticsUser(data.user.id, data.user.role).catch(() => {})

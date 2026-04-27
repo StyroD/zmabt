@@ -12,7 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.zmabt.frontend",
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -71,7 +73,8 @@
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-firebase/crashlytics"
+      "@react-native-firebase/crashlytics",
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

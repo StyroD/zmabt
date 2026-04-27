@@ -10,6 +10,7 @@ import * as Notifications from 'expo-notifications'
 import { updatePushToken } from '@/api/endpoints/users'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { setCrashlyticsUser } from '@/utils/firebase'
+import { initDb } from '@/utils/db'
 
 try {
     Notifications.setNotificationHandler({
@@ -83,56 +84,76 @@ function OfflineBanner() {
 
 function AppContent() {
     const [isLoading, setLoading] = useState(true)
-    const [isLoggedIn, setLoggedIn] = useState(false)
+    const [isLoggedIn, setLoggedIn] = useState<boolean | null>(null)
+
     const responseListener = useRef<Notifications.EventSubscription | null>(null)
 
     useEffect(() => {
+        let mounted = true
+
         const checkToken = async () => {
-            //const token = await SecureStore.getItemAsync('token')
-            //setLoggedIn(!!token)
-            setLoading(false)
+            try {
+                await initDb()
+
+                const token = await SecureStore.getItemAsync('token')
+                if (!mounted) return
+                setLoggedIn(!!token)
+            } catch (err) {
+                console.error(err)
+                if (!mounted) return
+                setLoggedIn(false)
+            } finally {
+                if (mounted) setLoading(false)
+            }
         }
+
         checkToken()
 
+        // push token (fire and forget)
         registerPushToken()
 
-        // Identify user in Crashlytics for crash attribution
+        // crashlytics (safe async chain)
         SecureStore.getItemAsync('userId').then(userId => {
             if (!userId) return
+
             SecureStore.getItemAsync('user').then(raw => {
                 const role = raw ? JSON.parse(raw).role : 'unknown'
                 setCrashlyticsUser(userId, role).catch(() => {})
             })
         })
 
-        // Tap on notification → navigate to relevant screen
-        responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-            const data = response.notification.request.content.data as Record<string, any>
-            const route = getRouteFromNotificationData(data)
-            router.push(route as any)
-        })
+        // notifications listener (IMPORTANT FIX)
+        const subscription =
+            Notifications.addNotificationResponseReceivedListener(response => {
+                const data = response.notification.request.content.data as Record<string, any>
+                const route = getRouteFromNotificationData(data)
+                router.push(route as any)
+            })
+
+        responseListener.current = subscription
 
         return () => {
-            responseListener.current?.remove()
+            mounted = false
+            subscription.remove()
         }
     }, [])
 
-    if (isLoading) {
+    if (isLoading || isLoggedIn === null) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color={darkColors.primary} />
+                <ActivityIndicator size="large" />
             </View>
         )
+    }
+
+    if (!isLoggedIn) {
+        return <Stack screenOptions={{ headerShown: false }} />
     }
 
     return (
         <>
             <OfflineBanner />
-            {isLoggedIn ? (
-                <Redirect href="/tabs/dashboard" />
-            ) : (
-                <Stack screenOptions={{ headerShown: false }} />
-            )}
+            <Stack screenOptions={{ headerShown: false }} />
         </>
     )
 }

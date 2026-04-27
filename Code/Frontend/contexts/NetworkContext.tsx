@@ -19,15 +19,17 @@ export function useNetwork() {
   return useContext(NetworkContext)
 }
 
+
+
 async function executeOperation(op: QueuedOperation): Promise<void> {
   switch (op.type) {
     case 'TASK_CREATE': {
-      const { workerIds, ...taskData } = op.payload
-      const res = await createTask(taskData)
-      if (workerIds?.length > 0) {
+    const { workerIds, ...taskData } = op.payload
+    const res = await createTask(taskData as { project_id: string; title: string; [key: string]: any })
+    if (workerIds?.length > 0) {
         await assignWorkersToTask(res.data.id, workerIds)
-      }
-      break
+    }
+    break
     }
     case 'TASK_STATUS_UPDATE':
       await updateTaskStatus(op.payload.taskId, op.payload.status)
@@ -81,16 +83,16 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
     refreshPendingCount()
 
     const unsubscribe = NetInfo.addEventListener(state => {
-      const online = !!state.isConnected && !!state.isInternetReachable
-      setIsOnline(online)
-      if (online && wasOffline.current) {
-        syncQueue()
-      }
-      wasOffline.current = !online
+        const online = !!state.isConnected && !!state.isInternetReachable
+        setIsOnline(online)
+        if (online && wasOffline.current) {
+            syncQueue()
+        }
+        wasOffline.current = !online
     })
 
     return unsubscribe
-  }, [syncQueue, refreshPendingCount])
+}, [])
 
   return (
     <NetworkContext.Provider value={{ isOnline, pendingCount, syncQueue }}>

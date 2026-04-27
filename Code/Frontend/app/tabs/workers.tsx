@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { getAllWorkers } from '@/api/endpoints/workers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { cacheWorkers, getCachedWorkers } from '@/utils/db'
 
 export default function Workers() {
   const Colors = useColors()
@@ -15,11 +16,20 @@ export default function Workers() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    getAllWorkers()
-      .then(res => setWorkers(res.data))
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false))
-  }, [])
+    const load = async () => {
+        try {
+            const res = await getAllWorkers()
+            setWorkers(res.data)
+            await cacheWorkers(res.data)
+        } catch {
+            const cached = await getCachedWorkers()
+            setWorkers(cached)
+        } finally {
+            setLoading(false)
+        }
+    }
+    load()
+}, [])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()

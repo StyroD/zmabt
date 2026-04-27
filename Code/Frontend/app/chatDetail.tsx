@@ -8,6 +8,7 @@ import { getMessages, postMessage } from "@/api/endpoints/messages"
 import { getSocket } from "@/api/socket"
 import * as SecureStore from "expo-secure-store"
 import type { Socket } from "socket.io-client"
+import { cacheMessages, getCachedMessages, appendMessage } from '@/utils/db'
 
 type Message = {
   id: string
@@ -31,44 +32,56 @@ export default function ChatDetail() {
   const initials = name?.split(' ').map(n => n[0]).join('') ?? '?'
 
   useEffect(() => {
-    let mounted = true
+  let mounted = true
 
-    const setup = async () => {
-      try {
-        const [uid, messagesRes, socket] = await Promise.all([
-          SecureStore.getItemAsync('userId'),
-          getMessages(userId),
-          getSocket(),
-        ])
+  const setup = async () => {
+    try {
+      const [uid, socket] = await Promise.all([
+        SecureStore.getItemAsync('userId'),
+        getSocket(),
+      ])
 
+      if (!mounted) return
+
+      currentUserIdRef.current = uid ?? ''
+      setCurrentUserId(uid ?? '')
+      socketRef.current = socket
+
+      socket.on('new_message', (msg: Message) => {
         if (!mounted) return
+        if (msg.sender_id === currentUserIdRef.current) return
+        if (msg.sender_id !== userId) return
+        appendMessage(msg)
+        setMessages(prev => [...prev, msg])
+        setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50)
+      })
 
-        currentUserIdRef.current = uid ?? ''
-        setCurrentUserId(uid ?? '')
-        setMessages(messagesRes.data)
-        socketRef.current = socket
-
-        socket.on('new_message', (msg: Message) => {
+      try {
+          const res = await getMessages(userId)
           if (!mounted) return
-          if (msg.sender_id === currentUserIdRef.current) return
-          if (msg.sender_id !== userId) return
-          setMessages(prev => [...prev, msg])
-          setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50)
-        })
-      } catch (err) {
-        console.error(err)
+          setMessages(res.data)
+          await cacheMessages(uid ?? '', userId, res.data)
+      } catch {
+          const cached = await getCachedMessages(uid ?? '', userId)
+          if (!mounted) return
+          setMessages(cached)
       } finally {
-        if (mounted) setLoading(false)
+          if (mounted) setLoading(false)
       }
-    }
 
-    setup()
-
-    return () => {
-      mounted = false
-      socketRef.current?.off('new_message')
+    } catch (err) {
+      console.error(err)
+      if (mounted) setLoading(false) 
     }
-  }, [userId])
+  }
+
+  setup() 
+
+  return () => {
+    mounted = false
+    socketRef.current?.off('new_message')
+  }
+}, [userId])
 
   const scrollToBottom = () =>
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50)
@@ -78,19 +91,23 @@ export default function ChatDetail() {
     if (!text) return
 
     const optimistic: Message = {
-      id: `tmp-${Date.now()}`,
-      sender_id: currentUserIdRef.current,
-      receiver_id: userId,
-      content: text,
-      sent_at: new Date().toISOString(),
+        id: `tmp-${Date.now()}`,
+        sender_id: currentUserIdRef.current,
+        receiver_id: userId,
+        content: text,
+        sent_at: new Date().toISOString(),
     }
     setMessages(prev => [...prev, optimistic])
     setInput('')
     scrollToBottom()
 
-    postMessage(userId, text).catch(err => console.error('Failed to send:', err))
-  }
-
+    postMessage(userId, text)
+        .then(res => {
+            appendMessage(res.data)
+            setMessages(prev => prev.map(m => m.id === optimistic.id ? res.data : m))
+        })
+        .catch(err => console.error('Failed to send:', err))
+}
   const styles = StyleSheet.create({
     center: {
       flex: 1,
