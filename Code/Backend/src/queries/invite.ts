@@ -52,6 +52,10 @@ export const registerWithInvite = async (req: Request, res: Response): Promise<v
 
     res.status(201).json({ token: jwtToken, user })
   } catch (err: any) {
-    res.status(500).json({ error: err.message })
+    if (err.code === '23505') {
+      res.status(409).json({ error: 'Username or email already exists' })
+    } else {
+      res.status(500).json({ error: err.message })
+    }
   }
 }

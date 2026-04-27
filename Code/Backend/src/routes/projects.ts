@@ -1,8 +1,9 @@
 import { Router } from 'express'
-import {  
-  getProjectById, 
-  getProjectByManagerId, 
-  createProject, 
+import {
+  getProjectById,
+  getProjectByManagerId,
+  getProjectsByWorkerId,
+  createProject,
   updateProject,
   deleteProject,
   assignWorkerToProject,
@@ -12,6 +13,7 @@ import {
 const router = Router()
 
 router.get('/manager/:managerId', getProjectByManagerId)
+router.get('/worker/:workerId', getProjectsByWorkerId)
 router.get('/:id', getProjectById)
 router.post('/', createProject)
 router.put('/:id', updateProject)

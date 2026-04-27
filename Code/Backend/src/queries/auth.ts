@@ -19,7 +19,11 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET as string)
     res.json({ token, user })
   } catch (err: any) {
-    res.status(500).json({ error: err.message })
+    if (err.code === '23505') {
+      res.status(409).json({ error: 'Username or email already exists' })
+    } else {
+      res.status(500).json({ error: err.message })
+    }
   }
 }
 
@@ -92,7 +96,7 @@ export const googleCallback = [
   (req: Request, res: Response) => {
     const user = req.user as { id: string; role: string }
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET as string)
-    res.redirect(`myapp://auth?token=${token}`)
+    res.redirect(`frontend://auth?token=${token}&userId=${user.id}`)
   }
 ]
 

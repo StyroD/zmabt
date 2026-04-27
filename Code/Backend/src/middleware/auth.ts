@@ -2,12 +2,12 @@ import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 
 const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  if (req.path.startsWith('/api-docs') || req.path === '/health') {
+  if (req.path.startsWith('/api-docs') || req.path === '/health' || req.path.startsWith('/api/auth') || req.path.startsWith('/api/invite')) {
     next()
     return
   }
 
-  const token = req.headers.authorization?.split(' ')[1]
+  const token = req.headers.authorization?.split(' ')[1] ?? req.query.token as string
   if (!token) {
     res.status(401).json({ error: 'No token provided' })
     return

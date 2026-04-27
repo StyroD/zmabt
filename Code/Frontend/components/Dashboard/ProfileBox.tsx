@@ -1,6 +1,6 @@
-import { View, StyleSheet, Text } from "react-native";
-import { Colors } from "@/constants/color";
-import { Ionicons } from "@expo/vector-icons";
+import { View, StyleSheet, Text } from "react-native"
+import { useColors } from "@/contexts/ThemeContext"
+import { Ionicons } from "@expo/vector-icons"
 
 type Props = {
     name: string
@@ -9,6 +9,42 @@ type Props = {
 }
 
 export function ProfileBox({ name, role, status }: Props) {
+    const Colors = useColors()
+    const styles = StyleSheet.create({
+        container: {
+            backgroundColor: Colors.surface,
+            marginHorizontal: 10,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 12,
+            alignSelf: 'stretch',
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: 16,
+            gap: 16,
+        },
+        info: {
+            flex: 1,
+        },
+        name: {
+            fontSize: 18,
+            fontWeight: '500',
+            color: Colors.textPrimary,
+        },
+        row: {
+            flexDirection: 'row',
+            gap: 16,
+            marginTop: 4,
+        },
+        role: {
+            fontSize: 14,
+            color: Colors.textSecondary,
+        },
+        status: {
+            fontSize: 14,
+            color: Colors.success,
+        },
+    })
     return (
         <View style={styles.container}>
             <Ionicons name="person" size={50} color={Colors.primary} />
@@ -22,39 +58,3 @@ export function ProfileBox({ name, role, status }: Props) {
         </View>
     )
 }
-
-const styles = StyleSheet.create({
-    container: {
-        backgroundColor: Colors.surface,
-        marginHorizontal: 10,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 12,
-        alignSelf: 'stretch',
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-        gap: 16,
-    },
-    info: {
-        flex: 1,
-    },
-    name: {
-        fontSize: 18,
-        fontWeight: '500',
-        color: Colors.textPrimary,
-    },
-    row: {
-        flexDirection: 'row',
-        gap: 16,
-        marginTop: 4,
-    },
-    role: {
-        fontSize: 14,
-        color: Colors.textSecondary,
-    },
-    status: {
-        fontSize: 14,
-        color: Colors.success,
-    }
-})

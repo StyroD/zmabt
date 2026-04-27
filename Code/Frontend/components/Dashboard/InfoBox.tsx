@@ -1,27 +1,77 @@
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native"
-import { Colors } from "@/constants/color"
+import { useColors } from "@/contexts/ThemeContext"
 
 type ManagerProps = {
-    isManager: true;
-    totaljobs: number;
-    activejobs: number;
-    pendingjobs: number;
-    workers: number;
-    onJobsDetail: () => void;
-    onWorkersDetail: () => void;
+    isManager: true
+    totaljobs: number
+    activejobs: number
+    pendingjobs: number
+    workers: number
+    onJobsDetail: () => void
+    onWorkersDetail: () => void
 }
 
 type WorkerProps = {
-    isManager: false;
-    activejobs: number;
-    certificates: number;
-    onJobsDetail: () => void;
-    onCertificatesDetail: () => void;
+    isManager: false
+    activejobs: number
+    certificates: number
+    onJobsDetail: () => void
+    onCertificatesDetail: () => void
 }
 
 type Props = ManagerProps | WorkerProps
 
 export function InfoBox(props: Props) {
+    const Colors = useColors()
+    const styles = StyleSheet.create({
+        wrapper: {
+            gap: 12,
+            marginTop: 12,
+        },
+        container: {
+            backgroundColor: Colors.surface,
+            marginHorizontal: 10,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 12,
+            alignSelf: 'stretch',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: 16,
+            gap: 16,
+        },
+        stat: {
+            flex: 1,
+        },
+        label: {
+            fontSize: 13,
+            color: Colors.textSecondary,
+            marginBottom: 4,
+        },
+        value: {
+            fontSize: 28,
+            fontWeight: '500',
+            color: Colors.textPrimary,
+        },
+        divider: {
+            width: 1,
+            height: '100%',
+            backgroundColor: Colors.border,
+        },
+        button: {
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 8,
+            paddingVertical: 6,
+            paddingHorizontal: 14,
+        },
+        buttonText: {
+            fontSize: 13,
+            color: Colors.textPrimary,
+        },
+    })
+
     return (
         <View style={styles.wrapper}>
             {props.isManager ? (
@@ -75,52 +125,3 @@ export function InfoBox(props: Props) {
         </View>
     )
 }
-
-const styles = StyleSheet.create({
-    wrapper: {
-        gap: 12,
-        marginTop: 12,
-    },
-    container: {
-        backgroundColor: Colors.surface,
-        marginHorizontal: 10,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 12,
-        alignSelf: 'stretch',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 16,
-        gap: 16,
-    },
-    stat: {
-        flex: 1,
-    },
-    label: {
-        fontSize: 13,
-        color: Colors.textSecondary,
-        marginBottom: 4,
-    },
-    value: {
-        fontSize: 28,
-        fontWeight: '500',
-        color: Colors.textPrimary,
-    },
-    divider: {
-        width: 1,
-        height: '100%',
-        backgroundColor: Colors.border,
-    },
-    button: {
-        borderWidth: 1,
-        borderColor: Colors.border,
-        borderRadius: 8,
-        paddingVertical: 6,
-        paddingHorizontal: 14,
-    },
-    buttonText: {
-        fontSize: 13,
-        color: Colors.textPrimary,
-    }
-})
