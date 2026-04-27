@@ -1,6 +1,22 @@
 import { Request, Response } from 'express'
 import pool from '../config/db'
 
+export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const currentUserId = (req.user as { id: string }).id
+    const result = await pool.query(
+      `SELECT id, first_name, last_name, username, role
+       FROM users
+       WHERE id != $1
+       ORDER BY first_name, last_name`,
+      [currentUserId]
+    )
+    res.json(result.rows)
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 export const getUserById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params
@@ -69,17 +85,18 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       return
     }
 
-    const { first_name, last_name, phone, address, avatar_url, fcm_token } = req.body
+    const { first_name, last_name, title, phone, address, avatar_url, fcm_token } = req.body
 
     let query = `UPDATE users SET
       first_name = COALESCE($1, first_name),
       last_name = COALESCE($2, last_name),
-      phone = COALESCE($3, phone),
-      address = COALESCE($4, address),
-      avatar_url = COALESCE($5, avatar_url),
-      fcm_token = COALESCE($6, fcm_token)`
+      title = COALESCE($3, title),
+      phone = COALESCE($4, phone),
+      address = COALESCE($5, address),
+      avatar_url = COALESCE($6, avatar_url),
+      fcm_token = COALESCE($7, fcm_token)`
 
-    const values: any[] = [first_name, last_name, phone, address, avatar_url, fcm_token]
+    const values: any[] = [first_name, last_name, title, phone, address, avatar_url, fcm_token]
 
     if (req.file) {
       let mimeType = req.file.mimetype
