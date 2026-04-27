@@ -13,14 +13,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 export default function Profile() {
     const Colors = useColors()
     const insets = useSafeAreaInsets()
-    const { userId: paramUserId, projectId, mode } = useLocalSearchParams<{
+    const { userId: paramUserId, projectId, mode, source } = useLocalSearchParams<{
         userId?: string
         projectId?: string
         mode?: 'project' | 'full' | 'own'
+        source?: 'worker_project' | 'manager_project' | 'workers'
     }>()
 
     const [user, setUser] = useState<any>(null)
-    const [role, setRole] = useState<string | null>(null)
+    const [viewerRole, setViewerRole] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
 
     const isOwn = mode === 'own' || !paramUserId
@@ -31,7 +32,7 @@ export default function Profile() {
             try {
                 const stored = await SecureStore.getItemAsync('user')
                 const storedUser = stored ? JSON.parse(stored) : null
-                setRole(storedUser?.role ?? null)
+                setViewerRole(storedUser?.role ?? null)
 
                 const idToLoad = paramUserId ?? storedUser?.id
                 if (idToLoad) {
@@ -54,7 +55,9 @@ export default function Profile() {
         router.replace('/auth/login' as any)
     }
 
-    const backRoute = projectId
+    const backRoute = source === 'worker_project' && projectId
+        ? `/tabs/projectDetail_worker?id=${projectId}`
+        : projectId
         ? `/tabs/projectDetail_manager?id=${projectId}`
         : '/tabs/workers'
 
@@ -141,7 +144,9 @@ export default function Profile() {
     }
 
     const certificates = user.certificates ?? []
-    const isManager = role === 'manager'
+    const viewedUserIsManager = user.role === 'manager'
+    const viewerIsManager = viewerRole === 'manager'
+    const canSeeHourlyRate = !viewedUserIsManager && (isOwn || viewerIsManager)
 
     return (
         <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute} rightElement={editButton}>
@@ -152,14 +157,14 @@ export default function Profile() {
                     <Text style={styles.fullName}>
                         {user.title ? `${user.title} ` : ''}{user.first_name} {user.last_name}
                     </Text>
-                    <Text style={styles.roleLabel}>{isManager ? 'Manager' : 'Worker'}</Text>
+                    <Text style={styles.roleLabel}>{viewedUserIsManager ? 'Manager' : 'Worker'}</Text>
                 </View>
 
                 <Text style={styles.sectionLabel}>Basic info</Text>
                 <View style={styles.fieldsSection}>
                     <ProfileField label="First name" value={user.first_name} />
                     <ProfileField label="Last name" value={user.last_name} />
-                    {!isManager && (
+                    {canSeeHourlyRate && (
                         <ProfileField label="Hourly rate" value={user.hourly_rate ? `${user.hourly_rate} ${user.currency ?? 'EUR'}/h` : '—'} />
                     )}
                 </View>
@@ -174,7 +179,7 @@ export default function Profile() {
                             <ProfileField label="Address" value={user.address} />
                         </View>
 
-                        {!isManager && (
+                        {!viewedUserIsManager && (
                             <>
                                 <View style={styles.sectionDivider} />
                                 <Text style={styles.sectionLabel}>Employment</Text>
@@ -196,7 +201,7 @@ export default function Profile() {
                     </>
                 )}
 
-                {!isManager && (
+                {!viewedUserIsManager && (
                     <>
                         <View style={styles.sectionDivider} />
                         <Text style={styles.sectionLabel}>Certificates</Text>
