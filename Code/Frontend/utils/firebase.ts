@@ -1,13 +1,59 @@
-// Firebase Analytics + Crashlytics stubs
-// @react-native-firebase requires a custom dev build — these are no-ops for Expo Go
+let analytics: any = null
+let crashlytics: any = null
 
-export async function logLogin(_method: 'email' | 'google') {}
-export async function logScreenView(_screenName: string) {}
-export async function logTaskCreated(_projectId: string) {}
-export async function logTaskDone(_taskId: string) {}
-export async function logTaskDeletedOffline(_taskId: string) {}
-export async function logCertificateUploaded() {}
-export async function logProjectViewed(_projectId: string) {}
-export async function setCrashlyticsUser(_userId: string, _role: string) {}
-export async function recordError(_error: Error, _context?: string) {}
-export async function log(_message: string) {}
+try {
+  analytics = require('@react-native-firebase/analytics').default
+} catch {}
+try {
+  crashlytics = require('@react-native-firebase/crashlytics').default
+} catch {}
+
+// ─── Analytics ───────────────────────────────────────────────────────────────
+
+export async function logLogin(method: 'email' | 'google') {
+  try { await analytics?.().logLogin({ method }) } catch {}
+}
+
+export async function logScreenView(screenName: string) {
+  try { await analytics?.().logScreenView({ screen_name: screenName, screen_class: screenName }) } catch {}
+}
+
+export async function logTaskCreated(projectId: string) {
+  try { await analytics?.().logEvent('task_created', { project_id: projectId }) } catch {}
+}
+
+export async function logTaskDone(taskId: string) {
+  try { await analytics?.().logEvent('task_marked_done', { task_id: taskId }) } catch {}
+}
+
+export async function logTaskDeletedOffline(taskId: string) {
+  try { await analytics?.().logEvent('task_deleted_offline', { task_id: taskId }) } catch {}
+}
+
+export async function logCertificateUploaded() {
+  try { await analytics?.().logEvent('certificate_uploaded') } catch {}
+}
+
+export async function logProjectViewed(projectId: string) {
+  try { await analytics?.().logEvent('project_viewed', { project_id: projectId }) } catch {}
+}
+
+// ─── Crashlytics ─────────────────────────────────────────────────────────────
+
+export async function setCrashlyticsUser(userId: string, role: string) {
+  try {
+    await crashlytics?.().setUserId(userId)
+    await crashlytics?.().setAttribute('role', role)
+  } catch {}
+}
+
+export async function recordError(error: Error, context?: string) {
+  try {
+    if (context) await crashlytics?.().log(context)
+    crashlytics?.().recordError(error)
+  } catch {}
+}
+
+export async function log(message: string) {
+  try { await crashlytics?.().log(message) } catch {}
+}

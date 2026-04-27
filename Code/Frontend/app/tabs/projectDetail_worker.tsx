@@ -232,7 +232,7 @@ export default function ProjectDetailWorker() {
           <TouchableOpacity
             key={w.id}
             style={styles.workerRow}
-            onPress={() => router.push(`/tabs/profile?userId=${w.id}&mode=project`)}
+            onPress={() => router.push(`/tabs/profile?userId=${w.id}&projectId=${id}&mode=project&source=worker_project`)}
           >
             <Ionicons name="person-outline" size={18} color={Colors.textSecondary} />
             <Text style={styles.workerName}>

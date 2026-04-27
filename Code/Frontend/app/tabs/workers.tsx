@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { getAllWorkers } from '@/api/endpoints/workers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as SecureStore from 'expo-secure-store'
 
 export default function Workers() {
   const Colors = useColors()
@@ -15,10 +16,19 @@ export default function Workers() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    getAllWorkers()
-      .then(res => setWorkers(res.data))
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false))
+    const load = async () => {
+      const [userId, userRaw] = await Promise.all([
+        SecureStore.getItemAsync('userId'),
+        SecureStore.getItemAsync('user'),
+      ])
+      const role = JSON.parse(userRaw ?? '{}').role
+      const managerId = role === 'manager' ? (userId ?? undefined) : undefined
+      getAllWorkers(managerId)
+        .then(res => setWorkers(res.data))
+        .catch(err => console.error(err))
+        .finally(() => setLoading(false))
+    }
+    load()
   }, [])
 
   const filtered = useMemo(() => {

@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { ProfileField } from '@/components/Profile/ProfileField'
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
 import { useColors } from '@/contexts/ThemeContext'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
@@ -17,50 +18,47 @@ import { Image } from 'react-native'
 export default function Profile() {
     const Colors = useColors()
     const insets = useSafeAreaInsets()
-    const { userId: paramUserId, projectId, mode } = useLocalSearchParams<{
+    const { userId: paramUserId, projectId, mode, source } = useLocalSearchParams<{
         userId?: string
         projectId?: string
         mode?: 'project' | 'full' | 'own'
+        source?: 'worker_project' | 'manager_project' | 'workers'
     }>()
 
     const [avatarUri, setAvatarUri] = useState<string | null>(null)
 
 
     const [user, setUser] = useState<any>(null)
-    const [role, setRole] = useState<string | null>(null)
+    const [viewerRole, setViewerRole] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
 
     const isOwn = mode === 'own' || !paramUserId
     const isFullView = mode === 'full'
 
-    useFocusEffect(useCallback(() => {
-        let active = true
-        const load = async () => {
-            setAvatarUri(null)
-            try {
-                const stored = await SecureStore.getItemAsync('user')
-                const storedUser = stored ? JSON.parse(stored) : null
-                if (!active) return
-                setRole(storedUser?.role ?? null)
+    useFocusEffect(
+        useCallback(() => {
+            let active = true
+            const load = async () => {
+                try {
+                    const stored = await SecureStore.getItemAsync('user')
+                    const storedUser = stored ? JSON.parse(stored) : null
+                    if (active) setViewerRole(storedUser?.role ?? null)
 
-                const idToLoad = paramUserId ?? storedUser?.id
-                if (idToLoad) {
-                    const res = await getUserById(idToLoad)
-                    if (!active) return
-                    setUser(res.data)
-                    if (res.data.has_avatar) {
-                        setAvatarUri(getAvatarUrl(res.data.id))
+                    const idToLoad = paramUserId ?? storedUser?.id
+                    if (idToLoad) {
+                        const res = await getUserById(idToLoad)
+                        if (active) setUser(res.data)
                     }
+                } catch (err) {
+                    console.error(err)
+                } finally {
+                    if (active) setLoading(false)
                 }
-            } catch (err) {
-                console.error(err)
-            } finally {
-                if (active) setLoading(false)
             }
-        }
-        load()
-        return () => { active = false }
-    }, [paramUserId]))
+            load()
+            return () => { active = false }
+        }, [paramUserId])
+    )
 
     const handleLogout = async () => {
         await SecureStore.deleteItemAsync('token')
@@ -69,7 +67,9 @@ export default function Profile() {
         router.replace('/auth/login' as any)
     }
 
-    const backRoute = projectId
+    const backRoute = source === 'worker_project' && projectId
+        ? `/tabs/projectDetail_worker?id=${projectId}`
+        : projectId
         ? `/tabs/projectDetail_manager?id=${projectId}`
         : '/tabs/workers'
 
@@ -156,32 +156,31 @@ export default function Profile() {
     }
 
     const certificates = user.certificates ?? []
-    const isManager = role === 'manager'
+    const viewedUserIsManager = user.role === 'manager'
+    const viewerIsManager = viewerRole === 'manager'
+    const canSeeHourlyRate = isOwn || (!viewedUserIsManager && viewerIsManager)
 
     return (
         <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute} rightElement={editButton}>
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 <View style={styles.avatarSection}>
-                   {avatarUri
-                        ? <Image
-                            source={{ uri: avatarUri }}
-                            style={{ width: 90, height: 90, borderRadius: 45 }}
-                            onError={(e) => console.log('avatar image error:', e.nativeEvent.error)}
-                        />
+                    {user.avatar
+                        ? <Image source={{ uri: `data:${user.avatar_mime_type ?? 'image/jpeg'};base64,${user.avatar}` }} style={{ width: 90, height: 90, borderRadius: 45 }} />
                         : <Ionicons name="person-circle" size={90} color={Colors.border} />
                     }
                     <Text style={styles.fullName}>
                         {user.title ? `${user.title} ` : ''}{user.first_name} {user.last_name}
                     </Text>
-                    <Text style={styles.roleLabel}>{isManager ? 'Manager' : 'Worker'}</Text>
+                    <Text style={styles.roleLabel}>{viewedUserIsManager ? 'Manager' : 'Worker'}</Text>
                 </View>
 
                 <Text style={styles.sectionLabel}>Basic info</Text>
                 <View style={styles.fieldsSection}>
+                    {user.title ? <ProfileField label="Title" value={user.title} /> : null}
                     <ProfileField label="First name" value={user.first_name} />
                     <ProfileField label="Last name" value={user.last_name} />
-                    {!isManager && (
+                    {canSeeHourlyRate && (
                         <ProfileField label="Hourly rate" value={user.hourly_rate ? `${user.hourly_rate} ${user.currency ?? 'EUR'}/h` : '—'} />
                     )}
                 </View>
@@ -195,6 +194,8 @@ export default function Profile() {
                             <ProfileField label="Email" value={user.email} />
                             <ProfileField label="Address" value={user.address} />
                         </View>
+
+                        {(isOwn || !viewedUserIsManager) && (
                             <>
                                 <View style={styles.sectionDivider} />
                                 <Text style={styles.sectionLabel}>Employment</Text>
@@ -225,7 +226,7 @@ export default function Profile() {
                     </>
                 )}
 
-                {!isManager && (
+                {!viewedUserIsManager && (
                     <>
                         <View style={styles.sectionDivider} />
                         <Text style={styles.sectionLabel}>Certificates</Text>
