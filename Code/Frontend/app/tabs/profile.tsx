@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { ProfileField } from '@/components/Profile/ProfileField'
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
 import { useColors } from '@/contexts/ThemeContext'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
@@ -27,26 +28,30 @@ export default function Profile() {
     const isOwn = mode === 'own' || !paramUserId
     const isFullView = mode === 'full'
 
-    useEffect(() => {
-        const load = async () => {
-            try {
-                const stored = await SecureStore.getItemAsync('user')
-                const storedUser = stored ? JSON.parse(stored) : null
-                setViewerRole(storedUser?.role ?? null)
+    useFocusEffect(
+        useCallback(() => {
+            let active = true
+            const load = async () => {
+                try {
+                    const stored = await SecureStore.getItemAsync('user')
+                    const storedUser = stored ? JSON.parse(stored) : null
+                    if (active) setViewerRole(storedUser?.role ?? null)
 
-                const idToLoad = paramUserId ?? storedUser?.id
-                if (idToLoad) {
-                    const res = await getUserById(idToLoad)
-                    setUser(res.data)
+                    const idToLoad = paramUserId ?? storedUser?.id
+                    if (idToLoad) {
+                        const res = await getUserById(idToLoad)
+                        if (active) setUser(res.data)
+                    }
+                } catch (err) {
+                    console.error(err)
+                } finally {
+                    if (active) setLoading(false)
                 }
-            } catch (err) {
-                console.error(err)
-            } finally {
-                setLoading(false)
             }
-        }
-        load()
-    }, [paramUserId])
+            load()
+            return () => { active = false }
+        }, [paramUserId])
+    )
 
     const handleLogout = async () => {
         await SecureStore.deleteItemAsync('token')
