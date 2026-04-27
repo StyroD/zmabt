@@ -69,6 +69,18 @@ export default function CreateTask() {
                     workerIds: assignedWorkers,
                 })
                 logTaskCreated(projectId as string).catch(() => {})
+                    const resetForm = () => {
+                    setTitle('')
+                    setDescription('')
+                    setCategoryId('')
+                    setCategoryName('')
+                    setDeadline(null)
+                    setPriority('medium')
+                    setAssignedWorkers([])
+                    setErrors({})
+                }
+
+                resetForm()
                 Alert.alert('Saved offline', 'Task will be created when you reconnect.')
                 router.back()
                 return
@@ -85,6 +97,18 @@ export default function CreateTask() {
                 await assignWorkersToTask(task.data.id, assignedWorkers)
             }
             logTaskCreated(projectId as string).catch(() => {})
+            const resetForm = () => {
+                setTitle('')
+                setDescription('')
+                setCategoryId('')
+                setCategoryName('')
+                setDeadline(null)
+                setPriority('medium')
+                setAssignedWorkers([])
+                setErrors({})
+            }
+
+            resetForm()
             router.back()
         } catch (err: any) {
             Alert.alert('Error', err?.response?.data?.error ?? 'Failed to create task')
