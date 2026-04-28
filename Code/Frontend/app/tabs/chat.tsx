@@ -6,8 +6,8 @@ import {
 import { useColors } from "@/contexts/ThemeContext"
 import { router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
-import { useEffect, useState, useCallback, useRef } from "react"
-import { useFocusEffect, useNavigation } from "@react-navigation/native"
+import { useEffect, useState, useRef } from "react"
+import { useNavigation } from "@react-navigation/native"
 import { getConversations } from "@/api/endpoints/messages"
 import { searchUsers } from "@/api/endpoints/users"
 import { getSocket } from "@/api/socket"
@@ -325,40 +325,37 @@ export default function ChatList() {
     navigation.setOptions({ tabBarBadge: unreadIds.size > 0 ? unreadIds.size : undefined })
   }, [unreadIds.size])
 
-  useFocusEffect(
-    useCallback(() => {
-      let active = true
-      setLoading(true)
-      const load = async () => {
-        try {
-          const [userId, res] = await Promise.all([
-            SecureStore.getItemAsync('userId'),
-            getConversations(),
-          ])
-          if (!active) return
-          currentUserIdRef.current = userId ?? ''
-          setCurrentUserId(userId ?? '')
-          const convs: Conversation[] = res.data
-          setConversations(convs)
-          // mark conversations whose last message is from the other person as unread
-          setUnreadIds(prev => {
-            const next = new Set(prev)
-            convs.forEach(c => {
-              if (c.sender_id !== (userId ?? '') && !readIdsRef.current.has(c.other_user_id))
-                next.add(c.other_user_id)
-            })
-            return next
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    const load = async () => {
+      try {
+        const [userId, res] = await Promise.all([
+          SecureStore.getItemAsync('userId'),
+          getConversations(),
+        ])
+        if (!active) return
+        currentUserIdRef.current = userId ?? ''
+        setCurrentUserId(userId ?? '')
+        const convs: Conversation[] = res.data
+        setConversations(convs)
+        setUnreadIds(prev => {
+          const next = new Set(prev)
+          convs.forEach(c => {
+            if (c.sender_id !== (userId ?? '') && !readIdsRef.current.has(c.other_user_id))
+              next.add(c.other_user_id)
           })
-        } catch (err) {
-          console.error(err)
-        } finally {
-          if (active) setLoading(false)
-        }
+          return next
+        })
+      } catch (err) {
+        console.error(err)
+      } finally {
+        if (active) setLoading(false)
       }
-      load()
-      return () => { active = false }
-    }, [])
-  )
+    }
+    load()
+    return () => { active = false }
+  }, [])
 
   useEffect(() => {
     let mounted = true
