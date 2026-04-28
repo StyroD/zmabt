@@ -3,7 +3,8 @@ import { useColors } from '@/contexts/ThemeContext'
 import { router } from 'expo-router'
 import { ProjectBox } from '@/components/Projects/ProjectBox'
 import { Ionicons } from '@expo/vector-icons'
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
 import { getProjectByManagerId, getProjectsByWorkerId } from '@/api/endpoints/projects'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import * as SecureStore from 'expo-secure-store'
@@ -26,24 +27,28 @@ export default function Projects() {
   const [activeFilter, setActiveFilter] = useState<string>('All')
   const [isManager, setIsManager] = useState(true)
 
-  useEffect(() => {
-    const load = async () => {
-      const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
-      const manager = user.role === 'manager'
-      setIsManager(manager)
-      try {
-        const res = manager
-          ? await getProjectByManagerId(user.id)
-          : await getProjectsByWorkerId(user.id)
-        setProjects(res.data)
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
+  useFocusEffect(
+    useCallback(() => {
+      let active = true
+      const load = async () => {
+        const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
+        const manager = user.role === 'manager'
+        setIsManager(manager)
+        try {
+          const res = manager
+            ? await getProjectByManagerId(user.id)
+            : await getProjectsByWorkerId(user.id)
+          if (active) setProjects(res.data)
+        } catch (err) {
+          console.error(err)
+        } finally {
+          if (active) setLoading(false)
+        }
       }
-    }
-    load()
-  }, [])
+      load()
+      return () => { active = false }
+    }, [])
+  )
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '—'

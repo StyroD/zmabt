@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Alert } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Alert, Keyboard } from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useState } from 'react'
@@ -7,9 +7,10 @@ import MapView, { Marker } from 'react-native-maps'
 import { router } from 'expo-router'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { Ionicons } from '@expo/vector-icons'
-import { getUsers } from '@/api/endpoints/users'
 import { createProject } from '@/api/endpoints/projects'
+import * as SecureStore from 'expo-secure-store'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as Location from 'expo-location'
 
 const STATUSES = ['in_progress', 'pending', 'finished', 'cancelled']
 const statusLabels: Record<string, string> = {
@@ -62,8 +63,7 @@ export default function CreateProject() {
         if (!validate()) return
         setSubmitting(true)
         try {
-            const usersRes = await getUsers()
-            const managerId = usersRes.data[0]?.id
+            const managerId = await SecureStore.getItemAsync('userId')
             if (!managerId) { Alert.alert('Error', 'Could not determine manager'); return }
             await createProject({
                 manager_id: managerId,
@@ -197,7 +197,7 @@ export default function CreateProject() {
                 <Text style={styles.fieldLabel}>Deadline <Text style={styles.required}>*</Text></Text>
                 <TouchableOpacity
                     style={[styles.input, styles.row, errors.deadline && styles.inputError]}
-                    onPress={() => setShowDatePicker(true)}
+                    onPress={() => { Keyboard.dismiss(); setShowDatePicker(true) }}
                 >
                     <AntDesign name="calendar" size={16} color={Colors.textSecondary} />
                     <Text style={[styles.dateText, !deadline && { color: Colors.textSecondary }]}>
@@ -233,7 +233,7 @@ export default function CreateProject() {
                             <TouchableOpacity
                                 key={s}
                                 style={[styles.statusChip, active && { backgroundColor: sc.bg, borderColor: sc.border }]}
-                                onPress={() => setStatus(s)}
+                                onPress={() => { Keyboard.dismiss(); setStatus(s) }}
                             >
                                 <Text style={[styles.statusChipText, active && { color: sc.text }]}>{statusLabels[s]}</Text>
                             </TouchableOpacity>
@@ -255,7 +255,7 @@ export default function CreateProject() {
                 />
                 {errors.address && <Text style={styles.errorText}>{errors.address}</Text>}
 
-                <TouchableOpacity style={styles.mapToggle} onPress={() => setShowMap(!showMap)}>
+                <TouchableOpacity style={styles.mapToggle} onPress={() => { Keyboard.dismiss(); setShowMap(!showMap) }}>
                     <Ionicons name="map-outline" size={16} color={Colors.primary} />
                     <Text style={styles.mapToggleText}>
                         {lat && lng ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : 'Pick location on map'}
@@ -267,9 +267,18 @@ export default function CreateProject() {
                     <MapView
                         style={styles.map}
                         initialRegion={{ latitude: 48.1486, longitude: 17.1077, latitudeDelta: 0.05, longitudeDelta: 0.05 }}
-                        onPress={e => {
-                            setLat(e.nativeEvent.coordinate.latitude)
-                            setLng(e.nativeEvent.coordinate.longitude)
+                        onPress={async e => {
+                            const { latitude, longitude } = e.nativeEvent.coordinate
+                            setLat(latitude)
+                            setLng(longitude)
+                            try {
+                                const [result] = await Location.reverseGeocodeAsync({ latitude, longitude })
+                                if (result) {
+                                    const parts = [result.street, result.streetNumber, result.city].filter(Boolean)
+                                    setAddress(parts.join(', '))
+                                    setErrors(err => ({ ...err, address: '' }))
+                                }
+                            } catch {}
                         }}
                     >
                         {lat && lng && <Marker coordinate={{ latitude: lat, longitude: lng }} />}
