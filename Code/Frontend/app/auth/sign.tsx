@@ -13,7 +13,7 @@ import { getUserById } from "@/api/endpoints/users"
 import { logLogin, setCrashlyticsUser } from "@/utils/firebase"
 import { saveUser } from "@/utils/secureUser"
 
-const GOOGLE_AUTH_URL = 'http://localhost:3000/api/auth/google'
+const GOOGLE_AUTH_URL = 'https://blasphemy-wrongness-letdown.ngrok-free.dev/api/auth/google'
 
 export default function Sign() {
     const Colors = useColors()
@@ -22,6 +22,10 @@ export default function Sign() {
     const [confirmPassword, setConfirmPassword] = useState('')
     const [logError, setLogError] = useState('')
     const [googleLoading, setGoogleLoading] = useState(false)
+    const [username, setUsername] = useState('')
+    const [firstName, setFirstName] = useState('')
+    const [lastName, setLastName] = useState('')
+
 
     const handleGoogleSignUp = async () => {
         setGoogleLoading(true)
@@ -43,6 +47,7 @@ export default function Sign() {
 
             await SecureStore.setItemAsync('token', token)
             await SecureStore.setItemAsync('userId', userId)
+            
 
             const userRes = await getUserById(userId)
             await saveUser(userRes.data)
@@ -66,8 +71,11 @@ export default function Sign() {
                 setLogError("Password cannot be empty.")
                 return
             }
-            await register(email, password)
-            router.push('/auth/login')
+            const data = await register(username, email, password, 'worker', firstName, lastName)
+            await SecureStore.setItemAsync('token', data.token)
+            await SecureStore.setItemAsync('userId', data.user.id)
+            await saveUser(data.user)
+            router.push('/tabs/dashboard')
         } catch (e) {
             console.log(e)
             setLogError("Registration failed. Try again.")
@@ -149,6 +157,9 @@ export default function Sign() {
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
             <View style={styles.card}>
                 <Text style={styles.title}>Sign Up</Text>
+                <LogBox placeholder="Enter your first name" label="First name" value={firstName} onChangeText={setFirstName} />
+                <LogBox placeholder="Enter your last name" label="Last name" value={lastName} onChangeText={setLastName} />
+                <LogBox placeholder="Enter your username" label="Username" value={username} onChangeText={(text) => setUsername(text)} />
                 <LogBox placeholder="Enter your email" label="Email" value={email} onChangeText={(text) => setEmail(text)} />
                 <LogBox placeholder="Enter your password" label="Password" value={password} onChangeText={(text) => setPassword(text)} secureTextEntry={true} icon="eye-off" />
                 <LogBox placeholder="Confirm your password" label="Confirm Password" value={confirmPassword} onChangeText={(text) => setConfirmPassword(text)} secureTextEntry={true} icon="eye-off" />

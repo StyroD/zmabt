@@ -45,11 +45,17 @@ export default function Profile() {
 
                 const idToLoad = paramUserId ?? storedUser?.id
                 if (idToLoad) {
-                    const res = await getUserById(idToLoad)
-                    if (!active) return
-                    setUser(res.data)
-                    if (res.data.has_avatar) {
-                        setAvatarUri(getAvatarUrl(res.data.id))
+                    try {
+                        const res = await getUserById(idToLoad)
+                        if (!active) return
+                        setUser(res.data)
+                        if (res.data.has_avatar) {
+                            setAvatarUri(getAvatarUrl(res.data.id))
+                        }
+                    } catch {
+                        // offline — fall back to SecureStore data
+                        if (!active) return
+                        if (storedUser) setUser(storedUser)
                     }
                 }
             } catch (err) {
@@ -148,12 +154,20 @@ export default function Profile() {
     if (loading) return <ActivityIndicator size="large" color={Colors.primary} style={{ flex: 1 }} />
 
     if (!user) {
-        return (
-            <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute}>
-                <Text style={{ color: Colors.textSecondary }}>No user found</Text>
-            </ScreenWrapper>
-        )
-    }
+    return (
+        <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute}>
+            <Text style={{ color: Colors.textSecondary, marginBottom: 20 }}>
+                Could not load profile. You may be offline.
+            </Text>
+            {isOwn && (
+                <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                    <Ionicons name="log-out-outline" size={18} color={Colors.danger} />
+                    <Text style={styles.logoutText}>Log out</Text>
+                </TouchableOpacity>
+            )}
+        </ScreenWrapper>
+    )
+}
 
     const certificates = user.certificates ?? []
     const isManager = role === 'manager'

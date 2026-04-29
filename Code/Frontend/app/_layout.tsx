@@ -11,6 +11,11 @@ import { updatePushToken } from '@/api/endpoints/users'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { setCrashlyticsUser } from '@/utils/firebase'
 import { initDb } from '@/utils/db'
+import NavigationBar from 'expo-navigation-bar'
+
+
+
+
 
 try {
     Notifications.setNotificationHandler({
@@ -94,7 +99,10 @@ function AppContent() {
         const checkToken = async () => {
             try {
                 await initDb()
-
+                if (Platform.OS === 'android') {
+                    NavigationBar.setBackgroundColorAsync('#0F172A') // match your dark background
+                    NavigationBar.setButtonStyleAsync('light')
+                }
                 const token = await SecureStore.getItemAsync('token')
                 if (!mounted) return
                 setLoggedIn(!!token)

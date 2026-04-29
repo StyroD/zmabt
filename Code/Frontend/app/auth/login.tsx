@@ -13,7 +13,7 @@ import { getUserById } from "@/api/endpoints/users"
 import { logLogin, setCrashlyticsUser } from "@/utils/firebase"
 import { saveUser } from "@/utils/secureUser"
 
-const GOOGLE_AUTH_URL = 'http://localhost:3000/api/auth/google'
+const GOOGLE_AUTH_URL = "https://blasphemy-wrongness-letdown.ngrok-free.dev/api/auth/google"
 
 export default function Login() {
     const Colors = useColors()
