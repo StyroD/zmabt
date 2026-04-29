@@ -1,98 +1,84 @@
-import { Request, Response } from 'express'
-import pool from '../config/db'
-import { v4 as uuidv4 } from 'uuid'
-import { createAuditLog } from '../utils/audit'
+import { Request, Response } from "express";
+import pool from "../config/db";
+import { v4 as uuidv4 } from "uuid";
+import { createAuditLog } from "../utils/audit";
 
-
-export const getProjectById = async (req: Request, res: Response): Promise<void> => {
+export const getProjectById = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const { id } = req.params
-    const user = req.user as { id: string; role: string }
+    const { id } = req.params;
+    const user = req.user as { id: string; role: string };
 
     const access = await pool.query(
       `SELECT 1 FROM projects WHERE id = $1 AND manager_id = $2
        UNION
        SELECT 1 FROM project_workers WHERE project_id = $1 AND worker_id = $2`,
-      [id, user.id]
-    )
+      [id, user.id],
+    );
 
     if (access.rows.length === 0) {
-      res.status(403).json({ error: 'Forbidden: you are not part of this project' })
-      return
+      res
+        .status(403)
+        .json({ error: "Forbidden: you are not part of this project" });
+      return;
     }
 
-    const result = await pool.query('SELECT * FROM projects WHERE id = $1', [id])
-    res.json(result.rows[0])
+    const result = await pool.query("SELECT * FROM projects WHERE id = $1", [
+      id,
+    ]);
+    res.json(result.rows[0]);
   } catch (err: any) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message });
   }
-}
+};
 
-export const getProjectsByWorkerId = async (req: Request, res: Response): Promise<void> => {
+export const getProjectsByWorkerId = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const { workerId } = req.params
+    const { workerId } = req.params;
     const result = await pool.query(
       `SELECT p.* FROM projects p
        JOIN project_workers pw ON p.id = pw.project_id
        WHERE pw.worker_id = $1
        ORDER BY p.created_at DESC`,
-      [workerId]
-    )
-    res.json(result.rows)
+      [workerId],
+    );
+    res.json(result.rows);
   } catch (err: any) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message });
   }
-}
+};
 
-export const getProjectByManagerId = async (req: Request, res: Response): Promise<void> => {
-  try{
-    const {managerId} = req.params
-    const result = await pool.query('SELECT * FROM projects WHERE manager_id = $1', [managerId])
-    res.json(result.rows)
-  }catch (err: any){
-    res.status(500).json({error: err.message})
-  }
-}
-
-
-
-export const createProject = async (req: Request, res: Response): Promise<void> => {
-  try{
-    const user = req.user as { id: string; role: string }
-    if (user.role !== 'manager') {
-      res.status(403).json({ error: 'Forbidden: managers only' })
-      return
-    }
-    const{
-      title,
-      description,
-      status,
-      deadline,
-      address,
-      lat,
-      lng,
-      client_name,
-      client_phone,
-      client_email
-    } = req.body
-    const id = uuidv4()
-
-    const result = await pool.query(`INSERT INTO projects (id, manager_id, title, description,status,deadline, address,lat,lng,client_name,client_phone,client_email, created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, NOW()) RETURNING *`,[id, user.id, title, description, status || 'pending', deadline, address,lat,lng,client_name,client_phone,client_email])
-    void createAuditLog({ actorId: user.id, action: 'create', targetType: 'project', targetId: result.rows[0].id, newValue: title })
-    res.status(201).json(result.rows[0])
-  }
-  catch (err: any) {
-    if (err.code === '23505') {
-      res.status(409).json({ error: 'You already have a project with this title' })
-    } else {
-      res.status(500).json({ error: err.message })
-    }
-  }
-}
-
-export const updateProject = async (req: Request, res: Response): Promise<void> => {
+export const getProjectByManagerId = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const { id } = req.params
+    const { managerId } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM projects WHERE manager_id = $1",
+      [managerId],
+    );
+    res.json(result.rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const createProject = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const user = req.user as { id: string; role: string };
+    if (user.role !== "manager") {
+      res.status(403).json({ error: "Forbidden: managers only" });
+      return;
+    }
     const {
       title,
       description,
@@ -103,8 +89,64 @@ export const updateProject = async (req: Request, res: Response): Promise<void> 
       lng,
       client_name,
       client_phone,
-      client_email
-    } = req.body
+      client_email,
+    } = req.body;
+    const id = uuidv4();
+
+    const result = await pool.query(
+      `INSERT INTO projects (id, manager_id, title, description,status,deadline, address,lat,lng,client_name,client_phone,client_email, created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, NOW()) RETURNING *`,
+      [
+        id,
+        user.id,
+        title,
+        description,
+        status || "pending",
+        deadline,
+        address,
+        lat,
+        lng,
+        client_name,
+        client_phone,
+        client_email,
+      ],
+    );
+    void createAuditLog({
+      actorId: user.id,
+      action: "create",
+      targetType: "project",
+      targetId: result.rows[0].id,
+      newValue: title,
+    });
+    res.status(201).json(result.rows[0]);
+  } catch (err: any) {
+    if (err.code === "23505") {
+      res
+        .status(409)
+        .json({ error: "You already have a project with this title" });
+    } else {
+      res.status(500).json({ error: err.message });
+    }
+  }
+};
+
+export const updateProject = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      description,
+      status,
+      deadline,
+      address,
+      lat,
+      lng,
+      client_name,
+      client_phone,
+      client_email,
+    } = req.body;
 
     const result = await pool.query(
       `UPDATE projects SET
@@ -120,84 +162,137 @@ export const updateProject = async (req: Request, res: Response): Promise<void> 
         client_email = COALESCE($10, client_email)
        WHERE id = $11
        RETURNING *`,
-      [title, description, status, deadline, address, lat, lng, client_name, client_phone, client_email, id]
-    )
+      [
+        title,
+        description,
+        status,
+        deadline,
+        address,
+        lat,
+        lng,
+        client_name,
+        client_phone,
+        client_email,
+        id,
+      ],
+    );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Project not found' })
-      return
+      res.status(404).json({ error: "Project not found" });
+      return;
     }
 
-    const user = req.user as { id: string; role: string }
-    void createAuditLog({ actorId: user.id, action: 'update', targetType: 'project', targetId: id as string })
-    res.json(result.rows[0])
+    const user = req.user as { id: string; role: string };
+    void createAuditLog({
+      actorId: user.id,
+      action: "update",
+      targetType: "project",
+      targetId: id as string,
+    });
+    res.json(result.rows[0]);
   } catch (err: any) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message });
   }
-}
+};
 
-export const deleteProject = async (req: Request, res: Response): Promise<void> => {
+export const deleteProject = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
+
+    await pool.query("DELETE FROM project_workers WHERE project_id = $1", [id]);
+    await pool.query("DELETE FROM project_photos WHERE project_id = $1", [id]);
+    await pool.query("DELETE FROM worker_locations WHERE project_id = $1", [
+      id,
+    ]);
+    await pool.query(
+      "DELETE FROM task_assignments WHERE task_id IN (SELECT id FROM tasks WHERE project_id = $1)",
+      [id],
+    );
+    await pool.query(
+      "DELETE FROM task_photos WHERE task_id IN (SELECT id FROM tasks WHERE project_id = $1)",
+      [id],
+    );
+    await pool.query(
+      "DELETE FROM task_status_sync WHERE task_id IN (SELECT id FROM tasks WHERE project_id = $1)",
+      [id],
+    );
+    await pool.query("DELETE FROM tasks WHERE project_id = $1", [id]);
 
     const result = await pool.query(
-      'DELETE FROM projects WHERE id = $1 RETURNING *',
-      [id]
-    )
+      "DELETE FROM projects WHERE id = $1 RETURNING *",
+      [id],
+    );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Project not found' })
-      return
+      res.status(404).json({ error: "Project not found" });
+      return;
     }
 
-    const user = req.user as { id: string; role: string }
-    void createAuditLog({ actorId: user.id, action: 'delete', targetType: 'project', targetId: id as string, oldValue: result.rows[0].title })
-    res.json({ message: 'Project deleted', project: result.rows[0] })
+    const user = req.user as { id: string; role: string };
+    void createAuditLog({
+      actorId: user.id,
+      action: "delete",
+      targetType: "project",
+      targetId: id as string,
+      oldValue: result.rows[0].title,
+    });
+    res.json({ message: "Project deleted", project: result.rows[0] });
   } catch (err: any) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message });
   }
-}
+};
 
-export const assignWorkerToProject = async (req: Request, res: Response): Promise<void> => {
+export const assignWorkerToProject = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const { id } = req.params
-    const { worker_id } = req.body
+    const { id } = req.params;
+    const { worker_id } = req.body;
 
     const result = await pool.query(
       `INSERT INTO project_workers (project_id, worker_id, joined_at)
       VALUES ($1, $2, NOW())
       ON CONFLICT (project_id, worker_id) DO NOTHING
       RETURNING *`,
-      [id, worker_id]
-    )
+      [id, worker_id],
+    );
 
     if (result.rows.length === 0) {
-      res.status(409).json({ error: 'Worker already assigned to this project' })
-      return
+      res
+        .status(409)
+        .json({ error: "Worker already assigned to this project" });
+      return;
     }
 
-    res.status(201).json(result.rows[0])
+    res.status(201).json(result.rows[0]);
   } catch (err: any) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message });
   }
-}
+};
 
-export const removeWorkerFromProject = async (req: Request, res: Response): Promise<void> => {
+export const removeWorkerFromProject = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const { id, workerId } = req.params
+    const { id, workerId } = req.params;
 
     const result = await pool.query(
-      'DELETE FROM project_workers WHERE project_id = $1 AND worker_id = $2 RETURNING *',
-      [id, workerId]
-    )
+      "DELETE FROM project_workers WHERE project_id = $1 AND worker_id = $2 RETURNING *",
+      [id, workerId],
+    );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Worker not assigned to this project' })
-      return
+      res.status(404).json({ error: "Worker not assigned to this project" });
+      return;
     }
 
-    res.json({ message: 'Worker removed from project' })
+    res.json({ message: "Worker removed from project" });
   } catch (err: any) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message });
   }
-}
+};

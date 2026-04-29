@@ -37,9 +37,9 @@ export default function CreateTask() {
     const { isOnline } = useNetwork()
 
     const priorityColors = {
-        low:    { bg: Colors.neutralBg, border: Colors.neutralBorder, text: Colors.neutral },
+        low: { bg: Colors.neutralBg, border: Colors.neutralBorder, text: Colors.neutral },
         medium: { bg: Colors.warningBg, border: Colors.warningBorder, text: Colors.warning },
-        high:   { bg: Colors.dangerBg,  border: Colors.dangerBorder,  text: Colors.danger  },
+        high: { bg: Colors.dangerBg, border: Colors.dangerBorder, text: Colors.danger },
     }
 
     const formatDate = (date: Date) =>
@@ -82,7 +82,7 @@ export default function CreateTask() {
 
                 resetForm()
                 Alert.alert('Saved offline', 'Task will be created when you reconnect.')
-                router.back()
+                router.replace(`/tabs/task-list?projectId=${projectId}&projectTitle=${projectTitle}`)
                 return
             }
             const task = await createTask({
@@ -110,6 +110,8 @@ export default function CreateTask() {
 
             resetForm()
             router.back()
+            logTaskCreated(projectId as string).catch(() => { })
+            router.replace(`/tabs/task-list?projectId=${projectId}&projectTitle=${projectTitle}`)
         } catch (err: any) {
             Alert.alert('Error', err?.response?.data?.error ?? 'Failed to create task')
         } finally {

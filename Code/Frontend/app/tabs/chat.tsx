@@ -14,6 +14,7 @@ import { getSocket } from "@/api/socket"
 import * as SecureStore from "expo-secure-store"
 import type { Socket } from "socket.io-client"
 
+
 type Conversation = {
   other_user_id: string
   name: string
