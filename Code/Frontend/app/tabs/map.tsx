@@ -8,6 +8,7 @@ import * as Location from 'expo-location'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getProjectByManagerId, getProjectsByWorkerId } from '@/api/endpoints/projects'
 import { getProjectWorkerLocations, updateWorkerLocation } from '@/api/endpoints/locations'
+import { useLocalSearchParams } from 'expo-router'
 
 const BRATISLAVA: Region = {
   latitude: 48.1486,
@@ -30,6 +31,10 @@ export default function MapScreen() {
   const mapRef = useRef<MapView>(null)
   const refreshRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  const { lat: paramLat, lng: paramLng, title: paramTitle } = useLocalSearchParams<{
+    lat?: string; lng?: string; title?: string
+  }>()
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -44,6 +49,21 @@ export default function MapScreen() {
           : await getProjectsByWorkerId(u.id)
         setProjects(res.data)
         if (res.data.length > 0) setSelected(res.data[0])
+        if (paramLat && paramLng) {
+          const targetLat = parseFloat(paramLat)
+          const targetLng = parseFloat(paramLng)
+          const match = res.data.find((p: any) => p.lat == targetLat && p.lng == targetLng)
+            ?? res.data.find((p: any) => p.title === paramTitle)
+          if (match) setSelected(match)
+          setTimeout(() => {
+            mapRef.current?.animateToRegion({
+              latitude: targetLat,
+              longitude: targetLng,
+              latitudeDelta: 0.02,
+              longitudeDelta: 0.02,
+            }, 600)
+          }, 500)
+        }
       } catch (err) {
         console.error(err)
       } finally {

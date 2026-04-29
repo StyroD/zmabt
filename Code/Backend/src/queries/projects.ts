@@ -64,7 +64,6 @@ export const createProject = async (req: Request, res: Response): Promise<void> 
       return
     }
     const{
-      manager_id,
       title,
       description,
       status,
@@ -78,13 +77,13 @@ export const createProject = async (req: Request, res: Response): Promise<void> 
     } = req.body
     const id = uuidv4()
 
-    const result = await pool.query(`INSERT INTO projects (id, manager_id, title, description,status,deadline, address,lat,lng,client_name,client_phone,client_email, created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, NOW()) RETURNING *`,[id, manager_id, title, description, status || 'pending', deadline, address,lat,lng,client_name,client_phone,client_email])
+    const result = await pool.query(`INSERT INTO projects (id, manager_id, title, description,status,deadline, address,lat,lng,client_name,client_phone,client_email, created_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, NOW()) RETURNING *`,[id, user.id, title, description, status || 'pending', deadline, address,lat,lng,client_name,client_phone,client_email])
     void createAuditLog({ actorId: user.id, action: 'create', targetType: 'project', targetId: result.rows[0].id, newValue: title })
     res.status(201).json(result.rows[0])
   }
   catch (err: any) {
     if (err.code === '23505') {
-      res.status(409).json({ error: 'A project with this title already exists' })
+      res.status(409).json({ error: 'You already have a project with this title' })
     } else {
       res.status(500).json({ error: err.message })
     }

@@ -62,7 +62,7 @@ async function migrate(): Promise<void> {
       CREATE TABLE IF NOT EXISTS projects (
         id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         manager_id uuid REFERENCES users(id),
-        title varchar UNIQUE NOT NULL,
+        title varchar NOT NULL,
         description text,
         status varchar,
         deadline date,
@@ -207,6 +207,22 @@ async function migrate(): Promise<void> {
           SELECT 1 FROM pg_constraint WHERE conname = 'worker_project_unique'
         ) THEN
           ALTER TABLE worker_locations ADD CONSTRAINT worker_project_unique UNIQUE (worker_id, project_id);
+        END IF;
+      END$$;
+    `)
+
+    await pool.query(`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'projects_title_key'
+        ) THEN
+          ALTER TABLE projects DROP CONSTRAINT projects_title_key;
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'projects_manager_title_unique'
+        ) THEN
+          ALTER TABLE projects ADD CONSTRAINT projects_manager_title_unique UNIQUE (manager_id, title);
         END IF;
       END$$;
     `)

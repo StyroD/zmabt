@@ -7,6 +7,7 @@ import { router } from 'expo-router'
 import { getAllWorkers } from '@/api/endpoints/workers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { cacheWorkers, getCachedWorkers } from '@/utils/db'
+import * as SecureStore from 'expo-secure-store'
 
 export default function Workers() {
   const Colors = useColors()

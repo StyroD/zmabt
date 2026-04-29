@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { createUser, getUserById, updateUser, updatePushToken } from '../queries/users'
+import { Router } from 'express'
+import { getAllUsers, searchUsers, createUser, getUserById, updateUser, updatePushToken } from '../queries/users'
 import authMiddleware from '../middleware/auth'
 import upload from '../middleware/upload'
 import pool from '../config/db'
@@ -26,6 +28,8 @@ router.get('/:id/avatar', async (req: Request, res: Response) => {
     }
 })
 
+router.get('/', authMiddleware, getAllUsers)
+router.get('/search', authMiddleware, searchUsers)
 router.get('/:id', authMiddleware, getUserById)
 router.put('/:id', authMiddleware, upload.single('avatar'), updateUser)
 router.patch('/:id/push-token', authMiddleware, updatePushToken)

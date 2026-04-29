@@ -1,7 +1,6 @@
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useColors } from '@/contexts/ThemeContext'
-import FontAwesome from '@expo/vector-icons/FontAwesome'
 
 export default function TabsLayout() {
   const Colors = useColors()
@@ -24,10 +23,11 @@ export default function TabsLayout() {
       <Tabs.Screen name="map" options={{ title: 'Map', tabBarIcon: ({ color, size }) => <Ionicons name="map" size={size} color={color} /> }} />
       <Tabs.Screen name="chat" options={{ title: 'Chat', tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble" size={size} color={color} /> }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile', href: { pathname: '/tabs/profile', params: { mode: 'own' } }, tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile', href: '/tabs/profile?mode=own', tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} /> }} />
       <Tabs.Screen name="projectDetail_manager" options={{ title: 'Project Detail Manager', href: null }} />
-      <Tabs.Screen name="create-project" options={{ title: 'Create project', tabBarIcon: ({ color, size }) => <Ionicons name="create" size={size} color={color} /> }} />
-      <Tabs.Screen name="task-list" options={{ title: 'Task list', tabBarIcon: ({ color }) => <FontAwesome name="tasks" size={24} color={color} /> }} />
-      <Tabs.Screen name="create-task" options={{ title: 'Create task', tabBarIcon: ({ color }) => <FontAwesome name="tasks" size={24} color={color} /> }} />
+      <Tabs.Screen name="create-project" options={{ title: 'Create project', href: null }} />
+      <Tabs.Screen name="task-list" options={{ title: 'Task list', href: null }} />
+      <Tabs.Screen name="create-task" options={{ title: 'Create task', href: null }} />
       <Tabs.Screen name="certificate-list" options={{ title: 'Certificates', href: null }} />
       <Tabs.Screen name="certificate-view" options={{ title: 'Certificate', href: null }} />
       <Tabs.Screen name="workers" options={{ title: 'Workers', href: null }} />

@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.zmabt.frontend",
+      "deploymentTarget": "15.0",
       "infoPlist": {
         "UIBackgroundModes": [
           "remote-notification"
@@ -19,6 +20,8 @@
     },
     "android": {
       "package": "com.zmabt.frontend",
+      "minSdkVersion": 29,
+      "targetSdkVersion": 34,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

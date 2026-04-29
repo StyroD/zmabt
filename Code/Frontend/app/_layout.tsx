@@ -28,6 +28,15 @@ try {
         }),
     })
 } catch { /* not supported in Expo Go */ }
+// Show notifications as banners when the app is in the foreground
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+    }),
+})
 
 function getRouteFromNotificationData(data: Record<string, any>): string {
     const { type, projectId } = data ?? {}
@@ -71,6 +80,12 @@ async function registerPushToken() {
     const tokenData = await Notifications.getExpoPushTokenAsync().catch(() => null)
     if (!tokenData) return
     await updatePushToken(userId, tokenData.data).catch(() => {})
+    try {
+        const tokenData = await Notifications.getExpoPushTokenAsync()
+        await updatePushToken(userId, tokenData.data).catch(() => {})
+    } catch {
+        // getExpoPushTokenAsync requires an EAS projectId — skip in dev/Expo Go
+    }
 }
 
 function OfflineBanner() {

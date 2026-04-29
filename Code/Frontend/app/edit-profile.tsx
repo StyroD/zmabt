@@ -16,7 +16,9 @@ export default function EditProfile() {
 
     const [userId, setUserId] = useState<string | null>(null)
     const [role, setRole] = useState<string | null>(null)
+    const [title, setTitle] = useState('')
     const [avatarUri, setAvatarUri] = useState<string | null>(null)
+    const [savedAvatarDataUri, setSavedAvatarDataUri] = useState<string | null>(null)
     const [categories, setCategories] = useState<any[]>([])
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [loading, setLoading] = useState(true)
@@ -63,6 +65,23 @@ export default function EditProfile() {
                 setEmergencyPhone(user.emergency_contact_phone ?? '')
                 setIban(user.iban ?? '')
                 setNotes(user.notes ?? '')
+                const user = stored ? JSON.parse(stored) : null
+                if (user) {
+                    setUserId(user.id)
+                    setRole(user.role ?? null)
+                    setTitle(user.title ?? '')
+                    setFirstName(user.first_name ?? '')
+                    setLastName(user.last_name ?? '')
+                    setHourlyRate(user.hourly_rate?.toString() ?? '')
+                }
+                if (user?.id) {
+                    const userRes = await getUserById(user.id)
+                    const fetched = userRes.data
+                    if (fetched.avatar) {
+                        setSavedAvatarDataUri(`data:${fetched.avatar_mime_type ?? 'image/jpeg'};base64,${fetched.avatar}`)
+                    }
+                }
+                const catRes = await getCategories()
                 setCategories(catRes.data)
             } catch (err) {
                 console.error(err)
@@ -114,6 +133,23 @@ export default function EditProfile() {
             emergency_contact_phone: emergencyPhone.trim() || null,
             iban: iban.trim() || null,
             notes: notes.trim() || null,
+        if (!validate() || !userId) return
+        setSaving(true)
+        try {
+            const res = await updateProfileWithAvatar(userId, {
+                title: title,
+                first_name: firstName,
+                last_name: lastName,
+                hourly_rate: hourlyRate ? Number(hourlyRate) : undefined,
+            }, avatarUri ?? undefined)
+            const stored = await SecureStore.getItemAsync('user')
+            const user = stored ? JSON.parse(stored) : {}
+            await SecureStore.setItemAsync('user', JSON.stringify({ ...user, ...res }))
+            router.back()
+        } catch {
+            Alert.alert('Error', 'Could not save profile. Please try again.')
+        } finally {
+            setSaving(false)
         }
 
         if (avatarUri) {
@@ -160,6 +196,8 @@ export default function EditProfile() {
                 <View style={styles.avatarSection}>
                     {avatarUri
                         ? <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+                        : savedAvatarDataUri
+                        ? <Image source={{ uri: savedAvatarDataUri }} style={styles.avatarImage} />
                         : <Ionicons name="person-circle" size={90} color={Colors.border} />
                     }
                     <TouchableOpacity style={styles.changePhotoBtn} onPress={handlePickAvatar}>
@@ -175,6 +213,24 @@ export default function EditProfile() {
                 {!isManager && (
                     <Field label="Hourly rate (EUR/h)" value={hourlyRate} onChangeText={t => { setHourlyRate(t); setErrors(e => ({ ...e, hourlyRate: '' })) }} error={errors.hourlyRate} keyboardType="numeric" colors={Colors} />
                 )}
+                <Text style={styles.fieldLabel}>Title</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="e.g. Ing., Mgr., Dr."
+                    placeholderTextColor={Colors.textSecondary}
+                    value={title}
+                    onChangeText={setTitle}
+                />
+
+                <Text style={styles.fieldLabel}>First name</Text>
+                <TextInput
+                    style={[styles.input, errors.firstName && styles.inputError]}
+                    placeholder="First name"
+                    placeholderTextColor={Colors.textSecondary}
+                    value={firstName}
+                    onChangeText={t => { setFirstName(t); setErrors(e => ({ ...e, firstName: '' })) }}
+                />
+                {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
 
                 {/* Contact */}
                 <View style={styles.sectionDivider} />
@@ -228,6 +284,37 @@ export default function EditProfile() {
                     </View>
                     <Switch value={theme === 'dark'} onValueChange={toggleTheme} trackColor={{ false: Colors.border, true: Colors.primary }} thumbColor={Colors.surface} />
                 </View>
+                    <Switch
+                        value={theme === 'dark'}
+                        onValueChange={toggleTheme}
+                        trackColor={{ false: Colors.border, true: Colors.primary }}
+                        thumbColor={Colors.surface}
+                    />
+                </View>
+
+                {role !== 'manager' && (
+                    <>
+                        <View style={styles.sectionDivider} />
+                        <Text style={styles.sectionLabel}>Certificates</Text>
+                        <View style={styles.certContainer}>
+                            {categories.map((cat, index) => (
+                                <View key={cat.id} style={[styles.certRow, index === categories.length - 1 && styles.certRowLast]}>
+                                    <Text style={styles.certName}>{cat.name}</Text>
+                                    <TouchableOpacity
+                                        style={styles.uploadBtn}
+                                        onPress={() => router.push({
+                                            pathname: '/uploadCertficate' as any,
+                                            params: { categoryId: cat.id, categoryName: cat.name },
+                                        })}
+                                    >
+                                        <Ionicons name="cloud-upload-outline" size={14} color={Colors.primary} />
+                                        <Text style={styles.uploadText}>Upload</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                        </View>
+                    </>
+                )}
 
                 {/* Logout */}
                 <View style={styles.sectionDivider} />
