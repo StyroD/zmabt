@@ -10,10 +10,7 @@ import { CertificateRow } from '@/components/Profile/CertificateRow'
 import { getUserById } from '@/api/endpoints/users'
 import * as SecureStore from 'expo-secure-store'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useFocusEffect } from 'expo-router'
-import { useCallback } from 'react'
 import { getAvatarUrl } from '@/api/endpoints/users'
-import { Image } from 'react-native'
 
 export default function Profile() {
     const Colors = useColors()
@@ -25,9 +22,6 @@ export default function Profile() {
         source?: 'worker_project' | 'manager_project' | 'workers'
     }>()
 
-    const [avatarUri, setAvatarUri] = useState<string | null>(null)
-
-
     const [user, setUser] = useState<any>(null)
     const [viewerRole, setViewerRole] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
@@ -38,12 +32,11 @@ export default function Profile() {
     useFocusEffect(useCallback(() => {
         let active = true
         const load = async () => {
-            setAvatarUri(null)
             try {
                 const stored = await SecureStore.getItemAsync('user')
                 const storedUser = stored ? JSON.parse(stored) : null
                 if (!active) return
-                setRole(storedUser?.role ?? null)
+                setViewerRole(storedUser?.role ?? null)
 
                 const idToLoad = paramUserId ?? storedUser?.id
                 if (idToLoad) {
@@ -51,11 +44,7 @@ export default function Profile() {
                         const res = await getUserById(idToLoad)
                         if (!active) return
                         setUser(res.data)
-                        if (res.data.has_avatar) {
-                            setAvatarUri(getAvatarUrl(res.data.id))
-                        }
                     } catch {
-                        // offline — fall back to SecureStore data
                         if (!active) return
                         if (storedUser) setUser(storedUser)
                     }
@@ -69,30 +58,6 @@ export default function Profile() {
         load()
         return () => { active = false }
     }, [paramUserId]))
-    useFocusEffect(
-        useCallback(() => {
-            let active = true
-            const load = async () => {
-                try {
-                    const stored = await SecureStore.getItemAsync('user')
-                    const storedUser = stored ? JSON.parse(stored) : null
-                    if (active) setViewerRole(storedUser?.role ?? null)
-
-                    const idToLoad = paramUserId ?? storedUser?.id
-                    if (idToLoad) {
-                        const res = await getUserById(idToLoad)
-                        if (active) setUser(res.data)
-                    }
-                } catch (err) {
-                    console.error(err)
-                } finally {
-                    if (active) setLoading(false)
-                }
-            }
-            load()
-            return () => { active = false }
-        }, [paramUserId])
-    )
 
     const handleLogout = async () => {
         await SecureStore.deleteItemAsync('token')
@@ -114,88 +79,35 @@ export default function Profile() {
     ) : undefined
 
     const styles = StyleSheet.create({
-        avatarSection: {
-            alignItems: 'center',
-            paddingVertical: 20,
-            gap: 6,
-        },
-        fullName: {
-            fontSize: 18,
-            fontWeight: '500',
-            color: Colors.textPrimary,
-        },
-        roleLabel: {
-            fontSize: 13,
-            color: Colors.textSecondary,
-            textTransform: 'uppercase',
-            letterSpacing: 0.5,
-        },
-        fieldsSection: {
-            gap: 12,
-        },
-        sectionDivider: {
-            height: 1,
-            backgroundColor: Colors.border,
-            marginVertical: 20,
-        },
-        sectionLabel: {
-            fontSize: 13,
-            color: Colors.textSecondary,
-            textTransform: 'uppercase',
-            letterSpacing: 0.5,
-            marginBottom: 8,
-        },
-        certContainer: {
-            backgroundColor: Colors.surface,
-            borderWidth: 1,
-            borderColor: Colors.border,
-            borderRadius: 12,
-            paddingHorizontal: 16,
-            minHeight: 48,
-            justifyContent: 'center',
-        },
-        emptyText: {
-            fontSize: 13,
-            color: Colors.textSecondary,
-            fontStyle: 'italic',
-            paddingVertical: 12,
-            textAlign: 'center',
-        },
-        logoutBtn: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            borderWidth: 1,
-            borderColor: Colors.dangerBorder,
-            backgroundColor: Colors.dangerBg,
-            borderRadius: 12,
-            padding: 14,
-        },
-        logoutText: {
-            color: Colors.danger,
-            fontSize: 16,
-            fontWeight: '500',
-        },
+        avatarSection: { alignItems: 'center', paddingVertical: 20, gap: 6 },
+        fullName: { fontSize: 18, fontWeight: '500', color: Colors.textPrimary },
+        roleLabel: { fontSize: 13, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
+        fieldsSection: { gap: 12 },
+        sectionDivider: { height: 1, backgroundColor: Colors.border, marginVertical: 20 },
+        sectionLabel: { fontSize: 13, color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
+        certContainer: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 12, paddingHorizontal: 16, minHeight: 48, justifyContent: 'center' },
+        emptyText: { fontSize: 13, color: Colors.textSecondary, fontStyle: 'italic', paddingVertical: 12, textAlign: 'center' },
+        logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: Colors.dangerBorder, backgroundColor: Colors.dangerBg, borderRadius: 12, padding: 14 },
+        logoutText: { color: Colors.danger, fontSize: 16, fontWeight: '500' },
     })
 
     if (loading) return <ActivityIndicator size="large" color={Colors.primary} style={{ flex: 1 }} />
 
     if (!user) {
-    return (
-        <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute}>
-            <Text style={{ color: Colors.textSecondary, marginBottom: 20 }}>
-                Could not load profile. You may be offline.
-            </Text>
-            {isOwn && (
-                <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-                    <Ionicons name="log-out-outline" size={18} color={Colors.danger} />
-                    <Text style={styles.logoutText}>Log out</Text>
-                </TouchableOpacity>
-            )}
-        </ScreenWrapper>
-    )
-}
+        return (
+            <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute}>
+                <Text style={{ color: Colors.textSecondary, marginBottom: 20 }}>
+                    Could not load profile. You may be offline.
+                </Text>
+                {isOwn && (
+                    <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                        <Ionicons name="log-out-outline" size={18} color={Colors.danger} />
+                        <Text style={styles.logoutText}>Log out</Text>
+                    </TouchableOpacity>
+                )}
+            </ScreenWrapper>
+        )
+    }
 
     const certificates = user.certificates ?? []
     const viewedUserIsManager = user.role === 'manager'
@@ -207,14 +119,12 @@ export default function Profile() {
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 <View style={styles.avatarSection}>
-                   {avatarUri
+                    {user.has_avatar
                         ? <Image
-                            source={{ uri: avatarUri }}
+                            source={{ uri: getAvatarUrl(user.id) }}
                             style={{ width: 90, height: 90, borderRadius: 45 }}
-                            onError={(e) => console.log('avatar image error:', e.nativeEvent.error)}
+                            onError={(e) => console.log('avatar error:', e.nativeEvent.error)}
                         />
-                    {user.avatar
-                        ? <Image source={{ uri: `data:${user.avatar_mime_type ?? 'image/jpeg'};base64,${user.avatar}` }} style={{ width: 90, height: 90, borderRadius: 45 }} />
                         : <Ionicons name="person-circle" size={90} color={Colors.border} />
                     }
                     <Text style={styles.fullName}>
@@ -271,6 +181,7 @@ export default function Profile() {
                                     </>
                                 ) : null}
                             </>
+                        )}
                     </>
                 )}
 

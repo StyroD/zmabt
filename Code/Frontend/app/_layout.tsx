@@ -11,7 +11,7 @@ import { updatePushToken } from '@/api/endpoints/users'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { setCrashlyticsUser } from '@/utils/firebase'
 import { initDb } from '@/utils/db'
-import NavigationBar from 'expo-navigation-bar'
+import * as NavigationBar from 'expo-navigation-bar'
 
 
 
