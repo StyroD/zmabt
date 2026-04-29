@@ -129,6 +129,8 @@ export const updateCertificateStatus = async (req: Request, res: Response): Prom
 export const uploadProjectPhoto = async (req: Request, res: Response): Promise<void> => {
   try {
     const { project_id, task_id } = req.body
+    console.log('body:', req.body)
+    console.log('project_id received:', req.body.project_id)
     const uploadedBy = (req.user as { id: string }).id
     const fileData = (req.file as Express.Multer.File).buffer
     const clientMime = (req.file as Express.Multer.File).mimetype
@@ -171,9 +173,10 @@ export const getProjectPhotos = async (req: Request, res: Response): Promise<voi
 
     // Convert file_data to base64
     const photos = result.rows.map(photo => ({
-      ...photo,
-      file_data: photo.file_data ? photo.file_data.toString('base64') : null
-    }))
+  ...photo,
+  file_data: photo.file_data ? photo.file_data.toString('base64') : null,
+  mime_type: photo.file_url, // file_url actually holds the mime type
+}))
 
     res.json(photos)
   } catch (err: any) {
