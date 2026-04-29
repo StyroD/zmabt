@@ -1,11 +1,9 @@
 
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-//const BASE_URL = 'http://10.0.2.2:3000/api';  // Android emulator
-//const BASE_URL = 'http://localhost:3000/api'; // iOS simulator only
-//const BASE_URL = 'http://10.10.14.238:3000/api'; // both simulators / physical device
-const BASE_URL = 'http://172.20.10.8:3000/api'; // physical device - iPhone wifi
-
+//export const BASE_URL = 'http://10.0.2.2:3000/api';  // Android emulator
+ //export const BASE_URL = 'http://localhost:3000/api'// iOS simulator
+export const BASE_URL = 'http://10.112.94.109:3000/api'; // Physical device
 
 const client = axios.create({
   baseURL: BASE_URL,
@@ -22,4 +20,25 @@ client.interceptors.request.use(async (config) => {
   return config;
 });
 
+import { router } from 'expo-router'
+
+let isLoggingOut = false 
+
+client.interceptors.response.use(
+  res => res,
+  async err => {
+    if (err.response?.status === 401 && !isLoggingOut) {
+      isLoggingOut = true
+
+      try {
+        await SecureStore.deleteItemAsync('token')
+        await SecureStore.deleteItemAsync('userId')
+      } catch {}
+
+      router.replace('/auth/login')
+    }
+
+    return Promise.reject(err)
+  }
+)
 export default client;

@@ -19,8 +19,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('ErrorBoundary caught:', error.message)
+    console.error('Stack:', info.componentStack)
     recordError(error, `componentStack: ${info.componentStack ?? ''}`)
-  }
+}
 
   render() {
     if (this.state.hasError) {
@@ -29,10 +31,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
           <Text style={styles.title}>Something went wrong</Text>
           <Text style={styles.message}>{this.state.error?.message}</Text>
           <TouchableOpacity
-            style={styles.button}
-            onPress={() => this.setState({ hasError: false, error: null })}
+              style={styles.button}
+              onPress={() => {}}
           >
-            <Text style={styles.buttonText}>Try again</Text>
+              <Text style={styles.buttonText}>Try again</Text>
           </TouchableOpacity>
         </View>
       )

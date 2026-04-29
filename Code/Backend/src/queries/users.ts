@@ -1,6 +1,35 @@
 import { Request, Response } from 'express'
 import pool from '../config/db'
 
+export const searchUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const currentUserId = (req.user as { id: string }).id
+    const q = ((req.query.q as string) ?? '').trim()
+
+    if (q.length < 2) {
+      res.json([])
+      return
+    }
+
+    const result = await pool.query(
+      `SELECT id, first_name, last_name
+       FROM users
+       WHERE id != $1
+         AND (
+           first_name ILIKE $2
+           OR last_name ILIKE $2
+           OR CONCAT(first_name, ' ', last_name) ILIKE $2
+         )
+       ORDER BY first_name, last_name
+       LIMIT 20`,
+      [currentUserId, `%${q}%`]
+    )
+    res.json(result.rows)
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const currentUserId = (req.user as { id: string }).id

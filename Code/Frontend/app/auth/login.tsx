@@ -13,7 +13,7 @@ import { getUserById } from "@/api/endpoints/users"
 import { logLogin, setCrashlyticsUser } from "@/utils/firebase"
 import { saveUser } from "@/utils/secureUser"
 
-const GOOGLE_AUTH_URL = 'http://localhost:3000/api/auth/google'
+const GOOGLE_AUTH_URL = "https://blasphemy-wrongness-letdown.ngrok-free.dev/api/auth/google"
 
 export default function Login() {
     const Colors = useColors()
@@ -25,6 +25,9 @@ export default function Login() {
     const handleLogin = async () => {
         try {
             const data = await login(email, password)
+            await SecureStore.setItemAsync('token', data.token) 
+            await SecureStore.setItemAsync('userId', data.user.id)
+
             await saveUser(data.user)
             logLogin('email').catch(() => {})
             setCrashlyticsUser(data.user.id, data.user.role).catch(() => {})

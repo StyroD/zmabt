@@ -8,23 +8,27 @@ import { v4 as uuidv4 } from 'uuid'
 
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { username, email, password, role } = req.body
-    const passwordHash = await bcrypt.hash(password, 10)
-    const result = await pool.query(
-      'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING *',
-      [username, email, passwordHash, role]
-    )
-    const user = result.rows[0]
-    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET as string)
-    res.json({ token, user })
-  } catch (err: any) {
-    if (err.code === '23505') {
-      res.status(409).json({ error: 'Username or email already exists' })
-    } else {
-      res.status(500).json({ error: err.message })
+    try {
+        const { username, email, password, role, first_name, last_name } = req.body
+        const passwordHash = await bcrypt.hash(password, 10)
+        const result = await pool.query(
+            `INSERT INTO users (username, email, password_hash, role, first_name, last_name)
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+            [username, email, passwordHash, role, first_name ?? null, last_name ?? null]
+        )
+        const user = result.rows[0]
+        delete user.password_hash
+        delete user.google_id
+        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET as string)
+        res.json({ token, user })
+    } catch (err: any) {
+        if (err.code === '23505') {
+            res.status(409).json({ error: 'Username or email already exists' })
+        } else {
+            res.status(500).json({ error: err.message })
+            console.log(err)
+        }
     }
-  }
 }
 
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
@@ -86,10 +90,12 @@ passport.use(new GoogleStrategy({
   }
 }))
 
-export const googleAuth = passport.authenticate('google', {
-  scope: ['profile', 'email'],
-  session: false
-})
+export const googleAuth = (req: Request, res: Response, next: any) => {
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false
+  })(req, res, next)
+}
 
 export const googleCallback = [
   passport.authenticate('google', { failureRedirect: '/api/auth/google/failed', session: false }),

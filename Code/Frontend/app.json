@@ -13,7 +13,9 @@
       "bundleIdentifier": "com.zmabt.frontend",
       "deploymentTarget": "15.0",
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -72,7 +74,10 @@
           "sounds": [],
           "iosDisplayInForeground": true
         }
-      ]
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/crashlytics",
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

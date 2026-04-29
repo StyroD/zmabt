@@ -22,6 +22,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="projectsList" options={{ title: 'Projects', tabBarIcon: ({ color, size }) => <Ionicons name="briefcase" size={size} color={color} /> }} />
       <Tabs.Screen name="map" options={{ title: 'Map', tabBarIcon: ({ color, size }) => <Ionicons name="map" size={size} color={color} /> }} />
       <Tabs.Screen name="chat" options={{ title: 'Chat', tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble" size={size} color={color} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile', href: { pathname: '/tabs/profile', params: { mode: 'own' } }, tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} /> }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile', href: '/tabs/profile?mode=own', tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} /> }} />
       <Tabs.Screen name="projectDetail_manager" options={{ title: 'Project Detail Manager', href: null }} />
       <Tabs.Screen name="create-project" options={{ title: 'Create project', href: null }} />

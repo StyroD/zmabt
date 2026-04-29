@@ -50,7 +50,7 @@ export function ScreenWrapper({ title, children, backRoute, rightElement }: Prop
     >
       <View style={styles.header}>
         {backRoute ? (
-          <BackArrow onBackButton={() => router.back()} />
+          <BackArrow onBackButton={() => router.push(backRoute as any)} />
         ) : (
           <View style={styles.placeholder} />
         )}

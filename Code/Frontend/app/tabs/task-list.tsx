@@ -1,9 +1,11 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import { useFocusEffect } from 'expo-router'
+import { useCallback } from 'react'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { getTasksByProjectId } from '@/api/endpoints/tasks'
 import { TaskBox } from '@/components/TaskBox'
@@ -49,18 +51,13 @@ export default function TaskList() {
 
   const activeFilterCount = [statusFilter, priorityFilter].filter(f => f !== 'all').length
 
-  useEffect(() => {
-    logScreenView('TaskList').catch(() => {})
-    getTasksByProjectId(projectId as string)
-      .then(res => {
-        setTasks(res.data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error(err)
-        setLoading(false)
-      })
-  }, [projectId])
+  useFocusEffect(useCallback(() => {
+      setLoading(true)
+      getTasksByProjectId(projectId as string)
+          .then(res => setTasks(res.data))
+          .catch(err => console.error(err))
+          .finally(() => setLoading(false))
+  }, [projectId]))
 
   const styles = StyleSheet.create({
     center: {

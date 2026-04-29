@@ -9,8 +9,19 @@ export const login = async (email: string, password: string) => {
     return response.data
 }
 
-export const register = async (email: string, password: string) => {
-    const response = await client.post('/auth/register', { email, password })
+export const register = async (
+    username: string,
+    email: string,
+    password: string,
+    role: string,
+    firstName: string,
+    lastName: string,
+) => {
+    const response = await client.post('/auth/register', {
+        username, email, password, role,
+        first_name: firstName,
+        last_name: lastName,
+    })
     return response.data
 }
 

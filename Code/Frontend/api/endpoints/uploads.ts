@@ -27,4 +27,16 @@ export const openCertificateFile = async (id: string) => {
   const uri = await downloadCertificateFile(id)
   await WebBrowser.openBrowserAsync(uri)
 }
+export const uploadProjectPhoto = async (projectId: string, uri: string, mimeType: string, fileName: string) => {
+  const formData = new FormData()
+  formData.append('project_id', projectId)
+  formData.append('photo', {
+    uri,
+    type: mimeType,
+    name: fileName,
+  } as any)
+  return client.post('/uploads/photos', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
 

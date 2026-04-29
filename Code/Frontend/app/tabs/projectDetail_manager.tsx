@@ -9,13 +9,17 @@ import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useEffect, useState, useRef } from 'react'
 import { getProjectById, deleteProject, assignWorkerToProject } from '@/api/endpoints/projects'
 import { getProjectWorkers, getAllWorkers } from '@/api/endpoints/workers'
+import { getProjectPhotos, uploadProjectPhoto } from '@/api/endpoints/uploads'
 import { getTasksByProjectId } from '@/api/endpoints/tasks'
-import { getProjectPhotos } from '@/api/endpoints/uploads'
 
 import * as SecureStore from 'expo-secure-store'
 import client from '@/api/client'
 import { useLocalSearchParams, router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as ImagePicker from 'expo-image-picker'
+import { useFocusEffect } from 'expo-router'
+import { useCallback } from 'react'
+
 
 const API_BASE = (client.defaults.baseURL ?? '').replace(/\/$/, '')
 
@@ -28,10 +32,14 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true)
   const [workers, setWorkers] = useState<any[]>([])
   const [tasks, setTasks] = useState<any[]>([])
+  const [photos, setPhotos] = useState<any[]>([])
   const [allWorkers, setAllWorkers] = useState<any[]>([])
   const [assignModalVisible, setAssignModalVisible] = useState(false)
   const [assignSearch, setAssignSearch] = useState('')
+  const [selectedWorkers, setSelectedWorkers] = useState<Set<string>>(new Set())
+  const [certFilter, setCertFilter] = useState<string | null>(null)
   const [assigning, setAssigning] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const scrollRef = useRef<ScrollView>(null)
 
   const handleDeleteProject = () => {
@@ -53,39 +61,100 @@ export default function ProjectDetail() {
   const handleOpenAssign = async () => {
     if (allWorkers.length === 0) {
       try {
-        const res = await getAllWorkers()
+        const res = await getAllWorkers(currentProject.manager_id)
         setAllWorkers(res.data)
       } catch { /* ignore */ }
     }
     setAssignSearch('')
+    setSelectedWorkers(new Set())
+    setCertFilter(null)
     setAssignModalVisible(true)
   }
 
-  const handleAssignWorker = async (workerId: string) => {
+  const toggleWorker = (workerId: string) => {
+    setSelectedWorkers(prev => {
+      const next = new Set(prev)
+      if (next.has(workerId)) { next.delete(workerId) } else { next.add(workerId) }
+      return next
+    })
+  }
+
+  const handleAssignSelected = async () => {
+    if (selectedWorkers.size === 0) return
     setAssigning(true)
     try {
-      await assignWorkerToProject(currentProject.id, workerId)
+      await Promise.all(
+        [...selectedWorkers].map(wId => assignWorkerToProject(currentProject.id, wId))
+      )
       const res = await getProjectWorkers(currentProject.id)
       setWorkers(res.data)
       setAssignModalVisible(false)
     } catch (err: any) {
-      Alert.alert('Error', err?.response?.data?.error ?? 'Could not assign worker')
+      Alert.alert('Error', err?.response?.data?.error ?? 'Could not assign workers')
     } finally {
       setAssigning(false)
     }
   }
 
-  useEffect(() => {
+const handleAddPhoto = () => {
+  Alert.alert('Add photo', 'Choose source', [
+    {
+      text: 'Camera', onPress: async () => {
+        const permission = await ImagePicker.requestCameraPermissionsAsync()
+        if (!permission.granted) { Alert.alert('Permission denied', 'Camera access is required'); return }
+        const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 })
+        if (!result.canceled) await handleUploadPhoto(result.assets[0])
+      }
+    },
+    {
+      text: 'Library', onPress: async () => {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
+        if (!permission.granted) { Alert.alert('Permission denied', 'Photo library access is required'); return }
+        const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 })
+        if (!result.canceled) await handleUploadPhoto(result.assets[0])
+      }
+    },
+    { text: 'Cancel', style: 'cancel' }
+  ])
+}
+
+const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
+  setUploadingPhoto(true)
+  try {
+    await uploadProjectPhoto(
+      currentProject.id,
+      asset.uri,
+      asset.mimeType ?? 'image/jpeg',
+      asset.fileName ?? `photo_${Date.now()}.jpg`,
+    )
+    const res = await getProjectPhotos(currentProject.id)
+    setPhotos(res.data)
+  } catch (err: any) {
+    console.error('Upload error:', JSON.stringify(err?.response?.data ?? err?.message ?? err))
+    Alert.alert('Error', err?.response?.data?.error ?? 'Could not upload photo')
+  } finally {
+    setUploadingPhoto(false)
+  }
+}
+
+  useFocusEffect(
+  useCallback(() => {
+    setLoading(true)
     getProjectById(id as string)
       .then(res => {
         setProject(res.data)
         setLoading(false)
+        // fetch photos here using the freshly loaded project id
+        getProjectPhotos(res.data.id)
+          .then(r => setPhotos(r.data))
+          .catch(err => console.error(err))
       })
       .catch(err => {
         console.error(err)
         setLoading(false)
       })
   }, [id])
+)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false })
@@ -109,6 +178,26 @@ export default function ProjectDetail() {
     cancelled:   { label: 'Cancelled',   dot: Colors.danger,  bg: Colors.dangerBg,  text: Colors.danger,  border: Colors.dangerBorder },
     finished:    { label: 'Finished',    dot: Colors.neutral, bg: Colors.neutralBg, text: Colors.neutral, border: Colors.neutralBorder },
   }
+
+  const certCategories: { name: string }[] = []
+  const seenCats = new Set<string>()
+  allWorkers.forEach(w => {
+    (w.certificates ?? []).forEach((c: any) => {
+      if (c.status === 'accepted' && c.name && !seenCats.has(c.name)) {
+        seenCats.add(c.name)
+        certCategories.push({ name: c.name })
+      }
+    })
+  })
+
+  const visibleWorkers = allWorkers.filter(w => {
+    const q = assignSearch.toLowerCase()
+    const nameMatch = !q || `${w.first_name} ${w.last_name}`.toLowerCase().includes(q)
+    const certMatch = !certFilter || (w.certificates ?? []).some(
+      (c: any) => c.status === 'accepted' && c.name === certFilter
+    )
+    return nameMatch && certMatch
+  })
 
   const styles = StyleSheet.create({
     center: {
@@ -224,12 +313,13 @@ export default function ProjectDetail() {
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: 10,
-      gap: 6,
+      overflow: 'hidden',
     },
     addPhotoBox: {
       borderStyle: 'dashed',
       borderColor: Colors.primary,
       backgroundColor: Colors.primaryLight,
+      gap: 6,
     },
     photoText: {
       color: Colors.textSecondary,
@@ -283,7 +373,7 @@ export default function ProjectDetail() {
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
       padding: 20,
-      maxHeight: '75%',
+      maxHeight: '80%',
     },
     modalHeader: {
       flexDirection: 'row',
@@ -306,12 +396,36 @@ export default function ProjectDetail() {
       borderRadius: 10,
       paddingHorizontal: 12,
       paddingVertical: 10,
-      marginBottom: 12,
+      marginBottom: 10,
     },
     modalSearchInput: {
       flex: 1,
       fontSize: 15,
       color: Colors.textPrimary,
+    },
+    filterRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 12,
+    },
+    filterChip: {
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: 20,
+      paddingVertical: 4,
+      paddingHorizontal: 12,
+      backgroundColor: Colors.surface,
+    },
+    filterChipActive: {
+      borderColor: Colors.primary,
+      backgroundColor: Colors.primaryLight,
+    },
+    filterChipText: {
+      fontSize: 12,
+      color: Colors.textSecondary,
+    },
+    filterChipTextActive: {
+      color: Colors.primary,
     },
     modalWorkerRow: {
       flexDirection: 'row',
@@ -322,12 +436,24 @@ export default function ProjectDetail() {
       borderBottomColor: Colors.border,
     },
     modalWorkerAssigned: {
-      opacity: 0.5,
+      opacity: 0.4,
     },
     modalWorkerName: {
       flex: 1,
       fontSize: 15,
       color: Colors.textPrimary,
+    },
+    assignBtn: {
+      backgroundColor: Colors.primary,
+      borderRadius: 10,
+      padding: 14,
+      alignItems: 'center',
+      marginTop: 12,
+    },
+    assignBtnText: {
+      color: Colors.textPrimary,
+      fontSize: 15,
+      fontWeight: '600',
     },
   })
 
@@ -355,7 +481,6 @@ export default function ProjectDetail() {
   }
 
   const s = statusConfig[currentProject.status as keyof typeof statusConfig] ?? statusConfig['pending']
-  const photos = ['1', '2', '3', '4']
 
   return (
     <ScreenWrapper title='Project detail' backRoute='/tabs/projectsList'>
@@ -424,21 +549,40 @@ export default function ProjectDetail() {
         <View style={styles.sectionDivider} />
         <Text style={styles.sectionLabel}>Photo documentation</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
-          {photos.map((_p, index) => (
-            <View key={`photo-${index}`} style={styles.photoBox}>
-              <Ionicons name="image-outline" size={28} color={Colors.textSecondary} />
-              <Text style={styles.photoText}>Photo</Text>
+          {photos.map(photo => (
+            <View key={photo.id} style={styles.photoBox}>
+              {photo.file_data ? (
+                <Image
+                  source={{ uri: `data:${photo.mime_type ?? 'image/jpeg'};base64,${photo.file_data}` }}
+                  style={{ width: 100, height: 100 }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons name="image-outline" size={28} color={Colors.textSecondary} />
+              )}
             </View>
           ))}
-          <TouchableOpacity style={[styles.photoBox, styles.addPhotoBox]}>
-            <AntDesign name="plus" size={24} color={Colors.primary} />
-            <Text style={[styles.photoText, { color: Colors.primary }]}>Add</Text>
+          <TouchableOpacity
+            style={[styles.photoBox, styles.addPhotoBox, uploadingPhoto && { opacity: 0.5 }]}
+            onPress={handleAddPhoto}
+            disabled={uploadingPhoto}
+          >
+            {uploadingPhoto
+              ? <ActivityIndicator size="small" color={Colors.primary} />
+              : <AntDesign name="plus" size={24} color={Colors.primary} />
+            }
+            <Text style={[styles.photoText, { color: Colors.primary }]}>
+              {uploadingPhoto ? 'Uploading...' : 'Add'}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
 
         <View style={styles.sectionDivider} />
         <View style={styles.actionsGrid}>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => router.push(`/tabs/create-project?projectId=${currentProject.id}`)}
+          >
             <AntDesign name="edit" size={16} color={Colors.textPrimary} />
             <Text style={styles.actionText}>Edit project</Text>
           </TouchableOpacity>
@@ -448,7 +592,7 @@ export default function ProjectDetail() {
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionButton, { backgroundColor: Colors.successBg, borderColor: Colors.successBorder }]} onPress={handleOpenAssign}>
             <Ionicons name="person-add-outline" size={16} color={Colors.textPrimary} />
-            <Text style={styles.actionText}>Assign worker</Text>
+            <Text style={styles.actionText}>Assign workers</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionButton, { backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]} onPress={() => router.push(`/tabs/create-task?projectId=${currentProject.id}&projectTitle=${currentProject.title}`)}>
             <AntDesign name="plus" size={16} color={Colors.textPrimary} />
@@ -456,7 +600,16 @@ export default function ProjectDetail() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.mapButton}>
+        <TouchableOpacity
+          style={[styles.mapButton, (!currentProject.lat || !currentProject.lng) && { opacity: 0.5 }]}
+          onPress={() => {
+            if (!currentProject.lat || !currentProject.lng) {
+              Alert.alert('No location', 'This project has no coordinates set')
+              return
+            }
+            router.push(`/tabs/map?lat=${currentProject.lat}&lng=${currentProject.lng}&title=${encodeURIComponent(currentProject.title)}`)
+          }}
+        >
           <Ionicons name="map-outline" size={18} color={Colors.textPrimary} />
           <Text style={styles.mapText}>View map</Text>
         </TouchableOpacity>
@@ -468,11 +621,12 @@ export default function ProjectDetail() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Assign worker</Text>
+              <Text style={styles.modalTitle}>Assign workers</Text>
               <TouchableOpacity onPress={() => setAssignModalVisible(false)}>
                 <AntDesign name="close" size={20} color={Colors.textSecondary} />
               </TouchableOpacity>
             </View>
+
             <View style={styles.modalSearch}>
               <Ionicons name="search-outline" size={15} color={Colors.textSecondary} />
               <TextInput
@@ -483,34 +637,61 @@ export default function ProjectDetail() {
                 onChangeText={setAssignSearch}
               />
             </View>
+
+            {certCategories.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
+                <TouchableOpacity
+                  style={[styles.filterChip, !certFilter && styles.filterChipActive]}
+                  onPress={() => setCertFilter(null)}
+                >
+                  <Text style={[styles.filterChipText, !certFilter && styles.filterChipTextActive]}>All</Text>
+                </TouchableOpacity>
+                {certCategories.map(cat => (
+                  <TouchableOpacity
+                    key={cat.name}
+                    style={[styles.filterChip, certFilter === cat.name && styles.filterChipActive]}
+                    onPress={() => setCertFilter(certFilter === cat.name ? null : cat.name)}
+                  >
+                    <Text style={[styles.filterChipText, certFilter === cat.name && styles.filterChipTextActive]}>{cat.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+
             <ScrollView showsVerticalScrollIndicator={false}>
-              {allWorkers
-                .filter(w => {
-                  const q = assignSearch.toLowerCase()
-                  return !q || `${w.first_name} ${w.last_name}`.toLowerCase().includes(q) || w.username?.toLowerCase().includes(q)
-                })
-                .map(w => {
-                  const alreadyAssigned = workers.some(pw => pw.id === w.id)
-                  return (
-                    <TouchableOpacity
-                      key={w.id}
-                      style={[styles.modalWorkerRow, alreadyAssigned && styles.modalWorkerAssigned]}
-                      onPress={() => !alreadyAssigned && handleAssignWorker(w.id)}
-                      disabled={alreadyAssigned || assigning}
-                    >
-                      <Ionicons name="person-outline" size={18} color={Colors.textSecondary} />
-                      <Text style={styles.modalWorkerName}>
-                        {w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username}
-                      </Text>
-                      {alreadyAssigned
-                        ? <AntDesign name="check-circle" size={16} color={Colors.success} />
-                        : <AntDesign name="plus" size={16} color={Colors.primary} />
-                      }
-                    </TouchableOpacity>
-                  )
-                })}
-              <View style={{ height: 20 }} />
+              {visibleWorkers.map(w => {
+                const alreadyAssigned = workers.some(pw => pw.id === w.id)
+                const selected = selectedWorkers.has(w.id)
+                return (
+                  <TouchableOpacity
+                    key={w.id}
+                    style={[styles.modalWorkerRow, alreadyAssigned && styles.modalWorkerAssigned]}
+                    onPress={() => !alreadyAssigned && toggleWorker(w.id)}
+                    disabled={alreadyAssigned || assigning}
+                  >
+                    <Ionicons name="person-outline" size={18} color={Colors.textSecondary} />
+                    <Text style={styles.modalWorkerName}>
+                      {w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username}
+                    </Text>
+                    {alreadyAssigned
+                      ? <AntDesign name="check-circle" size={18} color={Colors.success} />
+                      : <AntDesign name="check-circle" size={18} color={selected ? Colors.primary : Colors.border} />
+                    }
+                  </TouchableOpacity>
+                )
+              })}
+              <View style={{ height: 8 }} />
             </ScrollView>
+
+            <TouchableOpacity
+              style={[styles.assignBtn, (selectedWorkers.size === 0 || assigning) && { opacity: 0.5 }]}
+              onPress={handleAssignSelected}
+              disabled={selectedWorkers.size === 0 || assigning}
+            >
+              <Text style={styles.assignBtnText}>
+                {assigning ? 'Assigning...' : `Assign ${selectedWorkers.size > 0 ? `(${selectedWorkers.size})` : ''}`}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

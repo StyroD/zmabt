@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useColors, useTheme } from '@/contexts/ThemeContext'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
-import { updateProfileWithAvatar, getUserById } from '@/api/endpoints/users'
+import { updateProfileWithAvatar, updateProfile, getUserById } from '@/api/endpoints/users'
 import { getCategories } from '@/api/endpoints/categories'
 import * as SecureStore from 'expo-secure-store'
 import { saveUser } from '@/utils/secureUser'
@@ -46,6 +46,28 @@ export default function EditProfile() {
         const load = async () => {
             try {
                 const stored = await SecureStore.getItemAsync('user')
+                const storedUser = stored ? JSON.parse(stored) : null
+                const id = storedUser?.id
+                if (!id) return
+
+                setUserId(id)
+                setRole(storedUser.role ?? null)
+                console.log('edit-profile: id=', id, 'role=', storedUser.role)
+
+                const [userRes, catRes] = await Promise.all([
+                    getUserById(id),
+                    getCategories(),
+                ])
+                const user = userRes.data
+                setFirstName(user.first_name ?? '')
+                setLastName(user.last_name ?? '')
+                setHourlyRate(user.hourly_rate?.toString() ?? '')
+                setPhone(user.phone ?? '')
+                setAddress(user.address ?? '')
+                setEmergencyName(user.emergency_contact_name ?? '')
+                setEmergencyPhone(user.emergency_contact_phone ?? '')
+                setIban(user.iban ?? '')
+                setNotes(user.notes ?? '')
                 const user = stored ? JSON.parse(stored) : null
                 if (user) {
                     setUserId(user.id)
@@ -100,6 +122,20 @@ export default function EditProfile() {
     }
 
     const handleSave = async () => {
+    if (!validate()) return
+    if (!userId) { Alert.alert('Error', 'User ID not found'); return }
+    setSaving(true)
+    try {
+        const data = {
+            first_name: firstName.trim() || null,
+            last_name: lastName.trim() || null,
+            phone: phone.trim() || null,
+            address: address.trim() || null,
+            hourly_rate: hourlyRate ? Number(hourlyRate) : null,
+            emergency_contact_name: emergencyName.trim() || null,
+            emergency_contact_phone: emergencyPhone.trim() || null,
+            iban: iban.trim() || null,
+            notes: notes.trim() || null,
         if (!validate() || !userId) return
         setSaving(true)
         try {
@@ -173,6 +209,13 @@ export default function EditProfile() {
                     </TouchableOpacity>
                 </View>
 
+                {/* Basic info */}
+                <Text style={styles.sectionLabel}>Basic info</Text>
+                <Field label="First name" value={firstName} onChangeText={t => { setFirstName(t); setErrors(e => ({ ...e, firstName: '' })) }} error={errors.firstName} colors={Colors} />
+                <Field label="Last name" value={lastName} onChangeText={t => { setLastName(t); setErrors(e => ({ ...e, lastName: '' })) }} error={errors.lastName} colors={Colors} />
+                {!isManager && (
+                    <Field label="Hourly rate (EUR/h)" value={hourlyRate} onChangeText={t => { setHourlyRate(t); setErrors(e => ({ ...e, hourlyRate: '' })) }} error={errors.hourlyRate} keyboardType="numeric" colors={Colors} />
+                )}
                 <Text style={styles.fieldLabel}>Title</Text>
                 <TextInput
                     style={styles.input}
@@ -242,6 +285,8 @@ export default function EditProfile() {
                         <Ionicons name={theme === 'dark' ? 'moon-outline' : 'sunny-outline'} size={20} color={Colors.textPrimary} />
                         <Text style={styles.themeLabelText}>{theme === 'dark' ? 'Dark mode' : 'Light mode'}</Text>
                     </View>
+                    <Switch value={theme === 'dark'} onValueChange={toggleTheme} trackColor={{ false: Colors.border, true: Colors.primary }} thumbColor={Colors.surface} />
+                </View>
                     <Switch
                         value={theme === 'dark'}
                         onValueChange={toggleTheme}

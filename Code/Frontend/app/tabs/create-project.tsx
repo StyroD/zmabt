@@ -1,15 +1,16 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Alert } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Alert, Keyboard, ActivityIndicator } from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import MapView, { Marker } from 'react-native-maps'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { Ionicons } from '@expo/vector-icons'
-import { getUsers } from '@/api/endpoints/users'
-import { createProject } from '@/api/endpoints/projects'
+import { createProject, updateProject, getProjectById } from '@/api/endpoints/projects'
+import * as SecureStore from 'expo-secure-store'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as Location from 'expo-location'
 
 const STATUSES = ['in_progress', 'pending', 'finished', 'cancelled']
 const statusLabels: Record<string, string> = {
@@ -22,6 +23,10 @@ const statusLabels: Record<string, string> = {
 export default function CreateProject() {
     const Colors = useColors()
     const insets = useSafeAreaInsets()
+    const { projectId } = useLocalSearchParams<{ projectId?: string }>()
+    const isEdit = !!projectId
+
+    const [loading, setLoading] = useState(isEdit)
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [deadline, setDeadline] = useState<Date | null>(null)
@@ -36,6 +41,26 @@ export default function CreateProject() {
     const [clientEmail, setClientEmail] = useState('')
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [submitting, setSubmitting] = useState(false)
+
+    useEffect(() => {
+        if (!isEdit) return
+        getProjectById(projectId)
+            .then(res => {
+                const p = res.data
+                setTitle(p.title ?? '')
+                setDescription(p.description ?? '')
+                setStatus(p.status ?? 'in_progress')
+                setAddress(p.address ?? '')
+                setLat(p.lat ?? null)
+                setLng(p.lng ?? null)
+                setClientName(p.client_name ?? '')
+                setClientPhone(p.client_phone ?? '')
+                setClientEmail(p.client_email ?? '')
+                if (p.deadline) setDeadline(new Date(p.deadline))
+            })
+            .catch(() => Alert.alert('Error', 'Could not load project'))
+            .finally(() => setLoading(false))
+    }, [projectId])
 
     const statusColors = {
         in_progress: { bg: Colors.successBg, border: Colors.successBorder, text: Colors.success },
@@ -62,11 +87,7 @@ export default function CreateProject() {
         if (!validate()) return
         setSubmitting(true)
         try {
-            const usersRes = await getUsers()
-            const managerId = usersRes.data[0]?.id
-            if (!managerId) { Alert.alert('Error', 'Could not determine manager'); return }
-            await createProject({
-                manager_id: managerId,
+            const payload = {
                 title,
                 description,
                 status,
@@ -77,16 +98,31 @@ export default function CreateProject() {
                 client_name: clientName,
                 client_phone: clientPhone,
                 client_email: clientEmail,
-            })
-            router.push('/tabs/projectsList')
+            }
+
+            if (isEdit) {
+                await updateProject(projectId, payload)
+                router.back()
+            } else {
+                const managerId = await SecureStore.getItemAsync('userId')
+                if (!managerId) { Alert.alert('Error', 'Could not determine manager'); return }
+                await createProject({ manager_id: managerId, ...payload })
+                router.push('/tabs/projectsList')
+            }
         } catch (err: any) {
-            Alert.alert('Error', err?.response?.data?.error ?? 'Failed to create project')
+            Alert.alert('Error', err?.response?.data?.error ?? (isEdit ? 'Failed to update project' : 'Failed to create project'))
         } finally {
             setSubmitting(false)
         }
     }
 
     const styles = StyleSheet.create({
+        center: {
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: Colors.background,
+        },
         sectionLabel: {
             fontSize: 13,
             color: Colors.textSecondary,
@@ -167,8 +203,16 @@ export default function CreateProject() {
         submitText: { color: Colors.textPrimary, fontSize: 16, fontWeight: '500' },
     })
 
+    if (loading) {
+        return (
+            <View style={styles.center}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+            </View>
+        )
+    }
+
     return (
-        <ScreenWrapper title='New project' backRoute='/tabs/projectsList'>
+        <ScreenWrapper title={isEdit ? 'Edit project' : 'New project'} backRoute={isEdit ? undefined : '/tabs/projectsList'}>
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
                 <Text style={styles.sectionLabel}>Project info</Text>
@@ -197,7 +241,7 @@ export default function CreateProject() {
                 <Text style={styles.fieldLabel}>Deadline <Text style={styles.required}>*</Text></Text>
                 <TouchableOpacity
                     style={[styles.input, styles.row, errors.deadline && styles.inputError]}
-                    onPress={() => setShowDatePicker(true)}
+                    onPress={() => { Keyboard.dismiss(); setShowDatePicker(true) }}
                 >
                     <AntDesign name="calendar" size={16} color={Colors.textSecondary} />
                     <Text style={[styles.dateText, !deadline && { color: Colors.textSecondary }]}>
@@ -233,7 +277,7 @@ export default function CreateProject() {
                             <TouchableOpacity
                                 key={s}
                                 style={[styles.statusChip, active && { backgroundColor: sc.bg, borderColor: sc.border }]}
-                                onPress={() => setStatus(s)}
+                                onPress={() => { Keyboard.dismiss(); setStatus(s) }}
                             >
                                 <Text style={[styles.statusChipText, active && { color: sc.text }]}>{statusLabels[s]}</Text>
                             </TouchableOpacity>
@@ -255,7 +299,7 @@ export default function CreateProject() {
                 />
                 {errors.address && <Text style={styles.errorText}>{errors.address}</Text>}
 
-                <TouchableOpacity style={styles.mapToggle} onPress={() => setShowMap(!showMap)}>
+                <TouchableOpacity style={styles.mapToggle} onPress={() => { Keyboard.dismiss(); setShowMap(!showMap) }}>
                     <Ionicons name="map-outline" size={16} color={Colors.primary} />
                     <Text style={styles.mapToggleText}>
                         {lat && lng ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : 'Pick location on map'}
@@ -266,10 +310,24 @@ export default function CreateProject() {
                 {showMap && (
                     <MapView
                         style={styles.map}
-                        initialRegion={{ latitude: 48.1486, longitude: 17.1077, latitudeDelta: 0.05, longitudeDelta: 0.05 }}
-                        onPress={e => {
-                            setLat(e.nativeEvent.coordinate.latitude)
-                            setLng(e.nativeEvent.coordinate.longitude)
+                        initialRegion={{
+                            latitude: lat ?? 48.1486,
+                            longitude: lng ?? 17.1077,
+                            latitudeDelta: 0.05,
+                            longitudeDelta: 0.05,
+                        }}
+                        onPress={async e => {
+                            const { latitude, longitude } = e.nativeEvent.coordinate
+                            setLat(latitude)
+                            setLng(longitude)
+                            try {
+                                const [result] = await Location.reverseGeocodeAsync({ latitude, longitude })
+                                if (result) {
+                                    const parts = [result.street, result.streetNumber, result.city].filter(Boolean)
+                                    setAddress(parts.join(', '))
+                                    setErrors(err => ({ ...err, address: '' }))
+                                }
+                            } catch {}
                         }}
                     >
                         {lat && lng && <Marker coordinate={{ latitude: lat, longitude: lng }} />}
@@ -349,7 +407,9 @@ export default function CreateProject() {
                     onPress={handleSubmit}
                     disabled={submitting}
                 >
-                    <Text style={styles.submitText}>{submitting ? 'Creating...' : 'Create project'}</Text>
+                    <Text style={styles.submitText}>
+                        {submitting ? (isEdit ? 'Saving...' : 'Creating...') : (isEdit ? 'Save changes' : 'Create project')}
+                    </Text>
                 </TouchableOpacity>
 
                 <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
