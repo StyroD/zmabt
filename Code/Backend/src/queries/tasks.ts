@@ -32,6 +32,16 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
       return
     }
 
+    const duplicate = await pool.query(
+      'SELECT 1 FROM tasks WHERE project_id = $1 AND LOWER(title) = LOWER($2)',
+      [project_id, title.trim()]
+    )
+
+    if (duplicate.rows.length > 0) {
+      res.status(409).json({ error: 'A task with this title already exists in this project' })
+      return
+    }
+
     const id = uuidv4()
 
     const result = await pool.query(
@@ -44,7 +54,11 @@ export const createTask = async (req: Request, res: Response): Promise<void> => 
 
     res.status(201).json(result.rows[0])
   } catch (err: any) {
-    res.status(500).json({ error: err.message })
+    if (err.code === '23505') {
+      res.status(409).json({ error: 'A task with this title already exists in this project' })
+    } else {
+      res.status(500).json({ error: err.message })
+    }
   }
 }
 
