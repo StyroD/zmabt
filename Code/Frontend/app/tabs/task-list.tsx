@@ -9,6 +9,8 @@ import { getTasksByProjectId } from '@/api/endpoints/tasks'
 import { TaskBox } from '@/components/TaskBox'
 import { logScreenView } from '@/utils/firebase'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useFocusEffect } from 'expo-router'
+import { useCallback } from 'react'
 
 const STATUSES = ['all', 'pending', 'in_progress', 'done']
 const PRIORITIES = ['all', 'low', 'medium', 'high']
@@ -49,8 +51,10 @@ export default function TaskList() {
 
   const activeFilterCount = [statusFilter, priorityFilter].filter(f => f !== 'all').length
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     logScreenView('TaskList').catch(() => {})
+    setLoading(true)
     getTasksByProjectId(projectId as string)
       .then(res => {
         setTasks(res.data)
@@ -61,6 +65,7 @@ export default function TaskList() {
         setLoading(false)
       })
   }, [projectId])
+)
 
   const styles = StyleSheet.create({
     center: {
