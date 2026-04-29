@@ -8,6 +8,8 @@ import { getNotifications, markNotificationAsRead } from '@/api/endpoints/notifi
 import { router } from 'expo-router'
 import * as SecureStore from 'expo-secure-store'
 import { logScreenView } from '@/utils/firebase'
+import { useFocusEffect } from 'expo-router'
+import { useCallback } from 'react'
 
 export default function Dashboard() {
   const Colors = useColors()
@@ -16,9 +18,10 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     const load = async () => {
-      logScreenView('Dashboard').catch(() => {})
+      setLoading(true)
       try {
         const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
         setCurrentUser(user)
@@ -39,6 +42,7 @@ export default function Dashboard() {
     }
     load()
   }, [])
+)
 
   const handleMarkRead = (id: string) => {
     markNotificationAsRead(id).catch(err => console.error(err))
