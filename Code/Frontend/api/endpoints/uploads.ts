@@ -8,6 +8,9 @@ const API_BASE = (client.defaults.baseURL ?? 'http://localhost:3000/api').replac
 export const getCertificatesByWorker = (workerId: string) =>
   client.get(`/uploads/certificates/worker/${workerId}`)
 
+export const getProjectPhotos = (projectId: string) =>
+  client.get(`/uploads/photos/project/${projectId}`)
+
 export const downloadCertificateFile = async (id: string): Promise<string> => {
   const token = await SecureStore.getItemAsync('token')
   const cacheDir = FileSystem.cacheDirectory ?? 'file:///tmp/'
@@ -23,5 +26,17 @@ export const downloadCertificateFile = async (id: string): Promise<string> => {
 export const openCertificateFile = async (id: string) => {
   const uri = await downloadCertificateFile(id)
   await WebBrowser.openBrowserAsync(uri)
+}
+export const uploadProjectPhoto = async (projectId: string, uri: string, mimeType: string, fileName: string) => {
+  const formData = new FormData()
+  formData.append('project_id', projectId)
+  formData.append('photo', {
+    uri,
+    type: mimeType,
+    name: fileName,
+  } as any)
+  return client.post('/uploads/photos', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
 }
 
