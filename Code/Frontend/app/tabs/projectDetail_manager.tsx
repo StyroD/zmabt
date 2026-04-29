@@ -36,21 +36,22 @@ export default function ProjectDetail() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const scrollRef = useRef<ScrollView>(null)
 
-  const handleDeleteProject = () => {
-    Alert.alert('Delete project', 'Are you sure you want to delete this project?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete', style: 'destructive', onPress: async () => {
-          try {
-            await deleteProject(currentProject.id)
-            router.replace('/tabs/projectsList')
-          } catch {
-            Alert.alert('Error', 'Could not delete project')
-          }
+ const handleDeleteProject = () => {
+  Alert.alert('Delete project', 'Are you sure you want to delete this project?', [
+    { text: 'Cancel', style: 'cancel' },
+    {
+      text: 'Delete', style: 'destructive', onPress: async () => {
+        try {
+          await deleteProject(currentProject.id)
+          router.replace('/tabs/projectsList')
+        } catch (err: any) {
+          console.error('Delete error:', JSON.stringify(err?.response?.data ?? err?.message ?? err))
+          Alert.alert('Error', 'Could not delete project')
         }
       }
-    ])
-  }
+    }
+  ])
+}
 
   const handleOpenAssign = async () => {
     if (allWorkers.length === 0) {
