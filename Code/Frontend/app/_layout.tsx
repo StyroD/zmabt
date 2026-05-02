@@ -12,10 +12,9 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { setCrashlyticsUser } from '@/utils/firebase'
 import { initDb } from '@/utils/db'
 import * as NavigationBar from 'expo-navigation-bar'
-
-
-
-
+import { getConversations } from "@/api/endpoints/messages"
+import { getSocket } from "@/api/socket"
+import { unreadSignal } from '@/utils/unreadSignal'
 
 try {
     Notifications.setNotificationHandler({
@@ -28,15 +27,7 @@ try {
         }),
     })
 } catch { /* not supported in Expo Go */ }
-// Show notifications as banners when the app is in the foreground
-Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-        shouldShowBanner: true,
-        shouldShowList: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-    }),
-})
+
 
 function getRouteFromNotificationData(data: Record<string, any>): string {
     const { type, projectId } = data ?? {}
@@ -80,12 +71,6 @@ async function registerPushToken() {
     const tokenData = await Notifications.getExpoPushTokenAsync().catch(() => null)
     if (!tokenData) return
     await updatePushToken(userId, tokenData.data).catch(() => {})
-    try {
-        const tokenData = await Notifications.getExpoPushTokenAsync()
-        await updatePushToken(userId, tokenData.data).catch(() => {})
-    } catch {
-        // getExpoPushTokenAsync requires an EAS projectId — skip in dev/Expo Go
-    }
 }
 
 function OfflineBanner() {
@@ -115,7 +100,7 @@ function AppContent() {
             try {
                 await initDb()
                 if (Platform.OS === 'android') {
-                    NavigationBar.setBackgroundColorAsync('#0F172A') // match your dark background
+                    NavigationBar.setBackgroundColorAsync('#0F172A')
                     NavigationBar.setButtonStyleAsync('light')
                 }
                 const token = await SecureStore.getItemAsync('token')
@@ -131,21 +116,16 @@ function AppContent() {
         }
 
         checkToken()
-
-        // push token (fire and forget)
         registerPushToken()
 
-        // crashlytics (safe async chain)
         SecureStore.getItemAsync('userId').then(userId => {
             if (!userId) return
-
             SecureStore.getItemAsync('user').then(raw => {
                 const role = raw ? JSON.parse(raw).role : 'unknown'
                 setCrashlyticsUser(userId, role).catch(() => {})
             })
         })
 
-        // notifications listener (IMPORTANT FIX)
         const subscription =
             Notifications.addNotificationResponseReceivedListener(response => {
                 const data = response.notification.request.content.data as Record<string, any>
@@ -160,6 +140,58 @@ function AppContent() {
             subscription.remove()
         }
     }, [])
+
+    useEffect(() => {
+        if (!isLoggedIn) return;
+
+        let socketRef: any = null;
+        let isMounted = true;
+        let globalMessageHandler: ((msg: any) => void) | null = null; // 1. Create a reference for the handler
+
+        const setupGlobalSocket = async () => {
+            try {
+                const uid = await SecureStore.getItemAsync('userId');
+                const socket = await getSocket();
+                
+                if (!isMounted) return;
+                socketRef = socket;
+
+                try {
+                    const res = await getConversations();
+                    const unreadCount = res.data.filter((conv: any) => conv.sender_id !== uid).length;
+                    
+                    if (isMounted) {
+                        unreadSignal.set(unreadCount);
+                    }
+                } catch (apiErr) {
+                    console.error("Could not fetch initial unread count:", apiErr);
+                }
+
+                // 2. Define the named function
+                globalMessageHandler = (msg: any) => {
+                    if (msg.sender_id !== uid) {
+                        const currentCount = unreadSignal.get();
+                        unreadSignal.set(currentCount + 1);
+                    }
+                };
+
+                // 3. Attach it
+                socket.on('new_message', globalMessageHandler);
+            } catch (err) {
+                console.error("Global socket error:", err);
+            }
+        };
+
+        setupGlobalSocket();
+
+        return () => {
+            isMounted = false;
+            // 4. Safely detach ONLY the global handler
+            if (socketRef && globalMessageHandler) {
+                socketRef.off('new_message', globalMessageHandler);
+            }
+        };
+    }, [isLoggedIn]);
 
     if (isLoading || isLoggedIn === null) {
         return (

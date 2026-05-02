@@ -15,6 +15,12 @@ export const downloadCertificateFile = async (id: string): Promise<string> => {
   const token = await SecureStore.getItemAsync('token')
   const cacheDir = FileSystem.cacheDirectory ?? 'file:///tmp/'
   const dest = `${cacheDir}cert_${id}`
+  const info = await FileSystem.getInfoAsync(dest)
+
+  if (info.exists) {
+    return info.uri
+  }
+
   const { uri } = await FileSystem.downloadAsync(
     `${API_BASE}/uploads/certificate/${id}`,
     dest,

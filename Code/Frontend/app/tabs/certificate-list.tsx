@@ -84,7 +84,7 @@ export default function CertificateList() {
               <View key={cert.id} style={styles.row}>
                 <Text style={styles.certName}>{cert.name}</Text>
                 <TouchableOpacity onPress={() => openFile(cert)}>
-                  <Text style={styles.pdfLink}>pdf</Text>
+                  <Text style={styles.pdfLink}>Show</Text>
                 </TouchableOpacity>
               </View>
             ))

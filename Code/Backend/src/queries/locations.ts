@@ -65,13 +65,18 @@ export const getProjectWorkerLocations = async (req: Request, res: Response): Pr
     }
 
     const result = await pool.query(
-      `SELECT wl.*, u.first_name, u.last_name, u.avatar_url
-       FROM worker_locations wl
-       JOIN users u ON wl.worker_id = u.id
-       WHERE wl.project_id = $1
-       ORDER BY wl.recorded_at DESC`,
-      [projectId]
-    )
+    `SELECT wl.*, u.first_name, u.last_name,
+        CASE 
+            WHEN wl.recorded_at > NOW() - INTERVAL '15 minutes' THEN wl.is_online
+            ELSE false
+        END as is_online
+     FROM worker_locations wl
+     JOIN users u ON wl.worker_id = u.id
+     WHERE wl.project_id = $1
+     ORDER BY wl.recorded_at DESC`,
+    [projectId]
+)
+
     res.json(result.rows)
   } catch (err: any) {
     res.status(500).json({ error: err.message })

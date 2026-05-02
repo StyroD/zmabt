@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Keyboard } from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useEffect, useState, useMemo } from 'react'
@@ -15,6 +15,8 @@ export default function Workers() {
   const [workers, setWorkers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  // NEW: Track if the user is currently typing to show/hide suggestions
+  const [isFocused, setIsFocused] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -30,20 +32,23 @@ export default function Workers() {
         }
     }
     load()
-}, [])
+  }, [])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
     if (!q) return workers
-    return workers.filter(w =>
-      `${w.first_name} ${w.last_name}`.toLowerCase().includes(q) ||
-      w.username?.toLowerCase().includes(q)
-    )
+    return workers.filter(w => {
+      const fullName = w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username || ''
+      return fullName.toLowerCase().includes(q)
+    })
   }, [workers, search])
 
   const styles = StyleSheet.create({
     center: {
       flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background,
+    },
+    searchContainer: {
+      zIndex: 1, // Ensures the autocomplete dropdown sits above the scroll content if needed
     },
     searchRow: {
       flexDirection: 'row',
@@ -55,13 +60,41 @@ export default function Workers() {
       borderRadius: 10,
       paddingHorizontal: 12,
       paddingVertical: 10,
-      marginBottom: 12,
       marginTop: 8,
+      // Remove marginBottom here so it connects nicely to the dropdown
     },
     searchInput: {
       flex: 1,
       fontSize: 15,
       color: Colors.textPrimary,
+    },
+    // NEW: Autocomplete styles
+    autocompleteBox: {
+      backgroundColor: Colors.surface,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderTopWidth: 0,
+      borderBottomLeftRadius: 10,
+      borderBottomRightRadius: 10,
+      marginBottom: 12,
+      overflow: 'hidden',
+    },
+    suggestionItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.background,
+      gap: 10,
+    },
+    suggestionText: {
+      fontSize: 14,
+      color: Colors.textPrimary,
+    },
+    // Spacer for when autocomplete is hidden
+    spacer: {
+      height: 12, 
     },
     card: {
       flexDirection: 'row',
@@ -136,25 +169,67 @@ export default function Workers() {
     )
   }
 
+  // Helper to determine the display name
+  const getDisplayName = (w: any) => {
+    return w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username
+  }
+
   return (
     <ScreenWrapper title="Workers" backRoute="/tabs/dashboard">
-      <View style={styles.searchRow}>
-        <Ionicons name="search-outline" size={16} color={Colors.textSecondary} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by name..."
-          placeholderTextColor={Colors.textSecondary}
-          value={search}
-          onChangeText={setSearch}
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')}>
-            <Ionicons name="close-circle" size={16} color={Colors.textSecondary} />
-          </TouchableOpacity>
+      <View style={styles.searchContainer}>
+        <View style={[styles.searchRow, isFocused && search.length > 0 && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }]}>
+          <Ionicons name="search-outline" size={16} color={Colors.textSecondary} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by name..."
+            placeholderTextColor={Colors.textSecondary}
+            value={search}
+            onChangeText={setSearch}
+            onFocus={() => setIsFocused(true)}
+            // If they submit via keyboard return key, close the suggestions
+            onSubmitEditing={() => setIsFocused(false)} 
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => {
+              setSearch('')
+              setIsFocused(true)
+            }}>
+              <Ionicons name="close-circle" size={16} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Autocomplete Dropdown */}
+        {isFocused && search.length > 0 && filtered.length > 0 ? (
+          <View style={styles.autocompleteBox}>
+            {/* Show only top 4 suggestions to keep it compact */}
+            {filtered.slice(0, 4).map(worker => (
+              <TouchableOpacity
+                key={`suggestion-${worker.id}`}
+                style={styles.suggestionItem}
+                onPress={() => {
+                  setSearch(getDisplayName(worker)) // Fill the input
+                  setIsFocused(false)               // Hide dropdown
+                  Keyboard.dismiss()                // Drop the keyboard
+                }}
+              >
+                <Ionicons name="time-outline" size={14} color={Colors.textSecondary} />
+                <Text style={styles.suggestionText}>{getDisplayName(worker)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.spacer} />
         )}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        // IMPORTANT: This allows tapping suggestions without the first tap just closing the keyboard
+        keyboardShouldPersistTaps="handled" 
+        // Hide suggestions if the user starts scrolling the main list
+        onScrollBeginDrag={() => setIsFocused(false)}
+      >
         {filtered.length === 0 ? (
           <Text style={styles.emptyText}>No workers found</Text>
         ) : (
@@ -171,9 +246,7 @@ export default function Workers() {
                 </View>
                 <View style={styles.info}>
                   <Text style={styles.name} numberOfLines={1}>
-                    {worker.first_name && worker.last_name
-                      ? `${worker.first_name} ${worker.last_name}`
-                      : worker.username}
+                    {getDisplayName(worker)}
                   </Text>
                   {worker.phone ? (
                     <Text style={styles.sub}>{worker.phone}</Text>

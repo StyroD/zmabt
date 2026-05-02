@@ -1,14 +1,17 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { router } from 'expo-router'
 import { ProjectBox } from '@/components/Projects/ProjectBox'
 import { Ionicons } from '@expo/vector-icons'
 import { useCallback, useState } from 'react'
+import { useNetwork } from '@/contexts/NetworkContext'
 import { useFocusEffect } from '@react-navigation/native'
 import { getProjectByManagerId, getProjectsByWorkerId } from '@/api/endpoints/projects'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import * as SecureStore from 'expo-secure-store'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { cacheProjects, getCachedProjects } from '@/utils/db'
+import { getQueue } from '@/utils/offlineQueue'
 
 const FILTERS = ['All', 'in_progress', 'pending', 'finished', 'cancelled'] as const
 const filterLabels: Record<string, string> = {
@@ -26,6 +29,7 @@ export default function Projects() {
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState<string>('All')
   const [isManager, setIsManager] = useState(true)
+  const { pendingCount } = useNetwork()
 
   useFocusEffect(
     useCallback(() => {
@@ -34,20 +38,28 @@ export default function Projects() {
         const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
         const manager = user.role === 'manager'
         setIsManager(manager)
+        const queue = await getQueue()
+        const pending = queue
+            .filter(op => op.type === 'PROJECT_CREATE')
+            .map(op => ({ ...op.payload, id: op.id, _pending: true }))
         try {
-          const res = manager
-            ? await getProjectByManagerId(user.id)
-            : await getProjectsByWorkerId(user.id)
-          if (active) setProjects(res.data)
-        } catch (err) {
-          console.error(err)
+            const res = manager
+                ? await getProjectByManagerId(user.id)
+                : await getProjectsByWorkerId(user.id)
+            if (active) {
+                setProjects([...res.data, ...pending])
+                await cacheProjects(res.data)
+            }
+        } catch {
+            const cached = await getCachedProjects()
+            if (active) setProjects([...cached, ...pending])
         } finally {
-          if (active) setLoading(false)
+            if (active) setLoading(false)
         }
-      }
+    }
       load()
       return () => { active = false }
-    }, [])
+    }, [pendingCount])
   )
 
   const formatDate = (dateString: string) => {
@@ -151,7 +163,9 @@ export default function Projects() {
               status={project.status}
               deadline={formatDate(project.deadline)}
               address={project.address}
-              onProjectDetail={() => router.push(isManager ? `/tabs/projectDetail_manager?id=${project.id}` : `/tabs/projectDetail_worker?id=${project.id}`)}
+              onProjectDetail={project._pending
+                ? () => Alert.alert('Pending sync', 'This project will be available once it syncs to the server.')
+                : () => router.push(isManager ? `/tabs/projectDetail_manager?id=${project.id}` : `/tabs/projectDetail_worker?id=${project.id}`)}
             />
           ))
         )}

@@ -13,6 +13,7 @@ import { useNetwork } from '@/contexts/NetworkContext'
 import { addToQueue } from '@/utils/offlineQueue'
 import { logTaskCreated } from '@/utils/firebase'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { cacheCategories, getCachedCategories } from '@/utils/db'
 
 const PRIORITIES = ['low', 'medium', 'high']
 const priorityLabels: Record<string, string> = { low: 'Low', medium: 'Medium', high: 'High' }
@@ -130,10 +131,16 @@ export default function CreateTask() {
         (categoryName === '' || (worker.certificates ?? []).includes(categoryName))
     )
 
-    useEffect(() => {
+        useEffect(() => {
         getCategories()
-            .then(res => setCategories(res.data))
-            .catch(err => console.error(err))
+            .then(async res => {
+                setCategories(res.data)
+                await cacheCategories(res.data)
+            })
+            .catch(async () => {
+                const cached = await getCachedCategories()
+                setCategories(cached)
+            })
     }, [])
 
     useEffect(() => {

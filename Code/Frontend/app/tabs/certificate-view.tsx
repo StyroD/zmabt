@@ -24,6 +24,8 @@ export default function CertificateView() {
   const fileUrl = `${(client.defaults.baseURL ?? '').replace(/\/$/, '')}/uploads/certificate/${certId}`
 
   useEffect(() => {
+    let isActive = true
+
     const load = async () => {
       try {
         const token = await SecureStore.getItemAsync('token')
@@ -31,25 +33,36 @@ export default function CertificateView() {
         if (isImage) {
           const cacheDir = FileSystem.cacheDirectory ?? 'file:///tmp/'
           const dest = `${cacheDir}cert_${certId}`
-          const result = await FileSystem.downloadAsync(fileUrl, dest, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          if (result.status !== 200) {
-            setError(`Download failed: HTTP ${result.status}`)
-            return
+          const info = await FileSystem.getInfoAsync(dest)
+
+          if (info.exists) {
+            if (isActive) setImageUri(info.uri)
+          } else {
+            const result = await FileSystem.downloadAsync(fileUrl, dest, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+            if (result.status !== 200) {
+              setError(`Download failed: HTTP ${result.status}`)
+              return
+            }
+            if (isActive) setImageUri(result.uri)
           }
-          setImageUri(result.uri)
         } else {
           await WebBrowser.openBrowserAsync(`${fileUrl}?token=${token}`)
         }
       } catch (e: any) {
-        setError(e?.message ?? 'Unknown error')
+        if (isActive) setError(e?.message ?? 'Unknown error')
       } finally {
-        setLoading(false)
+        if (isActive) setLoading(false)
       }
     }
+
     load()
-  }, [certId])
+
+    return () => {
+      isActive = false
+    }
+  }, [certId, fileUrl, isImage])
 
   const styles = StyleSheet.create({
     image: {

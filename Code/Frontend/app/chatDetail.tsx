@@ -9,6 +9,8 @@ import { getSocket } from "@/api/socket"
 import * as SecureStore from "expo-secure-store"
 import type { Socket } from "socket.io-client"
 import { cacheMessages, getCachedMessages, appendMessage } from '@/utils/db'
+import { useNavigation } from "@react-navigation/native"
+import { unreadSignal } from "@/utils/unreadSignal"
 
 type Message = {
   id: string
@@ -31,57 +33,65 @@ export default function ChatDetail() {
 
   const initials = name?.split(' ').map(n => n[0]).join('') ?? '?'
 
-  useEffect(() => {
-  let mounted = true
+ useEffect(() => {
+    unreadSignal.set(0); 
+  }, [userId]);
 
-  const setup = async () => {
-    try {
-      const [uid, socket] = await Promise.all([
-        SecureStore.getItemAsync('userId'),
-        getSocket(),
-      ])
+ useEffect(() => {
+    let mounted = true;
 
-      if (!mounted) return
+    
+    const handleNewMessage = (msg: Message) => {
+      if (!mounted) return;
+      if (msg.sender_id === currentUserIdRef.current) return;
+      if (msg.sender_id !== userId) return;
+      appendMessage(msg);
+      setMessages(prev => [...prev, msg]);
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
+    };
 
-      currentUserIdRef.current = uid ?? ''
-      setCurrentUserId(uid ?? '')
-      socketRef.current = socket
-
-      socket.on('new_message', (msg: Message) => {
-        if (!mounted) return
-        if (msg.sender_id === currentUserIdRef.current) return
-        if (msg.sender_id !== userId) return
-        appendMessage(msg)
-        setMessages(prev => [...prev, msg])
-        setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50)
-      })
-
+    const setup = async () => {
       try {
-          const res = await getMessages(userId)
-          if (!mounted) return
-          setMessages(res.data)
-          await cacheMessages(uid ?? '', userId, res.data)
-      } catch {
-          const cached = await getCachedMessages(uid ?? '', userId)
-          if (!mounted) return
-          setMessages(cached)
-      } finally {
-          if (mounted) setLoading(false)
+        const [uid, socket] = await Promise.all([
+          SecureStore.getItemAsync('userId'),
+          getSocket(),
+        ]);
+
+        if (!mounted) return;
+
+        currentUserIdRef.current = uid ?? '';
+        setCurrentUserId(uid ?? '');
+        socketRef.current = socket;
+
+        // 2. Attach the named handler
+        socket.on('new_message', handleNewMessage);
+
+        try {
+          const res = await getMessages(userId);
+          if (!mounted) return;
+          setMessages(res.data);
+          await cacheMessages(uid ?? '', userId, res.data);
+        } catch {
+          const cached = await getCachedMessages(uid ?? '', userId);
+          if (!mounted) return;
+          setMessages(cached);
+        } finally {
+          if (mounted) setLoading(false);
+        }
+      } catch (err) {
+        console.error(err);
+        if (mounted) setLoading(false);
       }
+    };
 
-    } catch (err) {
-      console.error(err)
-      if (mounted) setLoading(false) 
-    }
-  }
+    setup();
 
-  setup() 
-
-  return () => {
-    mounted = false
-    socketRef.current?.off('new_message')
-  }
-}, [userId])
+    return () => {
+      mounted = false;
+      // 3. Remove ONLY this specific handler when leaving ChatDetail
+      socketRef.current?.off('new_message', handleNewMessage);
+    };
+  }, [userId]);
 
   const scrollToBottom = () =>
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50)

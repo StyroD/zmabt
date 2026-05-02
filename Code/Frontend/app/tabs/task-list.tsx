@@ -11,6 +11,7 @@ import { getTasksByProjectId } from '@/api/endpoints/tasks'
 import { TaskBox } from '@/components/TaskBox'
 import { logScreenView } from '@/utils/firebase'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { cacheTasks, getCachedTasks } from '@/utils/db'
 
 
 const STATUSES = ['all', 'pending', 'in_progress', 'done']
@@ -53,19 +54,20 @@ export default function TaskList() {
   const activeFilterCount = [statusFilter, priorityFilter].filter(f => f !== 'all').length
 
   useFocusEffect(
-  useCallback(() => {
-    logScreenView('TaskList').catch(() => {})
-    setLoading(true)
-    getTasksByProjectId(projectId as string)
-      .then(res => {
-        setTasks(res.data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error(err)
-        setLoading(false)
-      })
-  }, [projectId])
+    useCallback(() => {
+        logScreenView('TaskList').catch(() => {})
+        setLoading(true)
+        getTasksByProjectId(projectId as string)
+            .then(async res => {
+                setTasks(res.data)
+                await cacheTasks(projectId as string, res.data)
+            })
+            .catch(async () => {
+                const cached = await getCachedTasks(projectId as string)
+                setTasks(cached)
+            })
+            .finally(() => setLoading(false))
+    }, [projectId])
 )
 
   const styles = StyleSheet.create({

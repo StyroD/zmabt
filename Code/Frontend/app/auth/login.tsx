@@ -31,7 +31,7 @@ export default function Login() {
             await saveUser(data.user)
             logLogin('email').catch(() => {})
             setCrashlyticsUser(data.user.id, data.user.role).catch(() => {})
-            router.push('/tabs/dashboard')
+            router.replace('/tabs/dashboard')
         } catch (e: any) {
             if (e.response) {
                 if (e.response.status === 401) {

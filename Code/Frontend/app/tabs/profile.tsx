@@ -22,6 +22,7 @@ export default function Profile() {
         source?: 'worker_project' | 'manager_project' | 'workers'
     }>()
 
+    
     const [user, setUser] = useState<any>(null)
     const [viewerRole, setViewerRole] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
@@ -93,6 +94,7 @@ export default function Profile() {
 
     if (loading) return <ActivityIndicator size="large" color={Colors.primary} style={{ flex: 1 }} />
 
+    
     if (!user) {
         return (
             <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute}>
@@ -114,6 +116,22 @@ export default function Profile() {
     const viewerIsManager = viewerRole === 'manager'
     const canSeeHourlyRate = isOwn || (!viewedUserIsManager && viewerIsManager)
 
+    const groupedCerts = Object.values(
+        certificates.reduce((acc: any, cert: any) => {
+            const key = cert.category_id
+            if (!acc[key]) {
+                acc[key] = {
+                    category_id: cert.category_id,
+                    category: cert.category ?? cert.name,
+                    certified: false,
+                }
+            }
+            if (cert.status === 'accepted') {
+                acc[key].certified = true
+            }
+            return acc
+        }, {})
+    )
     return (
         <ScreenWrapper title="Profile" backRoute={isOwn ? undefined : backRoute} rightElement={editButton}>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -190,19 +208,19 @@ export default function Profile() {
                         <View style={styles.sectionDivider} />
                         <Text style={styles.sectionLabel}>Certificates</Text>
                         <View style={styles.certContainer}>
-                            {certificates.length === 0 ? (
+                            {groupedCerts.length === 0 ? (
                                 <Text style={styles.emptyText}>No certificates</Text>
                             ) : (
-                                certificates.map((cert: any) => (
+                                groupedCerts.map((cert: any) => (
                                     <CertificateRow
-                                        key={cert.id ?? cert.name}
-                                        name={cert.category ?? cert.name}
-                                        certified={cert.status === 'accepted' || cert.certified}
+                                        key={cert.category_id}
+                                        name={cert.category}
+                                        certified={cert.certified}
                                         onShow={() => router.push({
                                             pathname: '/tabs/certificate-list' as any,
                                             params: {
                                                 categoryId: cert.category_id,
-                                                categoryName: cert.category ?? cert.name,
+                                                categoryName: cert.category,
                                                 workerId: user.id,
                                             },
                                         })}
