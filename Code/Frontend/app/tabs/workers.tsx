@@ -1,4 +1,6 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Keyboard } from 'react-native'
+import {
+  View, Text,StyleSheet,ScrollView,TouchableOpacity,TextInput, ActivityIndicator, Keyboard,
+} from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useEffect, useState, useMemo } from 'react'
@@ -7,48 +9,59 @@ import { router } from 'expo-router'
 import { getAllWorkers } from '@/api/endpoints/workers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { cacheWorkers, getCachedWorkers } from '@/utils/db'
-import * as SecureStore from 'expo-secure-store'
 
 export default function Workers() {
   const Colors = useColors()
   const insets = useSafeAreaInsets()
   const [workers, setWorkers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [search, setSearch] = useState('')
-  // NEW: Track if the user is currently typing to show/hide suggestions
   const [isFocused, setIsFocused] = useState(false)
 
   useEffect(() => {
     const load = async () => {
-        try {
-            const res = await getAllWorkers()
-            setWorkers(res.data)
-            await cacheWorkers(res.data)
-        } catch {
-            const cached = await getCachedWorkers()
-            setWorkers(cached)
-        } finally {
-            setLoading(false)
+      try {
+        const res = await getAllWorkers()
+        setWorkers(res.data)
+        setError(false)
+        await cacheWorkers(res.data)
+      } catch {
+        const cached = await getCachedWorkers()
+        if (cached.length > 0) {
+          setWorkers(cached)
+        } else {
+          setError(true)
         }
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [])
 
+  const getDisplayName = (w: any) =>
+    w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
     if (!q) return workers
-    return workers.filter(w => {
-      const fullName = w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username || ''
-      return fullName.toLowerCase().includes(q)
-    })
+    return workers.filter(w =>
+      getDisplayName(w).toLowerCase().includes(q)
+    )
   }, [workers, search])
+
+  const showDropdown = isFocused && search.length > 0 && filtered.length > 0
 
   const styles = StyleSheet.create({
     center: {
-      flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background,
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: Colors.background,
     },
     searchContainer: {
-      zIndex: 1, // Ensures the autocomplete dropdown sits above the scroll content if needed
+      zIndex: 1,
     },
     searchRow: {
       flexDirection: 'row',
@@ -61,14 +74,16 @@ export default function Workers() {
       paddingHorizontal: 12,
       paddingVertical: 10,
       marginTop: 8,
-      // Remove marginBottom here so it connects nicely to the dropdown
+    },
+    searchRowOpen: {
+      borderBottomLeftRadius: 0,
+      borderBottomRightRadius: 0,
     },
     searchInput: {
       flex: 1,
       fontSize: 15,
       color: Colors.textPrimary,
     },
-    // NEW: Autocomplete styles
     autocompleteBox: {
       backgroundColor: Colors.surface,
       borderWidth: 1,
@@ -92,9 +107,8 @@ export default function Workers() {
       fontSize: 14,
       color: Colors.textPrimary,
     },
-    // Spacer for when autocomplete is hidden
     spacer: {
-      height: 12, 
+      height: 12,
     },
     card: {
       flexDirection: 'row',
@@ -159,6 +173,11 @@ export default function Workers() {
       fontStyle: 'italic',
       marginTop: 40,
     },
+    errorText: {
+      textAlign: 'center',
+      color: Colors.textSecondary,
+      marginTop: 40,
+    },
   })
 
   if (loading) {
@@ -169,15 +188,10 @@ export default function Workers() {
     )
   }
 
-  // Helper to determine the display name
-  const getDisplayName = (w: any) => {
-    return w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username
-  }
-
   return (
     <ScreenWrapper title="Workers" backRoute="/tabs/dashboard">
       <View style={styles.searchContainer}>
-        <View style={[styles.searchRow, isFocused && search.length > 0 && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }]}>
+        <View style={[styles.searchRow, showDropdown && styles.searchRowOpen]}>
           <Ionicons name="search-outline" size={16} color={Colors.textSecondary} />
           <TextInput
             style={styles.searchInput}
@@ -186,8 +200,11 @@ export default function Workers() {
             value={search}
             onChangeText={setSearch}
             onFocus={() => setIsFocused(true)}
-            // If they submit via keyboard return key, close the suggestions
-            onSubmitEditing={() => setIsFocused(false)} 
+            onBlur={() => setIsFocused(false)}
+            onSubmitEditing={() => {
+              setIsFocused(false)
+              Keyboard.dismiss()
+            }}
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => {
@@ -199,21 +216,19 @@ export default function Workers() {
           )}
         </View>
 
-        {/* Autocomplete Dropdown */}
-        {isFocused && search.length > 0 && filtered.length > 0 ? (
+        {showDropdown ? (
           <View style={styles.autocompleteBox}>
-            {/* Show only top 4 suggestions to keep it compact */}
             {filtered.slice(0, 4).map(worker => (
               <TouchableOpacity
                 key={`suggestion-${worker.id}`}
                 style={styles.suggestionItem}
                 onPress={() => {
-                  setSearch(getDisplayName(worker)) // Fill the input
-                  setIsFocused(false)               // Hide dropdown
-                  Keyboard.dismiss()                // Drop the keyboard
+                  setSearch(getDisplayName(worker))
+                  setIsFocused(false)
+                  Keyboard.dismiss()
                 }}
               >
-                <Ionicons name="time-outline" size={14} color={Colors.textSecondary} />
+                <Ionicons name="search-outline" size={14} color={Colors.textSecondary} />
                 <Text style={styles.suggestionText}>{getDisplayName(worker)}</Text>
               </TouchableOpacity>
             ))}
@@ -223,15 +238,17 @@ export default function Workers() {
         )}
       </View>
 
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
-        // IMPORTANT: This allows tapping suggestions without the first tap just closing the keyboard
-        keyboardShouldPersistTaps="handled" 
-        // Hide suggestions if the user starts scrolling the main list
+        keyboardShouldPersistTaps="handled"
         onScrollBeginDrag={() => setIsFocused(false)}
       >
-        {filtered.length === 0 ? (
-          <Text style={styles.emptyText}>No workers found</Text>
+        {error ? (
+          <Text style={styles.errorText}>Could not load workers. Check your connection.</Text>
+        ) : filtered.length === 0 ? (
+          <Text style={styles.emptyText}>
+            {search.length > 0 ? 'No workers match your search' : 'No workers found'}
+          </Text>
         ) : (
           filtered.map(worker => {
             const accepted = (worker.certificates ?? []).filter((c: any) => c.status === 'accepted')
