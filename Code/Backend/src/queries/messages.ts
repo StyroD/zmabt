@@ -68,9 +68,14 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
 
     const id = uuidv4()
     const result = await pool.query(
-      `INSERT INTO messages (id, sender_id, receiver_id, content)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
+      `WITH inserted AS (
+         INSERT INTO messages (id, sender_id, receiver_id, content)
+         VALUES ($1, $2, $3, $4)
+         RETURNING *
+       )
+       SELECT i.*, u.username AS sender_name
+       FROM inserted i
+       JOIN users u ON u.id = i.sender_id`,
       [id, senderId, receiverId, content.trim()]
     )
     const message = result.rows[0]
