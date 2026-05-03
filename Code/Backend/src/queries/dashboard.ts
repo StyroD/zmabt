@@ -27,20 +27,15 @@ export const getManagerDashboard = async (req: Request, res: Response): Promise<
     )
 
     const workersCount = await pool.query(
-      `SELECT COUNT(DISTINCT pw.worker_id)
-       FROM project_workers pw
-       JOIN projects p ON pw.project_id = p.id
-       JOIN users u ON u.id = pw.worker_id
-       WHERE p.manager_id = $1 AND u.role = 'worker'`,
+      `SELECT COUNT(*) FROM users WHERE manager_id = $1 AND role = 'worker'`,
       [id]
     )
 
     const onlineWorkersCount = await pool.query(
       `SELECT COUNT(DISTINCT wl.worker_id)
        FROM worker_locations wl
-       JOIN project_workers pw ON pw.worker_id = wl.worker_id
-       JOIN projects p ON p.id = pw.project_id
-       WHERE p.manager_id = $1 AND wl.is_online = true`,
+       JOIN users u ON u.id = wl.worker_id
+       WHERE u.manager_id = $1 AND wl.is_online = true`,
       [id]
     )
 

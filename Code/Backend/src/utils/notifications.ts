@@ -5,7 +5,7 @@ import { emitNotification } from '../socket'
 
 const expo = new Expo()
 
-type NotificationType = 'task_assigned' | 'task_done' | 'certificate_submitted' | 'certificate_reviewed'
+type NotificationType = 'task_assigned' | 'task_done' | 'certificate_submitted' | 'certificate_reviewed' | 'worker_assigned' | 'worker_removed'
 
 export const sendNotification = async ({
   userId,

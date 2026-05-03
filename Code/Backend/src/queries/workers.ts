@@ -8,7 +8,7 @@ export const getAllWorkers = async (req: Request, res: Response): Promise<void> 
     let result
     if (manager_id) {
       result = await pool.query(`
-        SELECT u.id, u.first_name, u.last_name, u.username, u.phone, u.email, u.avatar_url,
+        SELECT u.id, u.first_name, u.last_name, u.username, u.phone, u.email,
           COALESCE(
             json_agg(
               json_build_object('name', sc.name, 'status', c.status, 'category_id', c.category_id)
@@ -16,17 +16,15 @@ export const getAllWorkers = async (req: Request, res: Response): Promise<void> 
             '[]'
           ) as certificates
         FROM users u
-        JOIN project_workers pw ON pw.worker_id = u.id
-        JOIN projects p ON p.id = pw.project_id
         LEFT JOIN certificates c ON c.worker_id = u.id
         LEFT JOIN skill_categories sc ON sc.id = c.category_id
-        WHERE u.role = 'worker' AND p.manager_id = $1
+        WHERE u.role = 'worker' AND u.manager_id = $1
         GROUP BY u.id
         ORDER BY u.last_name, u.first_name
       `, [manager_id])
     } else {
       result = await pool.query(`
-        SELECT u.id, u.first_name, u.last_name, u.username, u.phone, u.email, u.avatar_url,
+        SELECT u.id, u.first_name, u.last_name, u.username, u.phone, u.email,
           COALESCE(
             json_agg(
               json_build_object('name', sc.name, 'status', c.status, 'category_id', c.category_id)

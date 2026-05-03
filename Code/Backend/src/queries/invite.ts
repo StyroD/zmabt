@@ -40,9 +40,9 @@ export const registerWithInvite = async (req: Request, res: Response): Promise<v
     const userId = uuidv4()
 
     const userResult = await pool.query(
-      `INSERT INTO users (id, username, email, password_hash, role, first_name, last_name, phone, created_at)
-       VALUES ($1, $2, $3, $4, 'worker', $5, $6, $7, NOW()) RETURNING *`,
-      [userId, username, email, passwordHash, first_name, last_name, phone]
+      `INSERT INTO users (id, username, email, password_hash, role, first_name, last_name, phone, manager_id, created_at)
+       VALUES ($1, $2, $3, $4, 'worker', $5, $6, $7, $8, NOW()) RETURNING *`,
+      [userId, username, email, passwordHash, first_name, last_name, phone, invite.manager_id]
     )
 
     await pool.query(`UPDATE invite_links SET used = true WHERE id = $1`, [invite.id])

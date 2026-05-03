@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import pool from "../config/db";
 import { v4 as uuidv4 } from "uuid";
 import { createAuditLog } from "../utils/audit";
+import { sendNotification } from "../utils/notifications";
+import { emitNotification } from "../socket";
 
 export const getProjectById = async (
   req: Request,
@@ -25,9 +27,13 @@ export const getProjectById = async (
       return;
     }
 
-    const result = await pool.query("SELECT * FROM projects WHERE id = $1", [
-      id,
-    ]);
+    const result = await pool.query(
+      `SELECT p.*, CONCAT(u.first_name, ' ', u.last_name) AS created_by
+       FROM projects p
+       JOIN users u ON u.id = p.manager_id
+       WHERE p.id = $1`,
+      [id],
+    );
     res.json(result.rows[0]);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -268,6 +274,22 @@ export const assignWorkerToProject = async (
       return;
     }
 
+    const projectRow = await pool.query(
+      `SELECT p.title, CONCAT(u.first_name, ' ', u.last_name) AS manager_name
+       FROM projects p JOIN users u ON u.id = p.manager_id WHERE p.id = $1`,
+      [id]
+    );
+    const { title, manager_name } = projectRow.rows[0] ?? {};
+    void sendNotification({
+      userId: String(worker_id),
+      type: 'worker_assigned',
+      title: 'Assigned to project',
+      body: `${manager_name} added you to "${title}"`,
+      referenceId: String(id),
+      referenceType: 'project',
+      extraData: { projectId: String(id) },
+    });
+
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -291,7 +313,29 @@ export const removeWorkerFromProject = async (
       return;
     }
 
+    const projectRow = await pool.query(
+      "SELECT title, manager_id FROM projects WHERE id = $1",
+      [id]
+    );
+    const project = projectRow.rows[0];
+
     res.json({ message: "Worker removed from project" });
+
+    if (project) {
+      try {
+        await sendNotification({
+          userId: String(workerId),
+          type: "worker_removed",
+          title: "Removed from project",
+          body: `You have been removed from "${project.title}"`,
+          referenceId: String(id),
+          referenceType: "project",
+        });
+      } catch (notifErr) {
+        console.error("Failed to send worker_removed notification:", notifErr);
+      }
+      emitNotification(project.manager_id, { type: "worker_removed", referenceId: id });
+    }
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

@@ -39,3 +39,7 @@ export function emitNewMessage(receiverId: string, message: object) {
 export function emitNotification(userId: string, payload: object) {
   io?.to(`user:${userId}`).emit('notification', payload)
 }
+
+export function emitWorkerLocation(managerId: string, location: object) {
+  io?.to(`user:${managerId}`).emit('worker_location_update', location)
+}

@@ -33,6 +33,27 @@ async function seed(): Promise<void> {
 `);
     console.log("✅ Users seeded");
 
+    // Assign workers to managers
+    await pool.query(`
+      UPDATE users SET manager_id = 'a1000000-0000-0000-0000-000000000001'
+      WHERE id IN (
+        'a1000000-0000-0000-0000-000000000004',
+        'a1000000-0000-0000-0000-000000000005',
+        'a1000000-0000-0000-0000-000000000006'
+      );
+      UPDATE users SET manager_id = 'a1000000-0000-0000-0000-000000000002'
+      WHERE id IN (
+        'a1000000-0000-0000-0000-000000000007',
+        'a1000000-0000-0000-0000-000000000008'
+      );
+      UPDATE users SET manager_id = 'a1000000-0000-0000-0000-000000000003'
+      WHERE id IN (
+        'a1000000-0000-0000-0000-000000000009',
+        'a1000000-0000-0000-0000-000000000010'
+      );
+    `);
+    console.log("✅ Worker manager assignments seeded");
+
     // Skill categories
     await pool.query(`
       INSERT INTO skill_categories (id, name) VALUES

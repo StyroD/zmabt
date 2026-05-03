@@ -13,6 +13,17 @@ export const getTasksByProjectId = async (req: Request, res: Response): Promise<
   }
 }
 
+export const getTaskById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const result = await pool.query('SELECT * FROM tasks WHERE id = $1', [id])
+    if (result.rows.length === 0) { res.status(404).json({ error: 'Task not found' }); return }
+    res.json(result.rows[0])
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 export const createTask = async (req: Request, res: Response): Promise<void> => {
   try {
     const {
