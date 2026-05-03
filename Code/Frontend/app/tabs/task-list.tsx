@@ -152,7 +152,7 @@ export default function TaskList() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator size="large" color={Colors.primary} accessibilityLabel="Loading" />
       </View>
     )
   }
@@ -162,8 +162,8 @@ export default function TaskList() {
       title={projectTitle as string ?? 'Project'}
       backRoute='/tabs/projectsList'
       rightElement={
-        <TouchableOpacity onPress={() => router.push(`/tabs/create-task?projectId=${projectId}&projectTitle=${projectTitle}`)}>
-          <AntDesign name="plus" size={22} color={Colors.textPrimary} />
+        <TouchableOpacity onPress={() => router.push(`/tabs/create-task?projectId=${projectId}&projectTitle=${projectTitle}`)} accessibilityRole="button" accessibilityLabel="Add new task">
+          <AntDesign name="plus" size={22} color={Colors.textPrimary} accessible={false} />
         </TouchableOpacity>
       }
     >
@@ -171,31 +171,37 @@ export default function TaskList() {
         <TouchableOpacity
           style={[styles.filterBtn, statusFilter !== 'all' && styles.filterActive]}
           onPress={() => { setShowStatusPicker(!showStatusPicker); setShowPriorityPicker(false) }}
+          accessibilityRole="button"
+          accessibilityLabel={`Status filter: ${statusLabels[statusFilter]}`}
         >
-          <Ionicons name="flag-outline" size={16} color={statusFilter !== 'all' ? Colors.primary : Colors.textSecondary} />
-          <Text style={[styles.filterText, statusFilter !== 'all' && styles.filterTextActive]}>
+          <Ionicons name="flag-outline" size={16} color={statusFilter !== 'all' ? Colors.primary : Colors.textSecondary} accessible={false} />
+          <Text style={[styles.filterText, statusFilter !== 'all' && styles.filterTextActive]} accessible={false}>
             {statusLabels[statusFilter]}
           </Text>
-          <AntDesign name={showStatusPicker ? 'up' : 'down'} size={10} color={Colors.textSecondary} />
+          <AntDesign name={showStatusPicker ? 'up' : 'down'} size={10} color={Colors.textSecondary} accessible={false} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.filterBtn, priorityFilter !== 'all' && styles.filterActive]}
           onPress={() => { setShowPriorityPicker(!showPriorityPicker); setShowStatusPicker(false) }}
+          accessibilityRole="button"
+          accessibilityLabel={`Priority filter: ${priorityLabels[priorityFilter]}`}
         >
-          <Ionicons name="alert-circle-outline" size={16} color={priorityFilter !== 'all' ? Colors.primary : Colors.textSecondary} />
-          <Text style={[styles.filterText, priorityFilter !== 'all' && styles.filterTextActive]}>
+          <Ionicons name="alert-circle-outline" size={16} color={priorityFilter !== 'all' ? Colors.primary : Colors.textSecondary} accessible={false} />
+          <Text style={[styles.filterText, priorityFilter !== 'all' && styles.filterTextActive]} accessible={false}>
             {priorityLabels[priorityFilter]}
           </Text>
-          <AntDesign name={showPriorityPicker ? 'up' : 'down'} size={10} color={Colors.textSecondary} />
+          <AntDesign name={showPriorityPicker ? 'up' : 'down'} size={10} color={Colors.textSecondary} accessible={false} />
         </TouchableOpacity>
 
         {activeFilterCount > 0 && (
           <TouchableOpacity
             style={styles.clearBtn}
             onPress={() => { setStatusFilter('all'); setPriorityFilter('all') }}
+            accessibilityRole="button"
+            accessibilityLabel="Clear all filters"
           >
-            <AntDesign name="close" size={14} color={Colors.textSecondary} />
+            <AntDesign name="close" size={14} color={Colors.textSecondary} accessible={false} />
           </TouchableOpacity>
         )}
       </View>
@@ -207,11 +213,13 @@ export default function TaskList() {
               key={s}
               style={styles.dropdownItem}
               onPress={() => { setStatusFilter(s); setShowStatusPicker(false) }}
+              accessibilityRole="button"
+              accessibilityLabel={`${statusLabels[s]}${statusFilter === s ? ', currently selected' : ''}`}
             >
               <Text style={[styles.dropdownText, statusFilter === s && styles.dropdownTextActive]}>
                 {statusLabels[s]}
               </Text>
-              {statusFilter === s && <AntDesign name="check" size={14} color={Colors.primary} />}
+              {statusFilter === s && <AntDesign name="check" size={14} color={Colors.primary} accessible={false} />}
             </TouchableOpacity>
           ))}
         </View>
@@ -224,11 +232,13 @@ export default function TaskList() {
               key={p}
               style={styles.dropdownItem}
               onPress={() => { setPriorityFilter(p); setShowPriorityPicker(false) }}
+              accessibilityRole="button"
+              accessibilityLabel={`${priorityLabels[p]}${priorityFilter === p ? ', currently selected' : ''}`}
             >
               <Text style={[styles.dropdownText, priorityFilter === p && styles.dropdownTextActive]}>
                 {priorityLabels[p]}
               </Text>
-              {priorityFilter === p && <AntDesign name="check" size={14} color={Colors.primary} />}
+              {priorityFilter === p && <AntDesign name="check" size={14} color={Colors.primary} accessible={false} />}
             </TouchableOpacity>
           ))}
         </View>
@@ -237,9 +247,9 @@ export default function TaskList() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {filteredTasks.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="search-outline" size={40} color={Colors.textSecondary} />
+            <Ionicons name="search-outline" size={40} color={Colors.textSecondary} accessible={false} />
             <Text style={styles.emptyText}>No tasks match your filters</Text>
-            <TouchableOpacity onPress={() => { setStatusFilter('all'); setPriorityFilter('all') }}>
+            <TouchableOpacity onPress={() => { setStatusFilter('all'); setPriorityFilter('all') }} accessibilityRole="button" accessibilityLabel="Clear filters">
               <Text style={styles.clearFiltersText}>Clear filters</Text>
             </TouchableOpacity>
           </View>

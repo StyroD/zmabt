@@ -1,6 +1,6 @@
 export const Colors = {
   // Brand
-  primary: '#3B82F6',
+  primary: '#60A5FA',
   primaryLight: '#1D4ED8',
 
   // Backgrounds
@@ -13,7 +13,7 @@ export const Colors = {
 
   // Text
   textPrimary: '#F1F5F9',
-  textSecondary: '#64748B',
+  textSecondary: '#94A3B8',
 
   // Status — In Progress (green)
   success: '#86EFAC',

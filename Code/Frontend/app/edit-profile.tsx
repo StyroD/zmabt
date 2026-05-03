@@ -17,6 +17,10 @@ export default function EditProfile() {
 
     const [userId, setUserId] = useState<string | null>(null)
     const [role, setRole] = useState<string | null>(null)
+    const [title, setTitle] = useState('')
+    const [firstName, setFirstName] = useState('')
+    const [lastName, setLastName] = useState('')
+    const [hourlyRate, setHourlyRate] = useState('')
     const [avatarUri, setAvatarUri] = useState<string | null>(null)
     const [savedAvatarUri, setSavedAvatarUri] = useState<string | null>(null)
     const [categories, setCategories] = useState<any[]>([])

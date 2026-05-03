@@ -226,7 +226,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator size="large" color={Colors.primary} accessibilityLabel="Loading" />
       </View>
     )
   }
@@ -269,7 +269,7 @@ export default function Dashboard() {
           <Text style={styles.profileRole}>{isManager ? 'Manager' : 'Worker'}</Text>
         </View>
         <View style={styles.onlineBadge}>
-          <View style={styles.onlineDot} />
+          <View style={styles.onlineDot} accessible={false} />
           <Text style={styles.onlineText}>Online</Text>
         </View>
       </View>
@@ -277,33 +277,33 @@ export default function Dashboard() {
       <Text style={styles.sectionLabel}>Overview</Text>
       <View style={styles.statsGrid}>
         {statTiles.map(tile => (
-          <View key={tile.label} style={styles.statTile}>
-            <Ionicons name={tile.icon} size={20} color={Colors.primary} />
-            <Text style={styles.statValue}>{tile.value}</Text>
-            <Text style={styles.statLabel}>{tile.label}</Text>
+          <View key={tile.label} style={styles.statTile} accessible={true} accessibilityLabel={`${tile.label}: ${tile.value}`}>
+            <Ionicons name={tile.icon} size={20} color={Colors.primary} accessible={false} />
+            <Text style={styles.statValue} accessible={false}>{tile.value}</Text>
+            <Text style={styles.statLabel} accessible={false}>{tile.label}</Text>
           </View>
         ))}
       </View>
 
       <Text style={styles.sectionLabel}>Quick actions</Text>
       <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/tabs/projectsList')}>
-          <Ionicons name="briefcase-outline" size={20} color={Colors.primary} />
+        <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/tabs/projectsList')} accessibilityRole="button" accessibilityLabel="Go to projects">
+          <Ionicons name="briefcase-outline" size={20} color={Colors.primary} accessible={false} />
           <Text style={styles.actionText}>Projects</Text>
         </TouchableOpacity>
         {isManager ? (
-          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/tabs/workers' as any)}>
-            <Ionicons name="people-outline" size={20} color={Colors.primary} />
+          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/tabs/workers' as any)} accessibilityRole="button" accessibilityLabel="Go to workers">
+            <Ionicons name="people-outline" size={20} color={Colors.primary} accessible={false} />
             <Text style={styles.actionText}>Workers</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/tabs/profile?mode=own' as any)}>
-            <Ionicons name="ribbon-outline" size={20} color={Colors.primary} />
+          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/tabs/profile?mode=own' as any)} accessibilityRole="button" accessibilityLabel="Go to certificates">
+            <Ionicons name="ribbon-outline" size={20} color={Colors.primary} accessible={false} />
             <Text style={styles.actionText}>Certificates</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/tabs/map' as any)}>
-          <Ionicons name="map-outline" size={20} color={Colors.primary} />
+        <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/tabs/map' as any)} accessibilityRole="button" accessibilityLabel="Go to map">
+          <Ionicons name="map-outline" size={20} color={Colors.primary} accessible={false} />
           <Text style={styles.actionText}>Map</Text>
         </TouchableOpacity>
       </View>
@@ -318,19 +318,23 @@ export default function Dashboard() {
               key={n.id}
               style={[styles.notifItem, n.read && styles.notifRead]}
               onPress={() => handleMarkRead(n.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`${n.title ?? n.body}. ${n.read ? 'Read' : 'Unread'}. ${new Date(n.sent_at).toLocaleDateString('sk-SK')}`}
+              accessibilityHint={n.read ? undefined : 'Double tap to mark as read'}
             >
-              <View style={styles.notifLeft}>
+              <View style={styles.notifLeft} accessible={false}>
                 <Ionicons
                   name={n.read ? 'notifications-outline' : 'notifications'}
                   size={18}
                   color={n.read ? Colors.textSecondary : Colors.primary}
+                  accessible={false}
                 />
               </View>
-              <View style={styles.notifContent}>
-                <Text style={[styles.notifMessage, n.read && styles.notifMessageRead]} numberOfLines={2}>{n.title ?? n.body}</Text>
-                <Text style={styles.notifTime}>{new Date(n.sent_at).toLocaleDateString('sk-SK')}</Text>
+              <View style={styles.notifContent} accessible={false}>
+                <Text style={[styles.notifMessage, n.read && styles.notifMessageRead]} numberOfLines={2} accessible={false}>{n.title ?? n.body}</Text>
+                <Text style={styles.notifTime} accessible={false}>{new Date(n.sent_at).toLocaleDateString('sk-SK')}</Text>
               </View>
-              {!n.read && <View style={styles.unreadDot} />}
+              {!n.read && <View style={styles.unreadDot} accessible={false} />}
             </TouchableOpacity>
           ))
         )}

@@ -10,7 +10,6 @@ import { CertificateRow } from '@/components/Profile/CertificateRow'
 import { getUserById, getAvatarUrl } from '@/api/endpoints/users'
 import * as SecureStore from 'expo-secure-store'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { getAvatarUrl } from '@/api/endpoints/users'
 
 export default function Profile() {
     const Colors = useColors()
@@ -137,7 +136,7 @@ export default function Profile() {
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 <View style={styles.avatarSection}>
-                    {avatarUri
+                    {user.has_avatar
                         ? <Image
                             source={{ uri: getAvatarUrl(user.id) }}
                             style={{ width: 90, height: 90, borderRadius: 45 }}

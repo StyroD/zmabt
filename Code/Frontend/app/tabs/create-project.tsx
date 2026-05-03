@@ -228,7 +228,7 @@ export default function CreateProject() {
     if (loading) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+                <ActivityIndicator size="large" color={Colors.primary} accessibilityLabel="Loading" />
             </View>
         )
     }
@@ -264,9 +264,11 @@ export default function CreateProject() {
                 <TouchableOpacity
                     style={[styles.input, styles.row, errors.deadline && styles.inputError]}
                     onPress={() => { Keyboard.dismiss(); setShowDatePicker(true) }}
+                    accessibilityRole="button"
+                    accessibilityLabel={deadline ? `Deadline: ${formatDate(deadline)}` : 'Select deadline date'}
                 >
-                    <AntDesign name="calendar" size={16} color={Colors.textSecondary} />
-                    <Text style={[styles.dateText, !deadline && { color: Colors.textSecondary }]}>
+                    <AntDesign name="calendar" size={16} color={Colors.textSecondary} accessible={false} />
+                    <Text style={[styles.dateText, !deadline && { color: Colors.textSecondary }]} accessible={false}>
                         {deadline ? formatDate(deadline) : 'Select date'}
                     </Text>
                 </TouchableOpacity>
@@ -283,7 +285,7 @@ export default function CreateProject() {
                             }}
                         />
                         {Platform.OS === 'ios' && (
-                            <TouchableOpacity style={styles.confirmBtn} onPress={() => setShowDatePicker(false)}>
+                            <TouchableOpacity style={styles.confirmBtn} onPress={() => setShowDatePicker(false)} accessibilityRole="button" accessibilityLabel="Confirm date">
                                 <Text style={styles.confirmText}>Confirm</Text>
                             </TouchableOpacity>
                         )}
@@ -300,8 +302,10 @@ export default function CreateProject() {
                                 key={s}
                                 style={[styles.statusChip, active && { backgroundColor: sc.bg, borderColor: sc.border }]}
                                 onPress={() => { Keyboard.dismiss(); setStatus(s) }}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${statusLabels[s]}${active ? ', currently selected' : ''}`}
                             >
-                                <Text style={[styles.statusChipText, active && { color: sc.text }]}>{statusLabels[s]}</Text>
+                                <Text style={[styles.statusChipText, active && { color: sc.text }]} accessible={false}>{statusLabels[s]}</Text>
                             </TouchableOpacity>
                         )
                     })}
@@ -321,12 +325,12 @@ export default function CreateProject() {
                 />
                 {errors.address && <Text style={styles.errorText}>{errors.address}</Text>}
 
-                <TouchableOpacity style={styles.mapToggle} onPress={() => { Keyboard.dismiss(); setShowMap(!showMap) }}>
-                    <Ionicons name="map-outline" size={16} color={Colors.primary} />
-                    <Text style={styles.mapToggleText}>
+                <TouchableOpacity style={styles.mapToggle} onPress={() => { Keyboard.dismiss(); setShowMap(!showMap) }} accessibilityRole="button" accessibilityLabel={lat && lng ? `Location set: ${lat.toFixed(4)}, ${lng.toFixed(4)}. Toggle map` : 'Pick location on map'}>
+                    <Ionicons name="map-outline" size={16} color={Colors.primary} accessible={false} />
+                    <Text style={styles.mapToggleText} accessible={false}>
                         {lat && lng ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : 'Pick location on map'}
                     </Text>
-                    <AntDesign name={showMap ? 'up' : 'down'} size={12} color={Colors.textSecondary} />
+                    <AntDesign name={showMap ? 'up' : 'down'} size={12} color={Colors.textSecondary} accessible={false} />
                 </TouchableOpacity>
 
                 {showMap && (
@@ -428,6 +432,8 @@ export default function CreateProject() {
                     style={[styles.submitButton, submitting && { opacity: 0.6 }]}
                     onPress={handleSubmit}
                     disabled={submitting}
+                    accessibilityRole="button"
+                    accessibilityLabel={submitting ? (isEdit ? 'Saving project' : 'Creating project') : (isEdit ? 'Save changes' : 'Create project')}
                 >
                     <Text style={styles.submitText}>
                         {submitting ? (isEdit ? 'Saving...' : 'Creating...') : (isEdit ? 'Save changes' : 'Create project')}

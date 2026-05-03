@@ -461,7 +461,7 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator size="large" color={Colors.primary} accessibilityLabel="Loading" />
       </View>
     )
   }
@@ -488,9 +488,9 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
       <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false}>
 
         <Text style={styles.projectTitle}>{currentProject.title}</Text>
-        <View style={[styles.statusBox, { backgroundColor: s.bg, borderColor: s.border }]}>
-          <View style={[styles.dot, { backgroundColor: s.dot }]} />
-          <Text style={[styles.statusText, { color: s.text }]}>{s.label}</Text>
+        <View style={[styles.statusBox, { backgroundColor: s.bg, borderColor: s.border }]} accessible={true} accessibilityLabel={`Status: ${s.label}`}>
+          <View style={[styles.dot, { backgroundColor: s.dot }]} accessible={false} />
+          <Text style={[styles.statusText, { color: s.text }]} accessible={false}>{s.label}</Text>
         </View>
 
         <Box width='big' text={currentProject.description ?? '—'} placeholder='Description' />
@@ -519,11 +519,11 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
         <View style={styles.sectionDivider} />
         <Text style={styles.sectionLabel}>Progress</Text>
         <View style={styles.row}>
-          <TouchableOpacity style={[styles.progressBox, { flex: 1, backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]} onPress={() => router.push(`/tabs/task-list?projectId=${id}&projectTitle=${currentProject.title}`)}>
-            <Text style={[styles.progressValue, { color: Colors.textPrimary }]}>{tasks.filter(t => t.status === 'done').length}/{tasks.length}</Text>
-            <View style={styles.progressRow}>
+          <TouchableOpacity style={[styles.progressBox, { flex: 1, backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]} onPress={() => router.push(`/tabs/task-list?projectId=${id}&projectTitle=${currentProject.title}`)} accessibilityRole="button" accessibilityLabel={`${tasks.filter(t => t.status === 'done').length} out of ${tasks.length} tasks done. Navigate to task list`}>
+            <Text style={[styles.progressValue, { color: Colors.textPrimary }]} accessible={false}>{tasks.filter(t => t.status === 'done').length}/{tasks.length}</Text>
+            <View style={styles.progressRow} accessible={false}>
               <Text style={[styles.progressLabel, { color: Colors.textPrimary }]}>Tasks done</Text>
-              <AntDesign name="arrow-right" size={14} color={Colors.textPrimary} />
+              <AntDesign name="arrow-right" size={14} color={Colors.textPrimary} accessible={false} />
             </View>
           </TouchableOpacity>
           <View style={[styles.progressBox, { flex: 1 }]}>
@@ -535,14 +535,14 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
         <View style={styles.sectionDivider} />
         <Text style={styles.sectionLabel}>Assigned workers</Text>
         {workers.map(worker => (
-          <TouchableOpacity key={worker.id} style={styles.workerBox} onPress={() => router.push(`/tabs/profile?userId=${worker.id}&projectId=${currentProject.id}&mode=project`)}>
-            <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
-            <Text style={styles.workerName}>
+          <TouchableOpacity key={worker.id} style={styles.workerBox} onPress={() => router.push(`/tabs/profile?userId=${worker.id}&projectId=${currentProject.id}&mode=project`)} accessibilityRole="button" accessibilityLabel={`${worker.first_name} ${worker.last_name}. View profile`}>
+            <Ionicons name="person-outline" size={20} color={Colors.textSecondary} accessible={false} />
+            <Text style={styles.workerName} accessible={false}>
               {worker.first_name} {worker.last_name}
             </Text>
-            <View style={styles.workerRight}>
-              <View style={[styles.onlineDot, { backgroundColor: Colors.offline }]} />
-              <AntDesign name="right" size={14} color={Colors.textSecondary} />
+            <View style={styles.workerRight} accessible={false}>
+              <View style={[styles.onlineDot, { backgroundColor: Colors.offline }]} accessible={false} />
+              <AntDesign name="right" size={14} color={Colors.textSecondary} accessible={false} />
             </View>
           </TouchableOpacity>
         ))}
@@ -557,9 +557,10 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
                   source={{ uri: `data:${photo.mime_type ?? 'image/jpeg'};base64,${photo.file_data}` }}
                   style={{ width: 100, height: 100 }}
                   resizeMode="cover"
+                  accessibilityLabel="Project photo"
                 />
               ) : (
-                <Ionicons name="image-outline" size={28} color={Colors.textSecondary} />
+                <Ionicons name="image-outline" size={28} color={Colors.textSecondary} accessible={false} />
               )}
             </View>
           ))}
@@ -567,12 +568,14 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
             style={[styles.photoBox, styles.addPhotoBox, uploadingPhoto && { opacity: 0.5 }]}
             onPress={handleAddPhoto}
             disabled={uploadingPhoto}
+            accessibilityRole="button"
+            accessibilityLabel={uploadingPhoto ? 'Uploading photo' : 'Add project photo'}
           >
             {uploadingPhoto
-              ? <ActivityIndicator size="small" color={Colors.primary} />
-              : <AntDesign name="plus" size={24} color={Colors.primary} />
+              ? <ActivityIndicator size="small" color={Colors.primary} accessibilityLabel="Uploading photo" />
+              : <AntDesign name="plus" size={24} color={Colors.primary} accessible={false} />
             }
-            <Text style={[styles.photoText, { color: Colors.primary }]}>
+            <Text style={[styles.photoText, { color: Colors.primary }]} accessible={false}>
               {uploadingPhoto ? 'Uploading...' : 'Add'}
             </Text>
           </TouchableOpacity>
@@ -583,20 +586,22 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => router.push(`/tabs/create-project?projectId=${currentProject.id}`)}
+            accessibilityRole="button"
+            accessibilityLabel="Edit project"
           >
-            <AntDesign name="edit" size={16} color={Colors.textPrimary} />
+            <AntDesign name="edit" size={16} color={Colors.textPrimary} accessible={false} />
             <Text style={styles.actionText}>Edit project</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: Colors.dangerBg, borderColor: Colors.dangerBorder }]} onPress={handleDeleteProject}>
-            <AntDesign name="delete" size={16} color={Colors.textPrimary} />
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: Colors.dangerBg, borderColor: Colors.dangerBorder }]} onPress={handleDeleteProject} accessibilityRole="button" accessibilityLabel="Delete project" accessibilityHint="Double tap to permanently delete this project">
+            <AntDesign name="delete" size={16} color={Colors.textPrimary} accessible={false} />
             <Text style={styles.actionText}>Delete project</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: Colors.successBg, borderColor: Colors.successBorder }]} onPress={handleOpenAssign}>
-            <Ionicons name="person-add-outline" size={16} color={Colors.textPrimary} />
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: Colors.successBg, borderColor: Colors.successBorder }]} onPress={handleOpenAssign} accessibilityRole="button" accessibilityLabel="Assign workers">
+            <Ionicons name="person-add-outline" size={16} color={Colors.textPrimary} accessible={false} />
             <Text style={styles.actionText}>Assign workers</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]} onPress={() => router.push(`/tabs/create-task?projectId=${currentProject.id}&projectTitle=${currentProject.title}`)}>
-            <AntDesign name="plus" size={16} color={Colors.textPrimary} />
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: Colors.primaryLight, borderColor: Colors.primary }]} onPress={() => router.push(`/tabs/create-task?projectId=${currentProject.id}&projectTitle=${currentProject.title}`)} accessibilityRole="button" accessibilityLabel="Add task">
+            <AntDesign name="plus" size={16} color={Colors.textPrimary} accessible={false} />
             <Text style={styles.actionText}>Add task</Text>
           </TouchableOpacity>
         </View>
@@ -610,8 +615,10 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
             }
             router.push(`/tabs/map?lat=${currentProject.lat}&lng=${currentProject.lng}&title=${encodeURIComponent(currentProject.title)}`)
           }}
+          accessibilityRole="button"
+          accessibilityLabel={(!currentProject.lat || !currentProject.lng) ? 'View map, no location set' : 'View project on map'}
         >
-          <Ionicons name="map-outline" size={18} color={Colors.textPrimary} />
+          <Ionicons name="map-outline" size={18} color={Colors.textPrimary} accessible={false} />
           <Text style={styles.mapText}>View map</Text>
         </TouchableOpacity>
 
@@ -620,11 +627,11 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
 
       <Modal visible={assignModalVisible} animationType="slide" transparent onRequestClose={() => setAssignModalVisible(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
+          <View style={styles.modalSheet} accessibilityViewIsModal={true}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Assign workers</Text>
-              <TouchableOpacity onPress={() => setAssignModalVisible(false)}>
-                <AntDesign name="close" size={20} color={Colors.textSecondary} />
+              <TouchableOpacity onPress={() => setAssignModalVisible(false)} accessibilityRole="button" accessibilityLabel="Close assign workers modal">
+                <AntDesign name="close" size={20} color={Colors.textSecondary} accessible={false} />
               </TouchableOpacity>
             </View>
 
@@ -644,6 +651,8 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
                 <TouchableOpacity
                   style={[styles.filterChip, !certFilter && styles.filterChipActive]}
                   onPress={() => setCertFilter(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`All certificates${!certFilter ? ', currently selected' : ''}`}
                 >
                   <Text style={[styles.filterChipText, !certFilter && styles.filterChipTextActive]}>All</Text>
                 </TouchableOpacity>
@@ -652,6 +661,8 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
                     key={cat.name}
                     style={[styles.filterChip, certFilter === cat.name && styles.filterChipActive]}
                     onPress={() => setCertFilter(certFilter === cat.name ? null : cat.name)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Filter by ${cat.name}${certFilter === cat.name ? ', currently selected' : ''}`}
                   >
                     <Text style={[styles.filterChipText, certFilter === cat.name && styles.filterChipTextActive]}>{cat.name}</Text>
                   </TouchableOpacity>
@@ -669,14 +680,17 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
                     style={[styles.modalWorkerRow, alreadyAssigned && styles.modalWorkerAssigned]}
                     onPress={() => !alreadyAssigned && toggleWorker(w.id)}
                     disabled={alreadyAssigned || assigning}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username}, ${alreadyAssigned ? 'already assigned' : selected ? 'selected' : 'not selected'}`}
+                    accessibilityHint={alreadyAssigned ? undefined : 'Double tap to select'}
                   >
-                    <Ionicons name="person-outline" size={18} color={Colors.textSecondary} />
-                    <Text style={styles.modalWorkerName}>
+                    <Ionicons name="person-outline" size={18} color={Colors.textSecondary} accessible={false} />
+                    <Text style={styles.modalWorkerName} accessible={false}>
                       {w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username}
                     </Text>
                     {alreadyAssigned
-                      ? <AntDesign name="check-circle" size={18} color={Colors.success} />
-                      : <AntDesign name="check-circle" size={18} color={selected ? Colors.primary : Colors.border} />
+                      ? <AntDesign name="check-circle" size={18} color={Colors.success} accessible={false} />
+                      : <AntDesign name="check-circle" size={18} color={selected ? Colors.primary : Colors.border} accessible={false} />
                     }
                   </TouchableOpacity>
                 )
@@ -688,6 +702,8 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
               style={[styles.assignBtn, (selectedWorkers.size === 0 || assigning) && { opacity: 0.5 }]}
               onPress={handleAssignSelected}
               disabled={selectedWorkers.size === 0 || assigning}
+              accessibilityRole="button"
+              accessibilityLabel={assigning ? 'Assigning workers' : selectedWorkers.size > 0 ? `Assign ${selectedWorkers.size} worker${selectedWorkers.size > 1 ? 's' : ''}` : 'Assign workers'}
             >
               <Text style={styles.assignBtnText}>
                 {assigning ? 'Assigning...' : `Assign ${selectedWorkers.size > 0 ? `(${selectedWorkers.size})` : ''}`}

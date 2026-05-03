@@ -291,11 +291,13 @@ export default function CreateTask() {
                 <TouchableOpacity
                     style={[styles.input, styles.pickerBtn, errors.category && styles.inputError]}
                     onPress={() => setShowCategoryPicker(!showCategoryPicker)}
+                    accessibilityRole="button"
+                    accessibilityLabel={categoryName ? `Category: ${categoryName}. Change category` : 'Select task category'}
                 >
-                    <Text style={[styles.pickerText, !categoryName && { color: Colors.textSecondary }]}>
+                    <Text style={[styles.pickerText, !categoryName && { color: Colors.textSecondary }]} accessible={false}>
                         {categoryName || 'Select category'}
                     </Text>
-                    <AntDesign name={showCategoryPicker ? 'up' : 'down'} size={12} color={Colors.textSecondary} />
+                    <AntDesign name={showCategoryPicker ? 'up' : 'down'} size={12} color={Colors.textSecondary} accessible={false} />
                 </TouchableOpacity>
                 {errors.category && <Text style={styles.errorText}>{errors.category}</Text>}
                 {showCategoryPicker && (
@@ -310,9 +312,11 @@ export default function CreateTask() {
                                     setShowCategoryPicker(false)
                                     setErrors(e => ({ ...e, category: '' }))
                                 }}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${c.name}${categoryId === c.id ? ', currently selected' : ''}`}
                             >
                                 <Text style={[styles.dropdownText, categoryId === c.id && { color: Colors.primary }]}>{c.name}</Text>
-                                {categoryId === c.id && <Ionicons name="checkmark" size={16} color={Colors.primary} />}
+                                {categoryId === c.id && <Ionicons name="checkmark" size={16} color={Colors.primary} accessible={false} />}
                             </TouchableOpacity>
                         ))}
                     </View>
@@ -322,9 +326,11 @@ export default function CreateTask() {
                 <TouchableOpacity
                     style={[styles.input, styles.dateBtn, errors.deadline && styles.inputError]}
                     onPress={() => setShowDatePicker(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel={deadline ? `Deadline: ${formatDate(deadline)}` : 'Select deadline date'}
                 >
-                    <AntDesign name="calendar" size={16} color={Colors.textSecondary} />
-                    <Text style={[styles.dateText, !deadline && { color: Colors.textSecondary }]}>
+                    <AntDesign name="calendar" size={16} color={Colors.textSecondary} accessible={false} />
+                    <Text style={[styles.dateText, !deadline && { color: Colors.textSecondary }]} accessible={false}>
                         {deadline ? formatDate(deadline) : 'Select date'}
                     </Text>
                 </TouchableOpacity>
@@ -341,7 +347,7 @@ export default function CreateTask() {
                             }}
                         />
                         {Platform.OS === 'ios' && (
-                            <TouchableOpacity style={styles.confirmBtn} onPress={() => setShowDatePicker(false)}>
+                            <TouchableOpacity style={styles.confirmBtn} onPress={() => setShowDatePicker(false)} accessibilityRole="button" accessibilityLabel="Confirm date">
                                 <Text style={styles.confirmText}>Confirm</Text>
                             </TouchableOpacity>
                         )}
@@ -358,8 +364,10 @@ export default function CreateTask() {
                                 key={p}
                                 style={[styles.priorityBtn, active && { backgroundColor: pc.bg, borderColor: pc.border }]}
                                 onPress={() => setPriority(p)}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${priorityLabels[p]} priority${active ? ', currently selected' : ''}`}
                             >
-                                <Text style={[styles.priorityText, active && { color: pc.text }]}>{priorityLabels[p]}</Text>
+                                <Text style={[styles.priorityText, active && { color: pc.text }]} accessible={false}>{priorityLabels[p]}</Text>
                             </TouchableOpacity>
                         )
                     })}
@@ -370,15 +378,15 @@ export default function CreateTask() {
                     <Text style={styles.emptyText}>No workers assigned yet</Text>
                 ) : (
                     workers.filter(w => assignedWorkers.includes(w.id)).map(worker => (
-                        <TouchableOpacity key={worker.id} style={[styles.workerBox, styles.workerSelected]} onPress={() => toggleWorker(worker.id)}>
-                            <Ionicons name="person-outline" size={18} color={Colors.primary} />
-                            <View style={styles.workerInfo}>
+                        <TouchableOpacity key={worker.id} style={[styles.workerBox, styles.workerSelected]} onPress={() => toggleWorker(worker.id)} accessibilityRole="button" accessibilityLabel={`${worker.first_name} ${worker.last_name}, assigned`} accessibilityHint="Double tap to remove from task">
+                            <Ionicons name="person-outline" size={18} color={Colors.primary} accessible={false} />
+                            <View style={styles.workerInfo} accessible={false}>
                                 <Text style={styles.workerName}>{worker.first_name} {worker.last_name}</Text>
                                 {(worker.certificates ?? []).length > 0 && (
                                     <Text style={styles.workerCerts}>{worker.certificates.join(' · ')}</Text>
                                 )}
                             </View>
-                            <Ionicons name="checkmark-circle" size={20} color={Colors.primary} />
+                            <Ionicons name="checkmark-circle" size={20} color={Colors.primary} accessible={false} />
                         </TouchableOpacity>
                     ))
                 )}
@@ -389,15 +397,15 @@ export default function CreateTask() {
                             {categoryName ? `Workers certified in ${categoryName}` : 'Available workers'}
                         </Text>
                         {availableWorkers.map(worker => (
-                            <TouchableOpacity key={worker.id} style={styles.workerBox} onPress={() => toggleWorker(worker.id)}>
-                                <Ionicons name="person-outline" size={18} color={Colors.textSecondary} />
-                                <View style={styles.workerInfo}>
+                            <TouchableOpacity key={worker.id} style={styles.workerBox} onPress={() => toggleWorker(worker.id)} accessibilityRole="button" accessibilityLabel={`${worker.first_name} ${worker.last_name}`} accessibilityHint="Double tap to assign to task">
+                                <Ionicons name="person-outline" size={18} color={Colors.textSecondary} accessible={false} />
+                                <View style={styles.workerInfo} accessible={false}>
                                     <Text style={styles.workerName}>{worker.first_name} {worker.last_name}</Text>
                                     {(worker.certificates ?? []).length > 0 && (
                                         <Text style={styles.workerCerts}>{worker.certificates.join(' · ')}</Text>
                                     )}
                                 </View>
-                                <Ionicons name="add-circle-outline" size={20} color={Colors.textSecondary} />
+                                <Ionicons name="add-circle-outline" size={20} color={Colors.textSecondary} accessible={false} />
                             </TouchableOpacity>
                         ))}
                     </>
@@ -407,6 +415,8 @@ export default function CreateTask() {
                     style={[styles.submitButton, submitting && { opacity: 0.6 }]}
                     onPress={handleSubmit}
                     disabled={submitting}
+                    accessibilityRole="button"
+                    accessibilityLabel={submitting ? 'Saving task' : 'Save task'}
                 >
                     <Text style={styles.submitText}>{submitting ? 'Saving...' : 'Save task'}</Text>
                 </TouchableOpacity>
