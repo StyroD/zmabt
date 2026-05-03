@@ -1,4 +1,6 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native'
+import {
+  View, Text,StyleSheet,ScrollView,TouchableOpacity,TextInput, ActivityIndicator, Keyboard,
+} from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useEffect, useState, useMemo } from 'react'
@@ -7,43 +9,59 @@ import { router } from 'expo-router'
 import { getAllWorkers } from '@/api/endpoints/workers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { cacheWorkers, getCachedWorkers } from '@/utils/db'
-import * as SecureStore from 'expo-secure-store'
 
 export default function Workers() {
   const Colors = useColors()
   const insets = useSafeAreaInsets()
   const [workers, setWorkers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [search, setSearch] = useState('')
+  const [isFocused, setIsFocused] = useState(false)
 
   useEffect(() => {
     const load = async () => {
-        try {
-            const res = await getAllWorkers()
-            setWorkers(res.data)
-            await cacheWorkers(res.data)
-        } catch {
-            const cached = await getCachedWorkers()
-            setWorkers(cached)
-        } finally {
-            setLoading(false)
+      try {
+        const res = await getAllWorkers()
+        setWorkers(res.data)
+        setError(false)
+        await cacheWorkers(res.data)
+      } catch {
+        const cached = await getCachedWorkers()
+        if (cached.length > 0) {
+          setWorkers(cached)
+        } else {
+          setError(true)
         }
+      } finally {
+        setLoading(false)
+      }
     }
     load()
-}, [])
+  }, [])
+
+  const getDisplayName = (w: any) =>
+    w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
     if (!q) return workers
     return workers.filter(w =>
-      `${w.first_name} ${w.last_name}`.toLowerCase().includes(q) ||
-      w.username?.toLowerCase().includes(q)
+      getDisplayName(w).toLowerCase().includes(q)
     )
   }, [workers, search])
 
+  const showDropdown = isFocused && search.length > 0 && filtered.length > 0
+
   const styles = StyleSheet.create({
     center: {
-      flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background,
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: Colors.background,
+    },
+    searchContainer: {
+      zIndex: 1,
     },
     searchRow: {
       flexDirection: 'row',
@@ -55,13 +73,42 @@ export default function Workers() {
       borderRadius: 10,
       paddingHorizontal: 12,
       paddingVertical: 10,
-      marginBottom: 12,
       marginTop: 8,
+    },
+    searchRowOpen: {
+      borderBottomLeftRadius: 0,
+      borderBottomRightRadius: 0,
     },
     searchInput: {
       flex: 1,
       fontSize: 15,
       color: Colors.textPrimary,
+    },
+    autocompleteBox: {
+      backgroundColor: Colors.surface,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderTopWidth: 0,
+      borderBottomLeftRadius: 10,
+      borderBottomRightRadius: 10,
+      marginBottom: 12,
+      overflow: 'hidden',
+    },
+    suggestionItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.background,
+      gap: 10,
+    },
+    suggestionText: {
+      fontSize: 14,
+      color: Colors.textPrimary,
+    },
+    spacer: {
+      height: 12,
     },
     card: {
       flexDirection: 'row',
@@ -126,6 +173,11 @@ export default function Workers() {
       fontStyle: 'italic',
       marginTop: 40,
     },
+    errorText: {
+      textAlign: 'center',
+      color: Colors.textSecondary,
+      marginTop: 40,
+    },
   })
 
   if (loading) {
@@ -138,25 +190,65 @@ export default function Workers() {
 
   return (
     <ScreenWrapper title="Workers" backRoute="/tabs/dashboard">
-      <View style={styles.searchRow}>
-        <Ionicons name="search-outline" size={16} color={Colors.textSecondary} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by name..."
-          placeholderTextColor={Colors.textSecondary}
-          value={search}
-          onChangeText={setSearch}
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')}>
-            <Ionicons name="close-circle" size={16} color={Colors.textSecondary} />
-          </TouchableOpacity>
+      <View style={styles.searchContainer}>
+        <View style={[styles.searchRow, showDropdown && styles.searchRowOpen]}>
+          <Ionicons name="search-outline" size={16} color={Colors.textSecondary} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by name..."
+            placeholderTextColor={Colors.textSecondary}
+            value={search}
+            onChangeText={setSearch}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            onSubmitEditing={() => {
+              setIsFocused(false)
+              Keyboard.dismiss()
+            }}
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => {
+              setSearch('')
+              setIsFocused(true)
+            }}>
+              <Ionicons name="close-circle" size={16} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {showDropdown ? (
+          <View style={styles.autocompleteBox}>
+            {filtered.slice(0, 4).map(worker => (
+              <TouchableOpacity
+                key={`suggestion-${worker.id}`}
+                style={styles.suggestionItem}
+                onPress={() => {
+                  setSearch(getDisplayName(worker))
+                  setIsFocused(false)
+                  Keyboard.dismiss()
+                }}
+              >
+                <Ionicons name="search-outline" size={14} color={Colors.textSecondary} />
+                <Text style={styles.suggestionText}>{getDisplayName(worker)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.spacer} />
         )}
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {filtered.length === 0 ? (
-          <Text style={styles.emptyText}>No workers found</Text>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        onScrollBeginDrag={() => setIsFocused(false)}
+      >
+        {error ? (
+          <Text style={styles.errorText}>Could not load workers. Check your connection.</Text>
+        ) : filtered.length === 0 ? (
+          <Text style={styles.emptyText}>
+            {search.length > 0 ? 'No workers match your search' : 'No workers found'}
+          </Text>
         ) : (
           filtered.map(worker => {
             const accepted = (worker.certificates ?? []).filter((c: any) => c.status === 'accepted')
@@ -171,9 +263,7 @@ export default function Workers() {
                 </View>
                 <View style={styles.info}>
                   <Text style={styles.name} numberOfLines={1}>
-                    {worker.first_name && worker.last_name
-                      ? `${worker.first_name} ${worker.last_name}`
-                      : worker.username}
+                    {getDisplayName(worker)}
                   </Text>
                   {worker.phone ? (
                     <Text style={styles.sub}>{worker.phone}</Text>

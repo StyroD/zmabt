@@ -13,7 +13,7 @@ import { searchUsers } from "@/api/endpoints/users"
 import { getSocket } from "@/api/socket"
 import * as SecureStore from "expo-secure-store"
 import type { Socket } from "socket.io-client"
-
+import { unreadSignal } from "@/utils/unreadSignal"
 
 type Conversation = {
   other_user_id: string
@@ -322,9 +322,11 @@ export default function ChatList() {
   const socketRef = useRef<Socket | null>(null)
   const readIdsRef = useRef<Set<string>>(new Set())
 
+  // Updates global unread signal and tab badge
   useEffect(() => {
-    navigation.setOptions({ tabBarBadge: unreadIds.size > 0 ? unreadIds.size : undefined })
-  }, [unreadIds.size])
+    unreadSignal.set(unreadIds.size);
+    navigation.setOptions({ tabBarBadge: unreadIds.size > 0 ? unreadIds.size : undefined });
+  }, [unreadIds.size]);
 
   useEffect(() => {
     let active = true
@@ -360,34 +362,41 @@ export default function ChatList() {
 
   useEffect(() => {
     let mounted = true
+    
+    
+    const handleNewMessage = (msg: { sender_id: string; receiver_id: string; content: string; sent_at: string; sender_name?: string }) => {
+      if (!mounted) return
+      const uid = currentUserIdRef.current
+      const otherUserId = msg.sender_id === uid ? msg.receiver_id : msg.sender_id
+      
+      setConversations(prev => {
+        const existing = prev.find(c => c.other_user_id === otherUserId)
+        const updated: Conversation = {
+          other_user_id: otherUserId,
+          name: existing?.name || msg.sender_name || 'Unknown User', 
+          last_message: msg.content,
+          timestamp: msg.sent_at,
+          sender_id: msg.sender_id,
+        }
+        return [updated, ...prev.filter(c => c.other_user_id !== otherUserId)]
+      })
+      
+      if (msg.sender_id !== uid) {
+        readIdsRef.current.delete(otherUserId)
+        setUnreadIds(prev => new Set(prev).add(otherUserId))
+      }
+    }
+
     getSocket().then(socket => {
       if (!mounted) return
       socketRef.current = socket
-      socket.on('new_message', (msg: { sender_id: string; receiver_id: string; content: string; sent_at: string; sender_name?: string }) => {
-        if (!mounted) return
-        const uid = currentUserIdRef.current
-        const otherUserId = msg.sender_id === uid ? msg.receiver_id : msg.sender_id
-        setConversations(prev => {
-          const existing = prev.find(c => c.other_user_id === otherUserId)
-          const updated: Conversation = {
-            other_user_id: otherUserId,
-            name: existing?.name ?? '',
-            last_message: msg.content,
-            timestamp: msg.sent_at,
-            sender_id: msg.sender_id,
-          }
-          return [updated, ...prev.filter(c => c.other_user_id !== otherUserId)]
-        })
-        // mark as unread only if the message is from someone else
-        if (msg.sender_id !== uid) {
-          readIdsRef.current.delete(otherUserId)
-          setUnreadIds(prev => new Set(prev).add(otherUserId))
-        }
-      })
+      socket.on('new_message', handleNewMessage)
     }).catch(() => {})
+
     return () => {
       mounted = false
-      socketRef.current?.off('new_message')
+      // 3. Only remove THIS specific listener, not the entire app's listeners
+      socketRef.current?.off('new_message', handleNewMessage) 
     }
   }, [])
 
@@ -401,20 +410,9 @@ export default function ChatList() {
   }
 
   const styles = StyleSheet.create({
-    list: {
-      paddingTop: 12,
-    },
-    center: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    empty: {
-      color: Colors.textSecondary,
-      textAlign: 'center',
-      marginTop: 40,
-      fontSize: 14,
-    },
+    list: { paddingTop: 12 },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    empty: { color: Colors.textSecondary, textAlign: 'center', marginTop: 40, fontSize: 14 },
   })
 
   if (loading) {
@@ -439,6 +437,8 @@ export default function ChatList() {
       <FlatList
         data={conversations}
         keyExtractor={item => item.other_user_id}
+
+        extraData={unreadIds.size}
         renderItem={({ item }) => (
             <ConversationItem
               item={item}

@@ -146,21 +146,21 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         const idParam = `$${values.length}`
 
         const query = `
-          UPDATE users SET
-              first_name              = $1,
-              last_name               = $2,
-              phone                   = $3,
-              address                 = $4,
-              fcm_token               = COALESCE($5, fcm_token),
-              hourly_rate             = $6,
-              emergency_contact_name  = $7,
-              emergency_contact_phone = $8,
-              iban                    = $9,
-              notes                   = $10
-              ${avatarClause}
-          WHERE id = ${idParam}
-          RETURNING *
-      `
+            UPDATE users SET
+                first_name              = $1,
+                last_name               = $2,
+                phone                   = $3,
+                address                 = $4,
+                fcm_token               = COALESCE($5, fcm_token),
+                hourly_rate             = $6,
+                emergency_contact_name  = $7,
+                emergency_contact_phone = $8,
+                iban                    = $9,
+                notes                   = $10
+                ${avatarClause}
+            WHERE id = ${idParam}
+            RETURNING *
+        `
 
         const result = await pool.query(query, values)
 
@@ -179,51 +179,6 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     } catch (err: any) {
         res.status(500).json({ error: err.message })
     }
-
-    const { first_name, last_name, title, phone, address, avatar_url, fcm_token } = req.body
-
-    let query = `UPDATE users SET
-      first_name = COALESCE($1, first_name),
-      last_name = COALESCE($2, last_name),
-      title = COALESCE($3, title),
-      phone = COALESCE($4, phone),
-      address = COALESCE($5, address),
-      avatar_url = COALESCE($6, avatar_url),
-      fcm_token = COALESCE($7, fcm_token)`
-
-    const values: any[] = [first_name, last_name, title, phone, address, avatar_url, fcm_token]
-
-    if (req.file) {
-      let mimeType = req.file.mimetype
-      const b = req.file.buffer
-      if (b[0] === 0xff && b[1] === 0xd8) mimeType = 'image/jpeg'
-      else if (b[0] === 0x89 && b[1] === 0x50) mimeType = 'image/png'
-      values.push(b, mimeType)
-      query += `, avatar = $${values.length - 1}, avatar_mime_type = $${values.length}`
-    }
-
-    values.push(id)
-    query += ` WHERE id = $${values.length} RETURNING *`
-
-    const result = await pool.query(query, values)
-
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'User not found' })
-      return
-    }
-
-    const updatedUser = result.rows[0]
-    delete updatedUser.password_hash
-    delete updatedUser.google_id
-
-    if (updatedUser.avatar) {
-      updatedUser.avatar = updatedUser.avatar.toString('base64')
-    }
-
-    res.json(updatedUser)
-  } catch (err: any) {
-    res.status(500).json({ error: err.message })
-  }
 }
 
 export const updatePushToken = async (req: Request, res: Response): Promise<void> => {

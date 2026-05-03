@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client'
 import * as SecureStore from 'expo-secure-store'
 
-const SOCKET_URL = 'http://localhost:3000'
+const SOCKET_URL = 'http://10.112.94.65:3000'
 
 let socket: Socket | null = null
 

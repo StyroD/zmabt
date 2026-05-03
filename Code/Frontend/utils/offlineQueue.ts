@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
+
 const QUEUE_KEY = 'offline_task_queue'
 
-export type OperationType = 'TASK_CREATE' | 'TASK_STATUS_UPDATE' | 'TASK_DELETE'
+export type OperationType = 'TASK_CREATE' | 'TASK_STATUS_UPDATE' | 'TASK_DELETE' | 'PROJECT_CREATE'
 
 export interface QueuedOperation {
   id: string
@@ -11,6 +12,7 @@ export interface QueuedOperation {
   timestamp: number
   retries: number
 }
+
 
 const generateId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 

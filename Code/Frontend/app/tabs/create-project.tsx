@@ -11,6 +11,8 @@ import { createProject, updateProject, getProjectById } from '@/api/endpoints/pr
 import * as SecureStore from 'expo-secure-store'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as Location from 'expo-location'
+import { useNetwork } from '@/contexts/NetworkContext'
+import { addToQueue } from '@/utils/offlineQueue'
 
 const STATUSES = ['in_progress', 'pending', 'finished', 'cancelled']
 const statusLabels: Record<string, string> = {
@@ -41,6 +43,7 @@ export default function CreateProject() {
     const [clientEmail, setClientEmail] = useState('')
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [submitting, setSubmitting] = useState(false)
+    const { isOnline } = useNetwork()
 
     useEffect(() => {
         if (!isEdit) return
@@ -79,7 +82,7 @@ export default function CreateProject() {
         if (!address.trim()) newErrors.address = 'Address is required'
         if (!clientName.trim()) newErrors.clientName = 'Client name is required'
         if (clientEmail && !/\S+@\S+\.\S+/.test(clientEmail)) newErrors.clientEmail = 'Invalid email'
-        setErrors(newErrors)
+        setErrors(newErrors) 
         return Object.keys(newErrors).length === 0
     }
 
@@ -106,10 +109,29 @@ export default function CreateProject() {
             } else {
                 const managerId = await SecureStore.getItemAsync('userId')
                 if (!managerId) { Alert.alert('Error', 'Could not determine manager'); return }
-                await createProject({ manager_id: managerId, ...payload })
-                router.push('/tabs/projectsList')
+
+                if (!isOnline) {
+                    await addToQueue('PROJECT_CREATE', { manager_id: managerId, ...payload })
+                    Alert.alert('Saved offline', 'Project will be created when you reconnect.')
+                    router.back()
+                    return
+                }
+
+                try {
+                    await createProject({ manager_id: managerId, ...payload })
+                    router.back()
+                } catch (err: any) {
+                    if (err?.message === 'Network Error' || err?.code === 'ECONNABORTED') {
+                        await addToQueue('PROJECT_CREATE', { manager_id: managerId, ...payload })
+                        Alert.alert('Saved offline', 'Project will be created when you reconnect.')
+                        router.back()
+                    } else {
+                        throw err
+                    }
+                }
             }
         } catch (err: any) {
+            console.error('create project error:', JSON.stringify(err?.response?.data ?? err?.message ?? err))
             Alert.alert('Error', err?.response?.data?.error ?? (isEdit ? 'Failed to update project' : 'Failed to create project'))
         } finally {
             setSubmitting(false)

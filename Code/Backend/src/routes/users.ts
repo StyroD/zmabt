@@ -1,6 +1,4 @@
 import { Router, Request, Response } from 'express'
-import { createUser, getUserById, updateUser, updatePushToken } from '../queries/users'
-import { Router } from 'express'
 import { getAllUsers, searchUsers, createUser, getUserById, updateUser, updatePushToken } from '../queries/users'
 import authMiddleware from '../middleware/auth'
 import upload from '../middleware/upload'

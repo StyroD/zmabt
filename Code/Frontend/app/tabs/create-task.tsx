@@ -13,6 +13,7 @@ import { useNetwork } from '@/contexts/NetworkContext'
 import { addToQueue } from '@/utils/offlineQueue'
 import { logTaskCreated } from '@/utils/firebase'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { cacheCategories, getCachedCategories } from '@/utils/db'
 
 const PRIORITIES = ['low', 'medium', 'high']
 const priorityLabels: Record<string, string> = { low: 'Low', medium: 'Medium', high: 'High' }
@@ -68,7 +69,19 @@ export default function CreateTask() {
                     deadline: deadline!.toISOString().split('T')[0],
                     workerIds: assignedWorkers,
                 })
-                logTaskCreated(projectId as string).catch(() => { })
+                logTaskCreated(projectId as string).catch(() => {})
+                    const resetForm = () => {
+                    setTitle('')
+                    setDescription('')
+                    setCategoryId('')
+                    setCategoryName('')
+                    setDeadline(null)
+                    setPriority('medium')
+                    setAssignedWorkers([])
+                    setErrors({})
+                }
+
+                resetForm()
                 Alert.alert('Saved offline', 'Task will be created when you reconnect.')
                 router.replace(`/tabs/task-list?projectId=${projectId}&projectTitle=${projectTitle}`)
                 return
@@ -84,6 +97,20 @@ export default function CreateTask() {
             if (assignedWorkers.length > 0) {
                 await assignWorkersToTask(task.data.id, assignedWorkers)
             }
+            logTaskCreated(projectId as string).catch(() => {})
+            const resetForm = () => {
+                setTitle('')
+                setDescription('')
+                setCategoryId('')
+                setCategoryName('')
+                setDeadline(null)
+                setPriority('medium')
+                setAssignedWorkers([])
+                setErrors({})
+            }
+
+            resetForm()
+            router.back()
             logTaskCreated(projectId as string).catch(() => { })
             router.replace(`/tabs/task-list?projectId=${projectId}&projectTitle=${projectTitle}`)
         } catch (err: any) {
@@ -104,10 +131,16 @@ export default function CreateTask() {
         (categoryName === '' || (worker.certificates ?? []).includes(categoryName))
     )
 
-    useEffect(() => {
+        useEffect(() => {
         getCategories()
-            .then(res => setCategories(res.data))
-            .catch(err => console.error(err))
+            .then(async res => {
+                setCategories(res.data)
+                await cacheCategories(res.data)
+            })
+            .catch(async () => {
+                const cached = await getCachedCategories()
+                setCategories(cached)
+            })
     }, [])
 
     useEffect(() => {

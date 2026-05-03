@@ -35,6 +35,43 @@ export default function MapScreen() {
     lat?: string; lng?: string; title?: string
   }>()
 
+  const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const startLocationTracking = (projectId: string, userId: string) => {
+      if (locationIntervalRef.current) clearInterval(locationIntervalRef.current)
+
+      const sendLocation = async () => {
+          try {
+              const location = await Location.getCurrentPositionAsync({
+                  accuracy: Location.Accuracy.Balanced,
+              })
+              userCoordsRef.current = {
+                  lat: location.coords.latitude,
+                  lng: location.coords.longitude,
+              }
+              await updateWorkerLocation({
+                  worker_id: userId,
+                  project_id: projectId,
+                  lat: location.coords.latitude,
+                  lng: location.coords.longitude,
+                  is_online: true,
+              })
+          } catch {
+              // silently ignore — no alert on background updates
+          }
+      }
+
+      sendLocation() // send immediately on start
+      locationIntervalRef.current = setInterval(sendLocation, 30000)
+  }
+
+  const stopLocationTracking = () => {
+      if (locationIntervalRef.current) {
+          clearInterval(locationIntervalRef.current)
+          locationIntervalRef.current = null
+      }
+  }
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -76,34 +113,55 @@ export default function MapScreen() {
   useEffect(() => {
     if (!selected || !user) return
 
-    if (refreshRef.current) clearInterval(refreshRef.current)
-
     if (user.role === 'manager') {
-      const fetch = async () => {
-        try {
-          const res = await getProjectWorkerLocations(selected.id)
-          setWorkerLocations(res.data)
-        } catch { /* ignore */ }
-      }
-      fetch()
-      refreshRef.current = setInterval(fetch, 30000)
-    } else {
-      setWorkerLocations([])
+        const fetch = async () => {
+            try {
+                const res = await getProjectWorkerLocations(selected.id)
+                console.log('worker locations:', res.data)
+                setWorkerLocations(res.data)
+            } catch (err) {
+                console.error('fetch locations failed:', err)
+            }
+        }
+        fetch()
+        refreshRef.current = setInterval(fetch, 30000)
+    } else if (locationPermission) {
+        const sendLocation = async () => {
+            try {
+                const location = await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.Balanced,
+                })
+                console.log('sending location:', location.coords.latitude, location.coords.longitude)
+                await updateWorkerLocation({
+                    worker_id: user.id,
+                    project_id: selected.id,
+                    lat: location.coords.latitude,
+                    lng: location.coords.longitude,
+                    is_online: true,
+                })
+                console.log('location sent ok')
+            } catch (err) {
+                console.error('location send failed:', err)
+            }
+        }
+        sendLocation()
+        locationIntervalRef.current = setInterval(sendLocation, 30000)
     }
 
     if (selected.lat && selected.lng) {
-      mapRef.current?.animateToRegion({
-        latitude: selected.lat,
-        longitude: selected.lng,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
-      }, 600)
+        mapRef.current?.animateToRegion({
+            latitude: selected.lat,
+            longitude: selected.lng,
+            latitudeDelta: 0.02,
+            longitudeDelta: 0.02,
+        }, 600)
     }
 
     return () => {
-      if (refreshRef.current) clearInterval(refreshRef.current)
+        if (refreshRef.current) clearInterval(refreshRef.current)
+        if (locationIntervalRef.current) clearInterval(locationIntervalRef.current)
     }
-  }, [selected, user])
+}, [selected, user, locationPermission])
 
   const handleCheckIn = async () => {
     if (!locationPermission) {
@@ -330,7 +388,13 @@ export default function MapScreen() {
                   {wl.is_online ? 'Online' : 'Offline'}
                 </Text>
                 <Text style={styles.calloutTime}>
-                  Last seen: {new Date(wl.recorded_at).toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' })}
+                  Last seen: {new Date(wl.recorded_at).toLocaleString('sk-SK', { 
+                      day: '2-digit', 
+                      month: '2-digit', 
+                      year: 'numeric',
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                  })}
                 </Text>
               </View>
             </Callout>
@@ -338,14 +402,14 @@ export default function MapScreen() {
         ))}
       </MapView>
 
-      {isManager && selected && (
+      {!isManager && selected && (
         <View style={styles.badge}>
-          <View style={[styles.badgeDot, { backgroundColor: Colors.online }]} />
-          <Text style={styles.badgeText}>
-            {workerLocations.filter(w => w.is_online).length} online · {workerLocations.length} total
-          </Text>
+            <View style={[styles.badgeDot, { backgroundColor: Colors.online }]} />
+            <Text style={styles.badgeText}>
+                {locationPermission ? 'Location sharing active' : 'Location permission required'}
+            </Text>
         </View>
-      )}
+    )}
 
       {!isManager && selected && (
         <TouchableOpacity

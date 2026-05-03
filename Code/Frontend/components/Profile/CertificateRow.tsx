@@ -1,5 +1,4 @@
 import { useColors } from "@/contexts/ThemeContext"
-import { Ionicons } from "@expo/vector-icons"
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
 
 type Props = {
@@ -10,26 +9,27 @@ type Props = {
 
 export function CertificateRow({ name, certified, onShow }: Props) {
     const Colors = useColors()
-    const iconName = certified ? "checkmark-circle" : "close-circle"
-    const iconColor = certified ? Colors.success : Colors.danger
 
     const styles = StyleSheet.create({
         container: {
             flexDirection: 'row',
             alignItems: 'center',
-            paddingVertical: 8,
+            paddingVertical: 12,
         },
         name: {
             flex: 1,
+            fontSize: 16,
+            color: Colors.textPrimary,
+        },
+        status: {
+            fontSize: 13,
+            color: certified ? Colors.success : Colors.danger,
+            marginRight: 12,
         },
         showText: {
-            color: Colors.textSecondary,
+            color: Colors.primary,
             textDecorationLine: 'underline',
-            fontSize: 16,
-        },
-        otherText: {
-            color: Colors.textSecondary,
-            fontSize: 16,
+            fontSize: 14,
         },
         divider: {
             position: 'absolute',
@@ -39,17 +39,13 @@ export function CertificateRow({ name, certified, onShow }: Props) {
             height: 1,
             backgroundColor: Colors.border,
         },
-        showBtn: {
-            width: '25%',
-            alignItems: 'flex-end',
-        },
     })
 
     return (
         <View style={styles.container}>
-            <Text style={[styles.otherText, styles.name]}>{name}</Text>
-            <Ionicons name={iconName} color={iconColor} size={20} />
-            <TouchableOpacity onPress={onShow} style={styles.showBtn}>
+            <Text style={styles.name}>{name}</Text>
+            <Text style={styles.status}>{certified ? 'Accepted' : 'Pending'}</Text>
+            <TouchableOpacity onPress={onShow}>
                 <Text style={styles.showText}>Show</Text>
             </TouchableOpacity>
             <View style={styles.divider} />
