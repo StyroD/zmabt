@@ -32,7 +32,10 @@ export function initSocket(httpServer: HttpServer): SocketServer {
   return io
 }
 
-// Called by the REST route after saving to DB
 export function emitNewMessage(receiverId: string, message: object) {
   io?.to(`user:${receiverId}`).emit('new_message', message)
+}
+
+export function emitNotification(userId: string, payload: object) {
+  io?.to(`user:${userId}`).emit('notification', payload)
 }

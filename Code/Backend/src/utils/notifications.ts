@@ -1,6 +1,7 @@
 import Expo, { ExpoPushMessage } from 'expo-server-sdk'
 import pool from '../config/db'
 import { v4 as uuidv4 } from 'uuid'
+import { emitNotification } from '../socket'
 
 const expo = new Expo()
 
@@ -28,7 +29,9 @@ export const sendNotification = async ({
      VALUES ($1, $2, $3, $4, $5, $6, $7, false, NOW())`,
     [uuidv4(), userId, type, title, body, referenceId, referenceType]
   )
-  //instead of fcm token using expo push token
+
+  emitNotification(userId, { type, title, body, referenceId, referenceType, ...extraData })
+
   const tokenResult = await pool.query(
     'SELECT fcm_token FROM users WHERE id = $1',
     [userId]
