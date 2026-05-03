@@ -7,13 +7,9 @@ import { useColors } from '@/contexts/ThemeContext'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
 import { CertificateRow } from '@/components/Profile/CertificateRow'
-import { getUserById } from '@/api/endpoints/users'
+import { getUserById, getAvatarUrl } from '@/api/endpoints/users'
 import * as SecureStore from 'expo-secure-store'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useFocusEffect } from 'expo-router'
-import { useCallback } from 'react'
-import { getAvatarUrl } from '@/api/endpoints/users'
-import { Image } from 'react-native'
 
 export default function Profile() {
     const Colors = useColors()
@@ -43,7 +39,7 @@ export default function Profile() {
                 const stored = await SecureStore.getItemAsync('user')
                 const storedUser = stored ? JSON.parse(stored) : null
                 if (!active) return
-                setRole(storedUser?.role ?? null)
+                setViewerRole(storedUser?.role ?? null)
 
                 const idToLoad = paramUserId ?? storedUser?.id
                 if (idToLoad) {
@@ -69,30 +65,6 @@ export default function Profile() {
         load()
         return () => { active = false }
     }, [paramUserId]))
-    useFocusEffect(
-        useCallback(() => {
-            let active = true
-            const load = async () => {
-                try {
-                    const stored = await SecureStore.getItemAsync('user')
-                    const storedUser = stored ? JSON.parse(stored) : null
-                    if (active) setViewerRole(storedUser?.role ?? null)
-
-                    const idToLoad = paramUserId ?? storedUser?.id
-                    if (idToLoad) {
-                        const res = await getUserById(idToLoad)
-                        if (active) setUser(res.data)
-                    }
-                } catch (err) {
-                    console.error(err)
-                } finally {
-                    if (active) setLoading(false)
-                }
-            }
-            load()
-            return () => { active = false }
-        }, [paramUserId])
-    )
 
     const handleLogout = async () => {
         await SecureStore.deleteItemAsync('token')
@@ -207,14 +179,12 @@ export default function Profile() {
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 <View style={styles.avatarSection}>
-                   {avatarUri
+                    {avatarUri
                         ? <Image
                             source={{ uri: avatarUri }}
                             style={{ width: 90, height: 90, borderRadius: 45 }}
                             onError={(e) => console.log('avatar image error:', e.nativeEvent.error)}
                         />
-                    {user.avatar
-                        ? <Image source={{ uri: `data:${user.avatar_mime_type ?? 'image/jpeg'};base64,${user.avatar}` }} style={{ width: 90, height: 90, borderRadius: 45 }} />
                         : <Ionicons name="person-circle" size={90} color={Colors.border} />
                     }
                     <Text style={styles.fullName}>
@@ -271,6 +241,7 @@ export default function Profile() {
                                     </>
                                 ) : null}
                             </>
+                        )}
                     </>
                 )}
 

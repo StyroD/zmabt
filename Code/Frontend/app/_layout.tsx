@@ -1,5 +1,5 @@
-import { Stack, Redirect, router } from 'expo-router'
-import { useState, useEffect, useRef } from 'react'
+import { Stack, router } from 'expo-router'
+import { useState, useEffect } from 'react'
 import { View, ActivityIndicator, Text, StyleSheet, Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -17,24 +17,13 @@ import NavigationBar from 'expo-navigation-bar'
 
 
 
-try {
-    Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-            shouldShowAlert: true,
-            shouldPlaySound: true,
-            shouldSetBadge: true,
-            shouldShowBanner: true,
-            shouldShowList: true,
-        }),
-    })
-} catch { /* not supported in Expo Go */ }
-// Show notifications as banners when the app is in the foreground
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
-        shouldShowBanner: true,
-        shouldShowList: true,
+        shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
     }),
 })
 
@@ -77,9 +66,6 @@ async function registerPushToken() {
 
     if (status !== 'granted') return
 
-    const tokenData = await Notifications.getExpoPushTokenAsync().catch(() => null)
-    if (!tokenData) return
-    await updatePushToken(userId, tokenData.data).catch(() => {})
     try {
         const tokenData = await Notifications.getExpoPushTokenAsync()
         await updatePushToken(userId, tokenData.data).catch(() => {})
@@ -105,8 +91,6 @@ function OfflineBanner() {
 function AppContent() {
     const [isLoading, setLoading] = useState(true)
     const [isLoggedIn, setLoggedIn] = useState<boolean | null>(null)
-
-    const responseListener = useRef<Notifications.EventSubscription | null>(null)
 
     useEffect(() => {
         let mounted = true
@@ -152,8 +136,6 @@ function AppContent() {
                 const route = getRouteFromNotificationData(data)
                 router.push(route as any)
             })
-
-        responseListener.current = subscription
 
         return () => {
             mounted = false
