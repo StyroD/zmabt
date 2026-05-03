@@ -9,6 +9,7 @@ import { router } from 'expo-router'
 import { getAllWorkers } from '@/api/endpoints/workers'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { cacheWorkers, getCachedWorkers } from '@/utils/db'
+import * as SecureStore from 'expo-secure-store'
 
 export default function Workers() {
   const Colors = useColors()
@@ -22,7 +23,9 @@ export default function Workers() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await getAllWorkers()
+        const userRaw = await SecureStore.getItemAsync('user')
+        const user = userRaw ? JSON.parse(userRaw) : null
+        const res = await getAllWorkers(user?.role === 'manager' ? user.id : undefined)
         setWorkers(res.data)
         setError(false)
         await cacheWorkers(res.data)

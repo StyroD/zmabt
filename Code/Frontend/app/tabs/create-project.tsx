@@ -1,10 +1,10 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Alert, Keyboard, ActivityIndicator } from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import MapView, { Marker } from 'react-native-maps'
-import { router, useLocalSearchParams } from 'expo-router'
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { Ionicons } from '@expo/vector-icons'
 import { createProject, updateProject, getProjectById } from '@/api/endpoints/projects'
@@ -28,6 +28,7 @@ export default function CreateProject() {
     const { projectId } = useLocalSearchParams<{ projectId?: string }>()
     const isEdit = !!projectId
 
+    const scrollRef = useRef<ScrollView>(null)
     const [loading, setLoading] = useState(isEdit)
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
@@ -44,6 +45,25 @@ export default function CreateProject() {
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [submitting, setSubmitting] = useState(false)
     const { isOnline } = useNetwork()
+
+    useFocusEffect(useCallback(() => {
+        if (!isEdit) {
+            setTitle('')
+            setDescription('')
+            setDeadline(null)
+            setShowDatePicker(false)
+            setStatus('in_progress')
+            setAddress('')
+            setLat(null)
+            setLng(null)
+            setShowMap(false)
+            setClientName('')
+            setClientPhone('')
+            setClientEmail('')
+            setErrors({})
+            scrollRef.current?.scrollTo({ y: 0, animated: false })
+        }
+    }, [isEdit]))
 
     useEffect(() => {
         if (!isEdit) return
@@ -105,7 +125,7 @@ export default function CreateProject() {
 
             if (isEdit) {
                 await updateProject(projectId, payload)
-                router.back()
+                router.replace(`/tabs/projectDetail_manager?id=${projectId}` as any)
             } else {
                 const managerId = await SecureStore.getItemAsync('userId')
                 if (!managerId) { Alert.alert('Error', 'Could not determine manager'); return }
@@ -118,8 +138,8 @@ export default function CreateProject() {
                 }
 
                 try {
-                    await createProject({ manager_id: managerId, ...payload })
-                    router.back()
+                    const res = await createProject({ manager_id: managerId, ...payload })
+                    router.replace(`/tabs/projectDetail_manager?id=${res.data.id}`)
                 } catch (err: any) {
                     if (err?.message === 'Network Error' || err?.code === 'ECONNABORTED') {
                         await addToQueue('PROJECT_CREATE', { manager_id: managerId, ...payload })
@@ -234,8 +254,8 @@ export default function CreateProject() {
     }
 
     return (
-        <ScreenWrapper title={isEdit ? 'Edit project' : 'New project'} backRoute={isEdit ? undefined : '/tabs/projectsList'}>
-            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScreenWrapper title={isEdit ? 'Edit project' : 'New project'} backRoute={isEdit ? `/tabs/projectDetail_manager?id=${projectId}` : '/tabs/projectsList'}>
+            <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
                 <Text style={styles.sectionLabel}>Project info</Text>
 

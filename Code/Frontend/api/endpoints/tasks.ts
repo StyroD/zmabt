@@ -1,6 +1,7 @@
 import client from "../client"
 
 export const getTasks = () => client.get('/tasks')
+export const getTaskById = (id: string) => client.get(`/tasks/${id}`)
 export const getTasksByProjectId = (projectId: string) => client.get(`/tasks/project/${projectId}`)
 export const getTasksByWorkerId = (workerId: string) => client.get(`/tasks/worker/${workerId}`)
 

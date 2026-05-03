@@ -49,11 +49,7 @@ export function ScreenWrapper({ title, children, backRoute, rightElement }: Prop
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
     >
       <View style={styles.header}>
-        {backRoute ? (
-          <BackArrow onBackButton={() => router.push(backRoute as any)} />
-        ) : (
-          <View style={styles.placeholder} />
-        )}
+        <BackArrow onBackButton={() => backRoute ? router.push(backRoute as any) : router.back()} />
         <Text style={styles.title}>{title}</Text>
         <View style={styles.placeholder}>
           {rightElement}

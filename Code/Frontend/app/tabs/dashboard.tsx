@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useColors } from '@/contexts/ThemeContext'
@@ -7,13 +7,16 @@ import { getManagerDashboard, getWorkerDashboard } from '@/api/endpoints/dashboa
 import { getNotifications, markNotificationAsRead } from '@/api/endpoints/notifications'
 import { router } from 'expo-router'
 import * as SecureStore from 'expo-secure-store'
+import { getSocket } from '@/api/socket'
 import { logScreenView } from '@/utils/firebase'
 import { useFocusEffect } from 'expo-router'
-import { useCallback } from 'react'
+
+import { statsRefreshSignal } from '@/utils/statsRefreshSignal'
 
 export default function Dashboard() {
   const Colors = useColors()
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const currentUserRef = useRef<any>(null)
   const [stats, setStats] = useState<any>(null)
   const [notifications, setNotifications] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -24,6 +27,7 @@ export default function Dashboard() {
       setLoading(true)
       try {
         const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
+        currentUserRef.current = user
         setCurrentUser(user)
 
         const dashFn = user.role === 'manager' ? getManagerDashboard : getWorkerDashboard
@@ -43,6 +47,47 @@ export default function Dashboard() {
     load()
   }, [])
 )
+
+  useEffect(() => {
+    if (!currentUser?.id) return
+    let mounted = true
+    const dashFn = currentUser.role === 'manager' ? getManagerDashboard : getWorkerDashboard
+    let socketRef: any = null
+    let handler: any = null
+
+    getSocket().then(socket => {
+      if (!mounted) return
+      socketRef = socket
+      handler = (payload: any) => {
+        if (!mounted) return
+        dashFn(currentUser.id)
+          .then(res => { if (mounted) setStats(res.data) })
+          .catch(() => {})
+        if (payload.type !== 'message') {
+          getNotifications(currentUser.id)
+            .then(res => { if (mounted) setNotifications(res.data.slice(0, 5)) })
+            .catch(() => {})
+        }
+      }
+      socket.on('notification', handler)
+    })
+
+    return () => {
+      mounted = false
+      if (socketRef && handler) socketRef.off('notification', handler)
+    }
+  }, [currentUser?.id, currentUser?.role])
+
+  useEffect(() => {
+    return statsRefreshSignal.subscribe(() => {
+      const u = currentUserRef.current
+      if (!u?.id) return
+      const dashFn = u.role === 'manager' ? getManagerDashboard : getWorkerDashboard
+      dashFn(u.id)
+        .then(res => setStats(res.data))
+        .catch(() => {})
+    })
+  }, [])
 
   const handleMarkRead = (id: string) => {
     markNotificationAsRead(id).catch(err => console.error(err))

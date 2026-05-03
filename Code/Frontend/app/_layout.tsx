@@ -1,6 +1,6 @@
 import { Stack, router } from 'expo-router'
-import { useState, useEffect } from 'react'
-import { View, ActivityIndicator, Text, StyleSheet, Platform } from 'react-native'
+import { useState, useEffect, useRef } from 'react'
+import { View, ActivityIndicator, Text, StyleSheet, Platform, Animated } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { ThemeProvider } from '@/contexts/ThemeContext'
@@ -15,6 +15,7 @@ import * as NavigationBar from 'expo-navigation-bar'
 import { getConversations } from "@/api/endpoints/messages"
 import { getSocket } from "@/api/socket"
 import { unreadSignal } from '@/utils/unreadSignal'
+import { activeChatSignal } from '@/utils/activeChatSignal'
 
 try {
     Notifications.setNotificationHandler({
@@ -44,9 +45,13 @@ function getRouteFromNotificationData(data: Record<string, any>): string {
             return '/tabs/workers'
         case 'certificate_reviewed':
             return '/tabs/certificate-list'
+        case 'worker_assigned':
+            return projectId
+                ? `/tabs/projectDetail_worker?id=${projectId}`
+                : '/tabs/projectsList'
         case 'message':
-            return senderId && senderName
-                ? `/chatDetail?userId=${senderId}&name=${encodeURIComponent(senderName)}`
+            return senderId
+                ? `/chatDetail?userId=${senderId}&name=${encodeURIComponent(senderName ?? '')}`
                 : '/tabs/chat'
         default:
             return '/tabs/dashboard'
@@ -92,15 +97,55 @@ async function registerPushToken() {
 
 function OfflineBanner() {
     const { isOnline, pendingCount } = useNetwork()
-    if (isOnline) return null
+    const [phase, setPhase] = useState<'hidden' | 'offline' | 'back-online'>('hidden')
+    const slideAnim = useRef(new Animated.Value(-60)).current
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const prevOnline = useRef<boolean | null>(null)
+
+    useEffect(() => {
+        if (timerRef.current) clearTimeout(timerRef.current)
+
+        if (prevOnline.current === null) {
+            prevOnline.current = isOnline
+            if (!isOnline) {
+                setPhase('offline')
+                Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true }).start()
+            }
+            return
+        }
+
+        if (prevOnline.current === isOnline) return
+        prevOnline.current = isOnline
+
+        if (!isOnline) {
+            setPhase('offline')
+            Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true }).start()
+        } else {
+            setPhase('back-online')
+            Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true }).start()
+            timerRef.current = setTimeout(() => {
+                Animated.timing(slideAnim, { toValue: -60, duration: 300, useNativeDriver: true }).start(() => {
+                    setPhase('hidden')
+                })
+            }, 2000)
+        }
+
+        return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+    }, [isOnline])
+
+    if (phase === 'hidden') return null
+
+    const isBackOnline = phase === 'back-online'
     return (
-        <View style={styles.banner}>
+        <Animated.View style={[styles.banner, isBackOnline ? styles.bannerOnline : styles.bannerOffline, { transform: [{ translateY: slideAnim }] }]}>
             <Text style={styles.bannerText}>
-                {pendingCount > 0
-                    ? `Offline — ${pendingCount} change${pendingCount > 1 ? 's' : ''} queued`
-                    : 'No internet connection'}
+                {isBackOnline
+                    ? 'Back online'
+                    : pendingCount > 0
+                        ? `Offline — ${pendingCount} change${pendingCount > 1 ? 's' : ''} queued`
+                        : 'No internet connection'}
             </Text>
-        </View>
+        </Animated.View>
     )
 }
 
@@ -181,7 +226,7 @@ function AppContent() {
                 }
 
                 globalMessageHandler = (msg: any) => {
-                    if (msg.sender_id !== uid) {
+                    if (msg.sender_id !== uid && msg.sender_id !== activeChatSignal.get()) {
                         unreadSignal.set(unreadSignal.get() + 1);
                         scheduleLocalNotification(
                             msg.sender_name ?? 'New Message',
@@ -249,10 +294,15 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
     banner: {
-        backgroundColor: '#B91C1C',
         paddingVertical: 8,
         paddingHorizontal: 16,
         alignItems: 'center',
+    },
+    bannerOffline: {
+        backgroundColor: '#B91C1C',
+    },
+    bannerOnline: {
+        backgroundColor: '#166534',
     },
     bannerText: {
         color: '#fff',

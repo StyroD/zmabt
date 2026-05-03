@@ -1,14 +1,15 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
 import MapView, { Marker, Callout, Region } from 'react-native-maps'
 import { useColors } from '@/contexts/ThemeContext'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import * as SecureStore from 'expo-secure-store'
 import * as Location from 'expo-location'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getProjectByManagerId, getProjectsByWorkerId } from '@/api/endpoints/projects'
 import { getProjectWorkerLocations, updateWorkerLocation } from '@/api/endpoints/locations'
-import { useLocalSearchParams } from 'expo-router'
+import { useLocalSearchParams, useFocusEffect } from 'expo-router'
+import { getSocket } from '@/api/socket'
 
 const BRATISLAVA: Region = {
   latitude: 48.1486,
@@ -72,18 +73,22 @@ export default function MapScreen() {
       }
   }
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
+    let active = true
     const load = async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync()
+        if (!active) return
         setLocationPermission(status === 'granted')
 
         const stored = await SecureStore.getItemAsync('user')
         const u = stored ? JSON.parse(stored) : null
+        if (!active) return
         setUser(u)
         const res = u?.role === 'manager'
           ? await getProjectByManagerId(u.id)
           : await getProjectsByWorkerId(u.id)
+        if (!active) return
         setProjects(res.data)
         if (res.data.length > 0) setSelected(res.data[0])
         if (paramLat && paramLng) {
@@ -104,27 +109,58 @@ export default function MapScreen() {
       } catch (err) {
         console.error(err)
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     }
     load()
-  }, [])
+    return () => { active = false }
+  }, [paramLat, paramLng, paramTitle]))
 
   useEffect(() => {
     if (!selected || !user) return
 
+    if (selected.lat && selected.lng) {
+        mapRef.current?.animateToRegion({
+            latitude: selected.lat,
+            longitude: selected.lng,
+            latitudeDelta: 0.02,
+            longitudeDelta: 0.02,
+        }, 600)
+    }
+
     if (user.role === 'manager') {
-        const fetch = async () => {
-            try {
-                const res = await getProjectWorkerLocations(selected.id)
-                console.log('worker locations:', res.data)
-                setWorkerLocations(res.data)
-            } catch (err) {
-                console.error('fetch locations failed:', err)
+        let mounted = true
+        const projectId = selected.id
+
+        getProjectWorkerLocations(projectId)
+            .then(res => { if (mounted) setWorkerLocations(res.data) })
+            .catch(err => console.error('fetch locations failed:', err))
+
+        getSocket().then(socket => {
+            if (!mounted) return
+
+            const handler = (loc: any) => {
+                if (loc.project_id !== projectId) return
+                setWorkerLocations(prev => {
+                    const idx = prev.findIndex(w => w.worker_id === loc.worker_id)
+                    if (idx >= 0) {
+                        const next = [...prev]
+                        next[idx] = { ...next[idx], ...loc }
+                        return next
+                    }
+                    return [...prev, loc]
+                })
             }
+            socket.on('worker_location_update', handler)
+            refreshRef.current = { socket, handler } as any
+        })
+
+        return () => {
+            mounted = false
+            const ref = refreshRef.current as any
+            if (ref?.socket) ref.socket.off('worker_location_update', ref.handler)
+            if (locationIntervalRef.current) clearInterval(locationIntervalRef.current)
         }
-        fetch()
-        refreshRef.current = setInterval(fetch, 30000)
     } else if (locationPermission) {
         const sendLocation = async () => {
             try {
@@ -148,17 +184,7 @@ export default function MapScreen() {
         locationIntervalRef.current = setInterval(sendLocation, 30000)
     }
 
-    if (selected.lat && selected.lng) {
-        mapRef.current?.animateToRegion({
-            latitude: selected.lat,
-            longitude: selected.lng,
-            latitudeDelta: 0.02,
-            longitudeDelta: 0.02,
-        }, 600)
-    }
-
     return () => {
-        if (refreshRef.current) clearInterval(refreshRef.current)
         if (locationIntervalRef.current) clearInterval(locationIntervalRef.current)
     }
 }, [selected, user, locationPermission])
@@ -375,7 +401,7 @@ export default function MapScreen() {
 
         {isManager && workerLocations.map(wl => (
           <Marker
-            key={wl.id}
+            key={wl.worker_id}
             coordinate={{ latitude: wl.lat, longitude: wl.lng }}
           >
             <View style={[styles.workerPin, { backgroundColor: wl.is_online ? Colors.online : Colors.offline }]}>

@@ -11,6 +11,7 @@ import type { Socket } from "socket.io-client"
 import { cacheMessages, getCachedMessages, appendMessage } from '@/utils/db'
 import { useNavigation } from "@react-navigation/native"
 import { unreadSignal } from "@/utils/unreadSignal"
+import { activeChatSignal } from "@/utils/activeChatSignal"
 
 type Message = {
   id: string
@@ -34,7 +35,9 @@ export default function ChatDetail() {
   const initials = name?.split(' ').map(n => n[0]).join('') ?? '?'
 
  useEffect(() => {
-    unreadSignal.set(0); 
+    activeChatSignal.set(userId)
+    unreadSignal.set(0)
+    return () => activeChatSignal.set('')
   }, [userId]);
 
  useEffect(() => {
@@ -47,7 +50,6 @@ export default function ChatDetail() {
       if (msg.sender_id !== userId) return;
       appendMessage(msg);
       setMessages(prev => [...prev, msg]);
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
     };
 
     const setup = async () => {
@@ -93,8 +95,6 @@ export default function ChatDetail() {
     };
   }, [userId]);
 
-  const scrollToBottom = () =>
-    setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50)
 
   const sendMessage = async () => {
     const text = input.trim()
@@ -109,7 +109,6 @@ export default function ChatDetail() {
     }
     setMessages(prev => [...prev, optimistic])
     setInput('')
-    scrollToBottom()
 
     postMessage(userId, text)
         .then(res => {
@@ -262,7 +261,8 @@ export default function ChatDetail() {
 
         <FlatList
           ref={listRef}
-          data={messages}
+          data={[...messages].reverse()}
+          inverted
           keyExtractor={item => item.id}
           renderItem={({ item }) => {
             const isOwn = item.sender_id === currentUserId
@@ -278,7 +278,6 @@ export default function ChatDetail() {
           }}
           contentContainerStyle={styles.messagesList}
           showsVerticalScrollIndicator={false}
-          onLayout={() => listRef.current?.scrollToEnd({ animated: false })}
         />
 
         <View style={styles.inputRow}>

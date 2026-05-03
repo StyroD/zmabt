@@ -6,6 +6,7 @@ import { updateTaskStatus, deleteTask } from "@/api/endpoints/tasks"
 import { useNetwork } from "@/contexts/NetworkContext"
 import { addToQueue } from "@/utils/offlineQueue"
 import { logTaskDone, recordError } from "@/utils/firebase"
+import { router } from "expo-router"
 
 const formatDate = (dateString: string) => {
   if (!dateString) return '—'
@@ -190,6 +191,21 @@ export function TaskBox({ task, onStatusChange, onDelete }: { task: any; onStatu
       color: Colors.danger,
       fontWeight: '500',
     },
+    editBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: 10,
+      padding: 10,
+      marginTop: 4,
+    },
+    editBtnText: {
+      fontSize: 14,
+      color: Colors.textPrimary,
+    },
   })
 
   if (deleted) return null
@@ -250,6 +266,16 @@ export function TaskBox({ task, onStatusChange, onDelete }: { task: any; onStatu
               <Text style={styles.completedText}>Completed</Text>
             </View>
           )}
+
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={() => router.push(
+              `/tabs/create-task?taskId=${task.id}&projectId=${task.project_id}&projectTitle=${encodeURIComponent(task.project_title ?? '')}` as any
+            )}
+          >
+            <Ionicons name="pencil-outline" size={16} color={Colors.textPrimary} />
+            <Text style={styles.editBtnText}>Edit task</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
             <Ionicons name="trash-outline" size={16} color={Colors.danger} />

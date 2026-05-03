@@ -160,7 +160,7 @@ export default function TaskList() {
   return (
     <ScreenWrapper
       title={projectTitle as string ?? 'Project'}
-      backRoute='/tabs/projectsList'
+      backRoute={`/tabs/projectDetail_manager?id=${projectId}`}
       rightElement={
         <TouchableOpacity onPress={() => router.push(`/tabs/create-task?projectId=${projectId}&projectTitle=${projectTitle}`)} accessibilityRole="button" accessibilityLabel="Add new task">
           <AntDesign name="plus" size={22} color={Colors.textPrimary} accessible={false} />

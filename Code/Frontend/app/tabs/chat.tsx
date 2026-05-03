@@ -14,6 +14,7 @@ import { getSocket } from "@/api/socket"
 import * as SecureStore from "expo-secure-store"
 import type { Socket } from "socket.io-client"
 import { unreadSignal } from "@/utils/unreadSignal"
+import { activeChatSignal } from "@/utils/activeChatSignal"
 
 type Conversation = {
   other_user_id: string
@@ -321,6 +322,12 @@ export default function ChatList() {
   const currentUserIdRef = useRef('')
   const socketRef = useRef<Socket | null>(null)
   const readIdsRef = useRef<Set<string>>(new Set())
+  const markReadRef = useRef<(id: string) => void>(() => {})
+
+  // Register with activeChatSignal so opening a chat from a notification marks it read here too
+  useEffect(() => {
+    return activeChatSignal.registerMarkRead(userId => markReadRef.current(userId))
+  }, [])
 
   // Updates global unread signal and tab badge
   useEffect(() => {
@@ -381,7 +388,7 @@ export default function ChatList() {
         return [updated, ...prev.filter(c => c.other_user_id !== otherUserId)]
       })
       
-      if (msg.sender_id !== uid) {
+      if (msg.sender_id !== uid && msg.sender_id !== activeChatSignal.get()) {
         readIdsRef.current.delete(otherUserId)
         setUnreadIds(prev => new Set(prev).add(otherUserId))
       }
@@ -408,6 +415,7 @@ export default function ChatList() {
       return next
     })
   }
+  markReadRef.current = markRead
 
   const styles = StyleSheet.create({
     list: { paddingTop: 12 },

@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
 import { useEffect, useState, useRef } from 'react'
-import { getProjectById, deleteProject, assignWorkerToProject } from '@/api/endpoints/projects'
+import { getProjectById, deleteProject, assignWorkerToProject, removeWorkerFromProject } from '@/api/endpoints/projects'
 import { getProjectWorkers, getAllWorkers } from '@/api/endpoints/workers'
 import { getProjectPhotos, uploadProjectPhoto } from '@/api/endpoints/uploads'
 import { getTasksByProjectId } from '@/api/endpoints/tasks'
@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import * as ImagePicker from 'expo-image-picker'
 import { useFocusEffect } from 'expo-router'
 import { useCallback } from 'react'
+import { statsRefreshSignal } from '@/utils/statsRefreshSignal'
 
 
 const API_BASE = (client.defaults.baseURL ?? '').replace(/\/$/, '')
@@ -59,12 +60,32 @@ export default function ProjectDetail() {
   ])
 }
 
+  const handleRemoveWorker = (workerId: string, workerName: string) => {
+    Alert.alert('Remove worker', `Remove ${workerName} from this project?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove', style: 'destructive', onPress: async () => {
+          try {
+            await removeWorkerFromProject(currentProject.id, workerId)
+            setWorkers(prev => prev.filter(w => w.id !== workerId))
+            statsRefreshSignal.emit()
+          } catch (err: any) {
+            Alert.alert('Error', err?.response?.data?.error ?? 'Could not remove worker')
+          }
+        }
+      }
+    ])
+  }
+
   const handleOpenAssign = async () => {
     if (allWorkers.length === 0) {
       try {
         const res = await getAllWorkers(currentProject.manager_id)
         setAllWorkers(res.data)
-      } catch { /* ignore */ }
+      } catch (err: any) {
+        Alert.alert('Error', err?.response?.data?.error ?? 'Could not load workers')
+        return
+      }
     }
     setAssignSearch('')
     setSelectedWorkers(new Set())
@@ -374,7 +395,13 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
       padding: 20,
-      maxHeight: '80%',
+      paddingBottom: Math.max(insets.bottom, 16) + 8,
+      maxHeight: '85%',
+      flex: 0,
+    },
+    modalWorkerList: {
+      flexGrow: 0,
+      maxHeight: 320,
     },
     modalHeader: {
       flexDirection: 'row',
@@ -533,18 +560,33 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
         </View>
 
         <View style={styles.sectionDivider} />
-        <Text style={styles.sectionLabel}>Assigned workers</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0 }}>
+          <Text style={styles.sectionLabel}>Assigned workers</Text>
+          <TouchableOpacity
+            onPress={handleOpenAssign}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 2, paddingHorizontal: 6 }}
+            accessibilityRole="button"
+            accessibilityLabel="Assign workers"
+          >
+            <Ionicons name="person-add-outline" size={16} color={Colors.primary} accessible={false} />
+            <Text style={{ fontSize: 13, color: Colors.primary }}>Assign</Text>
+          </TouchableOpacity>
+        </View>
         {workers.map(worker => (
-          <TouchableOpacity key={worker.id} style={styles.workerBox} onPress={() => router.push(`/tabs/profile?userId=${worker.id}&projectId=${currentProject.id}&mode=project`)} accessibilityRole="button" accessibilityLabel={`${worker.first_name} ${worker.last_name}. View profile`}>
-            <Ionicons name="person-outline" size={20} color={Colors.textSecondary} accessible={false} />
-            <Text style={styles.workerName} accessible={false}>
-              {worker.first_name} {worker.last_name}
-            </Text>
+          <View key={worker.id} style={styles.workerBox}>
+            <TouchableOpacity style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }} onPress={() => router.push(`/tabs/profile?userId=${worker.id}&projectId=${currentProject.id}&mode=project`)} accessibilityRole="button" accessibilityLabel={`${worker.first_name} ${worker.last_name}. View profile`}>
+              <Ionicons name="person-outline" size={20} color={Colors.textSecondary} accessible={false} />
+              <Text style={styles.workerName} accessible={false}>
+                {worker.first_name} {worker.last_name}
+              </Text>
+            </TouchableOpacity>
             <View style={styles.workerRight} accessible={false}>
               <View style={[styles.onlineDot, { backgroundColor: Colors.offline }]} accessible={false} />
-              <AntDesign name="right" size={14} color={Colors.textSecondary} accessible={false} />
+              <TouchableOpacity onPress={() => handleRemoveWorker(worker.id, `${worker.first_name} ${worker.last_name}`)} accessibilityRole="button" accessibilityLabel={`Remove ${worker.first_name} ${worker.last_name} from project`}>
+                <Ionicons name="person-remove-outline" size={18} color={Colors.danger} accessible={false} />
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
+          </View>
         ))}
 
         <View style={styles.sectionDivider} />
@@ -670,7 +712,7 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
               </ScrollView>
             )}
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.modalWorkerList}>
               {visibleWorkers.map(w => {
                 const alreadyAssigned = workers.some(pw => pw.id === w.id)
                 const selected = selectedWorkers.has(w.id)

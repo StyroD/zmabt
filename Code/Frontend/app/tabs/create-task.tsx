@@ -7,7 +7,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { Ionicons } from '@expo/vector-icons'
 import { getProjectWorkers } from '@/api/endpoints/workers'
-import { createTask, assignWorkersToTask } from '@/api/endpoints/tasks'
+import { createTask, updateTask, getTaskById, assignWorkersToTask } from '@/api/endpoints/tasks'
 import { getCategories } from '@/api/endpoints/categories'
 import { useNetwork } from '@/contexts/NetworkContext'
 import { addToQueue } from '@/utils/offlineQueue'
@@ -21,7 +21,8 @@ const priorityLabels: Record<string, string> = { low: 'Low', medium: 'Medium', h
 export default function CreateTask() {
     const Colors = useColors()
     const insets = useSafeAreaInsets()
-    const { projectId, projectTitle } = useLocalSearchParams()
+    const { projectId, projectTitle, taskId } = useLocalSearchParams<{ projectId: string; projectTitle: string; taskId?: string }>()
+    const isEdit = !!taskId
     const [workers, setWorkers] = useState<any[]>([])
     const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
     const [title, setTitle] = useState('')
@@ -38,7 +39,7 @@ export default function CreateTask() {
     const { isOnline } = useNetwork()
 
     const priorityColors = {
-        low: { bg: Colors.neutralBg, border: Colors.neutralBorder, text: Colors.neutral },
+        low: { bg: Colors.surfaceElevated, border: Colors.textSecondary, text: Colors.textPrimary },
         medium: { bg: Colors.warningBg, border: Colors.warningBorder, text: Colors.warning },
         high: { bg: Colors.dangerBg, border: Colors.dangerBorder, text: Colors.danger },
     }
@@ -58,63 +59,40 @@ export default function CreateTask() {
     const handleSubmit = async () => {
         if (!validate()) return
         setSubmitting(true)
+        const payload = {
+            title,
+            description,
+            category_id: categoryId,
+            priority,
+            deadline: deadline!.toISOString().split('T')[0],
+        }
         try {
-            if (!isOnline) {
-                await addToQueue('TASK_CREATE', {
-                    project_id: projectId as string,
-                    title,
-                    description,
-                    category_id: categoryId,
-                    priority,
-                    deadline: deadline!.toISOString().split('T')[0],
-                    workerIds: assignedWorkers,
-                })
-                logTaskCreated(projectId as string).catch(() => {})
-                    const resetForm = () => {
-                    setTitle('')
-                    setDescription('')
-                    setCategoryId('')
-                    setCategoryName('')
-                    setDeadline(null)
-                    setPriority('medium')
-                    setAssignedWorkers([])
-                    setErrors({})
-                }
-
-                resetForm()
-                Alert.alert('Saved offline', 'Task will be created when you reconnect.')
-                router.replace(`/tabs/task-list?projectId=${projectId}&projectTitle=${projectTitle}`)
+            if (isEdit && taskId) {
+                await updateTask(taskId, payload)
+                router.replace(`/tabs/task-list?projectId=${projectId}&projectTitle=${projectTitle}` as any)
                 return
             }
-            const task = await createTask({
-                project_id: projectId as string,
-                title,
-                description,
-                category_id: categoryId,
-                priority,
-                deadline: deadline!.toISOString().split('T')[0],
-            })
+
+            if (!isOnline) {
+                await addToQueue('TASK_CREATE', {
+                    project_id: projectId,
+                    ...payload,
+                    workerIds: assignedWorkers,
+                })
+                logTaskCreated(projectId).catch(() => {})
+                Alert.alert('Saved offline', 'Task will be created when you reconnect.')
+                router.replace(`/tabs/task-list?projectId=${projectId}&projectTitle=${projectTitle}` as any)
+                return
+            }
+
+            const task = await createTask({ project_id: projectId, ...payload })
             if (assignedWorkers.length > 0) {
                 await assignWorkersToTask(task.data.id, assignedWorkers)
             }
-            logTaskCreated(projectId as string).catch(() => {})
-            const resetForm = () => {
-                setTitle('')
-                setDescription('')
-                setCategoryId('')
-                setCategoryName('')
-                setDeadline(null)
-                setPriority('medium')
-                setAssignedWorkers([])
-                setErrors({})
-            }
-
-            resetForm()
-            router.back()
-            logTaskCreated(projectId as string).catch(() => { })
-            router.replace(`/tabs/task-list?projectId=${projectId}&projectTitle=${projectTitle}`)
+            logTaskCreated(projectId).catch(() => {})
+            router.replace(`/tabs/task-list?projectId=${projectId}&projectTitle=${projectTitle}` as any)
         } catch (err: any) {
-            Alert.alert('Error', err?.response?.data?.error ?? 'Failed to create task')
+            Alert.alert('Error', err?.response?.data?.error ?? (isEdit ? 'Failed to update task' : 'Failed to create task'))
         } finally {
             setSubmitting(false)
         }
@@ -131,7 +109,7 @@ export default function CreateTask() {
         (categoryName === '' || (worker.certificates ?? []).includes(categoryName))
     )
 
-        useEffect(() => {
+    useEffect(() => {
         getCategories()
             .then(async res => {
                 setCategories(res.data)
@@ -149,6 +127,20 @@ export default function CreateTask() {
             .then(res => setWorkers(res.data))
             .catch(err => console.error(err))
     }, [projectId])
+
+    useEffect(() => {
+        if (!isEdit || !taskId) return
+        getTaskById(taskId)
+            .then(res => {
+                const t = res.data
+                setTitle(t.title ?? '')
+                setDescription(t.description ?? '')
+                setCategoryId(t.category_id ?? '')
+                setPriority(t.priority ?? 'medium')
+                if (t.deadline) setDeadline(new Date(t.deadline))
+            })
+            .catch(() => Alert.alert('Error', 'Could not load task'))
+    }, [isEdit, taskId])
 
     const styles = StyleSheet.create({
         breadcrumb: {
@@ -255,13 +247,13 @@ export default function CreateTask() {
     })
 
     return (
-        <ScreenWrapper title='New task' backRoute={`/tabs/projectDetail_manager?id=${projectId}`}>
+        <ScreenWrapper title={isEdit ? 'Edit task' : 'New task'} backRoute={`/tabs/task-list?projectId=${projectId}&projectTitle=${projectTitle}`}>
 
             <View style={styles.breadcrumb}>
                 <Ionicons name="folder-outline" size={12} color={Colors.textSecondary} />
                 <Text style={styles.breadcrumbText}>{projectTitle ?? 'Project'}</Text>
                 <Ionicons name="chevron-forward" size={10} color={Colors.textSecondary} />
-                <Text style={styles.breadcrumbCurrent}>New task</Text>
+                <Text style={styles.breadcrumbCurrent}>{isEdit ? 'Edit task' : 'New task'}</Text>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -418,7 +410,7 @@ export default function CreateTask() {
                     accessibilityRole="button"
                     accessibilityLabel={submitting ? 'Saving task' : 'Save task'}
                 >
-                    <Text style={styles.submitText}>{submitting ? 'Saving...' : 'Save task'}</Text>
+                    <Text style={styles.submitText}>{submitting ? (isEdit ? 'Updating...' : 'Saving...') : (isEdit ? 'Update task' : 'Save task')}</Text>
                 </TouchableOpacity>
 
                 <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
