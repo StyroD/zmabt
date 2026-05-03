@@ -5,7 +5,6 @@ import * as SecureStore from 'expo-secure-store'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { NetworkProvider, useNetwork } from '@/contexts/NetworkContext'
-import { darkColors } from '@/constants/themes'
 import * as Notifications from 'expo-notifications'
 import { updatePushToken } from '@/api/endpoints/users'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -114,7 +113,6 @@ function AppContent() {
         }
 
         checkToken()
-        registerPushToken()
 
         SecureStore.getItemAsync('userId').then(userId => {
             if (!userId) return
@@ -139,6 +137,8 @@ function AppContent() {
 
     useEffect(() => {
         if (!isLoggedIn) return;
+
+        registerPushToken()
 
         let socketRef: any = null;
         let isMounted = true;
