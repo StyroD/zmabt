@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { NetworkProvider, useNetwork } from '@/contexts/NetworkContext'
 import * as Notifications from 'expo-notifications'
+import Constants from 'expo-constants'
 import { updatePushToken } from '@/api/endpoints/users'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { setCrashlyticsUser } from '@/utils/firebase'
@@ -29,7 +30,7 @@ try {
 
 
 function getRouteFromNotificationData(data: Record<string, any>): string {
-    const { type, projectId } = data ?? {}
+    const { type, projectId, senderId, senderName } = data ?? {}
     switch (type) {
         case 'task_assigned':
             return projectId
@@ -43,9 +44,22 @@ function getRouteFromNotificationData(data: Record<string, any>): string {
             return '/tabs/workers'
         case 'certificate_reviewed':
             return '/tabs/certificate-list'
+        case 'message':
+            return senderId && senderName
+                ? `/chatDetail?userId=${senderId}&name=${encodeURIComponent(senderName)}`
+                : '/tabs/chat'
         default:
             return '/tabs/dashboard'
     }
+}
+
+async function scheduleLocalNotification(title: string, body: string, data: Record<string, any>) {
+    try {
+        await Notifications.scheduleNotificationAsync({
+            content: { title, body, data },
+            trigger: null,
+        })
+    } catch { /* not supported in Expo Go */ }
 }
 
 async function registerPushToken() {
@@ -67,7 +81,11 @@ async function registerPushToken() {
 
     if (status !== 'granted') return
 
-    const tokenData = await Notifications.getExpoPushTokenAsync().catch(() => null)
+    const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId
+    const tokenData = await Notifications.getExpoPushTokenAsync(
+        projectId ? { projectId } : undefined
+    ).catch(() => null)
     if (!tokenData) return
     await updatePushToken(userId, tokenData.data).catch(() => {})
 }
@@ -138,41 +156,47 @@ function AppContent() {
     useEffect(() => {
         if (!isLoggedIn) return;
 
+        Notifications.requestPermissionsAsync().catch(() => {})
         registerPushToken()
 
         let socketRef: any = null;
         let isMounted = true;
-        let globalMessageHandler: ((msg: any) => void) | null = null; // 1. Create a reference for the handler
+        let globalMessageHandler: ((msg: any) => void) | null = null;
+        let globalNotificationHandler: ((payload: any) => void) | null = null;
 
         const setupGlobalSocket = async () => {
             try {
                 const uid = await SecureStore.getItemAsync('userId');
                 const socket = await getSocket();
-                
+
                 if (!isMounted) return;
                 socketRef = socket;
 
                 try {
                     const res = await getConversations();
                     const unreadCount = res.data.filter((conv: any) => conv.sender_id !== uid).length;
-                    
-                    if (isMounted) {
-                        unreadSignal.set(unreadCount);
-                    }
+                    if (isMounted) unreadSignal.set(unreadCount);
                 } catch (apiErr) {
                     console.error("Could not fetch initial unread count:", apiErr);
                 }
 
-                // 2. Define the named function
                 globalMessageHandler = (msg: any) => {
                     if (msg.sender_id !== uid) {
-                        const currentCount = unreadSignal.get();
-                        unreadSignal.set(currentCount + 1);
+                        unreadSignal.set(unreadSignal.get() + 1);
+                        scheduleLocalNotification(
+                            msg.sender_name ?? 'New Message',
+                            msg.content,
+                            { type: 'message', senderId: msg.sender_id, senderName: msg.sender_name }
+                        );
                     }
                 };
 
-                // 3. Attach it
+                globalNotificationHandler = (payload: any) => {
+                    scheduleLocalNotification(payload.title, payload.body, payload);
+                };
+
                 socket.on('new_message', globalMessageHandler);
+                socket.on('notification', globalNotificationHandler);
             } catch (err) {
                 console.error("Global socket error:", err);
             }
@@ -182,9 +206,9 @@ function AppContent() {
 
         return () => {
             isMounted = false;
-            // 4. Safely detach ONLY the global handler
-            if (socketRef && globalMessageHandler) {
-                socketRef.off('new_message', globalMessageHandler);
+            if (socketRef) {
+                if (globalMessageHandler) socketRef.off('new_message', globalMessageHandler);
+                if (globalNotificationHandler) socketRef.off('notification', globalNotificationHandler);
             }
         };
     }, [isLoggedIn]);
