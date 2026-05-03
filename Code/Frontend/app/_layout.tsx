@@ -1,5 +1,5 @@
-import { Stack, Redirect, router } from 'expo-router'
-import { useState, useEffect, useRef } from 'react'
+import { Stack, router } from 'expo-router'
+import { useState, useEffect } from 'react'
 import { View, ActivityIndicator, Text, StyleSheet, Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -91,8 +91,6 @@ function AppContent() {
     const [isLoading, setLoading] = useState(true)
     const [isLoggedIn, setLoggedIn] = useState<boolean | null>(null)
 
-    const responseListener = useRef<Notifications.EventSubscription | null>(null)
-
     useEffect(() => {
         let mounted = true
 
@@ -132,8 +130,6 @@ function AppContent() {
                 const route = getRouteFromNotificationData(data)
                 router.push(route as any)
             })
-
-        responseListener.current = subscription
 
         return () => {
             mounted = false

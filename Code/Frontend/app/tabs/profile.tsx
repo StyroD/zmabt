@@ -7,7 +7,7 @@ import { useColors } from '@/contexts/ThemeContext'
 import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
 import { CertificateRow } from '@/components/Profile/CertificateRow'
-import { getUserById } from '@/api/endpoints/users'
+import { getUserById, getAvatarUrl } from '@/api/endpoints/users'
 import * as SecureStore from 'expo-secure-store'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getAvatarUrl } from '@/api/endpoints/users'
@@ -137,7 +137,7 @@ export default function Profile() {
             <ScrollView showsVerticalScrollIndicator={false}>
 
                 <View style={styles.avatarSection}>
-                    {user.has_avatar
+                    {avatarUri
                         ? <Image
                             source={{ uri: getAvatarUrl(user.id) }}
                             style={{ width: 90, height: 90, borderRadius: 45 }}
