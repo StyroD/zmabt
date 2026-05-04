@@ -1,4 +1,7 @@
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native"
+import {
+  View, Text, StyleSheet, FlatList, TextInput,
+  TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator
+} from "react-native"
 import { useColors } from "@/contexts/ThemeContext"
 import { useLocalSearchParams, router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
@@ -9,9 +12,9 @@ import { getSocket } from "@/api/socket"
 import * as SecureStore from "expo-secure-store"
 import type { Socket } from "socket.io-client"
 import { cacheMessages, getCachedMessages, appendMessage } from '@/utils/db'
-import { useNavigation } from "@react-navigation/native"
 import { unreadSignal } from "@/utils/unreadSignal"
 import { activeChatSignal } from "@/utils/activeChatSignal"
+import NetInfo from "@react-native-community/netinfo"
 
 type Message = {
   id: string
@@ -19,6 +22,7 @@ type Message = {
   receiver_id: string
   content: string
   sent_at: string
+  _error?: boolean
 }
 
 export default function ChatDetail() {
@@ -28,95 +32,122 @@ export default function ChatDetail() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState('')
+  const [isOnline, setIsOnline] = useState(true)
   const currentUserIdRef = useRef('')
   const listRef = useRef<FlatList>(null)
   const socketRef = useRef<Socket | null>(null)
 
   const initials = name?.split(' ').map(n => n[0]).join('') ?? '?'
 
- useEffect(() => {
+  useEffect(() => {
     activeChatSignal.set(userId)
     unreadSignal.set(0)
     return () => activeChatSignal.set('')
-  }, [userId]);
+  }, [userId])
 
- useEffect(() => {
-    let mounted = true;
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsOnline(state.isConnected === true && state.isInternetReachable !== false)
+    })
+    return () => unsubscribe()
+  }, [])
 
-    
+  useEffect(() => {
+    let mounted = true
+
     const handleNewMessage = (msg: Message) => {
-      if (!mounted) return;
-      if (msg.sender_id === currentUserIdRef.current) return;
-      if (msg.sender_id !== userId) return;
-      appendMessage(msg);
-      setMessages(prev => [...prev, msg]);
-    };
+      if (!mounted) return
+      if (msg.sender_id === currentUserIdRef.current) return
+      if (msg.sender_id !== userId) return
+      appendMessage(msg)
+      setMessages(prev => [...prev, msg])
+    }
 
     const setup = async () => {
       try {
         const [uid, socket] = await Promise.all([
           SecureStore.getItemAsync('userId'),
           getSocket(),
-        ]);
+        ])
 
-        if (!mounted) return;
+        if (!mounted) return
 
-        currentUserIdRef.current = uid ?? '';
-        setCurrentUserId(uid ?? '');
-        socketRef.current = socket;
+        currentUserIdRef.current = uid ?? ''
+        setCurrentUserId(uid ?? '')
+        socketRef.current = socket
 
-        // 2. Attach the named handler
-        socket.on('new_message', handleNewMessage);
+        socket.on('new_message', handleNewMessage)
 
         try {
-          const res = await getMessages(userId);
-          if (!mounted) return;
-          setMessages(res.data);
-          await cacheMessages(uid ?? '', userId, res.data);
+          const res = await getMessages(userId)
+          if (!mounted) return
+          setMessages(res.data)
+          await cacheMessages(uid ?? '', userId, res.data)
         } catch {
-          const cached = await getCachedMessages(uid ?? '', userId);
-          if (!mounted) return;
-          setMessages(cached);
+          const cached = await getCachedMessages(uid ?? '', userId)
+          if (!mounted) return
+          setMessages(cached)
         } finally {
-          if (mounted) setLoading(false);
+          if (mounted) setLoading(false)
         }
       } catch (err) {
-        console.error(err);
-        if (mounted) setLoading(false);
+        console.error(err)
+        if (mounted) setLoading(false)
       }
-    };
+    }
 
-    setup();
+    setup()
 
     return () => {
-      mounted = false;
-      // 3. Remove ONLY this specific handler when leaving ChatDetail
-      socketRef.current?.off('new_message', handleNewMessage);
-    };
-  }, [userId]);
+      mounted = false
+      socketRef.current?.off('new_message', handleNewMessage)
+    }
+  }, [userId])
 
+  const showSendError = () => {
+    const errMsg: Message = {
+      id: `err-${Date.now()}`,
+      sender_id: '__error__',
+      receiver_id: userId,
+      content: 'Internet unavailable. Please try again later.',
+      sent_at: new Date().toISOString(),
+      _error: true,
+    }
+    setMessages(prev => [...prev, errMsg])
+  }
 
   const sendMessage = async () => {
     const text = input.trim()
     if (!text) return
+    if (!isOnline) {
+      showSendError()
+      return
+    }
 
     const optimistic: Message = {
-        id: `tmp-${Date.now()}`,
-        sender_id: currentUserIdRef.current,
-        receiver_id: userId,
-        content: text,
-        sent_at: new Date().toISOString(),
+      id: `tmp-${Date.now()}`,
+      sender_id: currentUserIdRef.current,
+      receiver_id: userId,
+      content: text,
+      sent_at: new Date().toISOString(),
     }
+
     setMessages(prev => [...prev, optimistic])
     setInput('')
 
     postMessage(userId, text)
-        .then(res => {
-            appendMessage(res.data)
-            setMessages(prev => prev.map(m => m.id === optimistic.id ? res.data : m))
-        })
-        .catch(err => console.error('Failed to send:', err))
-}
+      .then(res => {
+        appendMessage(res.data)
+        setMessages(prev =>
+          prev.map(m => (m.id === optimistic.id ? res.data : m))
+        )
+      })
+      .catch(() => {
+        setMessages(prev => prev.filter(m => m.id !== optimistic.id))
+        showSendError()
+      })
+  }
+
   const styles = StyleSheet.create({
     center: {
       flex: 1,
@@ -161,6 +192,21 @@ export default function ChatDetail() {
       height: 1,
       backgroundColor: Colors.border,
       marginHorizontal: 16,
+    },
+    offlineBanner: {
+      backgroundColor: Colors.dangerBg,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.dangerBorder,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    offlineBannerText: {
+      fontSize: 13,
+      color: Colors.danger,
+      flex: 1,
     },
     messagesList: {
       padding: 16,
@@ -218,6 +264,9 @@ export default function ChatDetail() {
       borderWidth: 1,
       borderColor: Colors.border,
     },
+    inputDisabled: {
+      opacity: 0.5,
+    },
     sendButton: {
       width: 40,
       height: 40,
@@ -225,6 +274,24 @@ export default function ChatDetail() {
       backgroundColor: Colors.primary,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    sendButtonDisabled: {
+      opacity: 0.4,
+    },
+    errorRow: {
+      alignItems: 'center',
+      marginVertical: 6,
+    },
+    errorText: {
+      fontSize: 12,
+      color: Colors.danger,
+      backgroundColor: Colors.dangerBg,
+      borderWidth: 1,
+      borderColor: Colors.dangerBorder,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      overflow: 'hidden',
     },
   })
 
@@ -259,12 +326,28 @@ export default function ChatDetail() {
         </View>
         <View style={styles.divider} />
 
+        {!isOnline && (
+          <View style={styles.offlineBanner}>
+            <Ionicons name="cloud-offline-outline" size={16} color={Colors.danger} />
+            <Text style={styles.offlineBannerText}>
+              No internet connection. Please try again later.
+            </Text>
+          </View>
+        )}
+
         <FlatList
           ref={listRef}
           data={[...messages].reverse()}
           inverted
           keyExtractor={item => item.id}
           renderItem={({ item }) => {
+            if (item._error) {
+              return (
+                <View style={styles.errorRow}>
+                  <Text style={styles.errorText}>{item.content}</Text>
+                </View>
+              )
+            }
             const isOwn = item.sender_id === currentUserId
             return (
               <View style={[styles.messageRow, isOwn ? styles.messageRowOwn : styles.messageRowOther]}>
@@ -282,15 +365,20 @@ export default function ChatDetail() {
 
         <View style={styles.inputRow}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, !isOnline && styles.inputDisabled]}
             value={input}
             onChangeText={setInput}
-            placeholder="Message..."
+            placeholder={isOnline ? "Message..." : "Unavailable offline"}
             placeholderTextColor={Colors.textSecondary}
             onSubmitEditing={sendMessage}
             returnKeyType="send"
+            editable={isOnline}
           />
-          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+          <TouchableOpacity
+            style={[styles.sendButton, !isOnline && styles.sendButtonDisabled]}
+            onPress={sendMessage}
+            disabled={!isOnline}
+          >
             <Ionicons name="send" size={18} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
