@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Platform, Alert } from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { router, useLocalSearchParams } from 'expo-router'
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { Ionicons } from '@expo/vector-icons'
 import { getProjectWorkers } from '@/api/endpoints/workers'
@@ -37,6 +37,22 @@ export default function CreateTask() {
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [submitting, setSubmitting] = useState(false)
     const { isOnline } = useNetwork()
+
+    useFocusEffect(
+        useCallback(() => {
+            if (isEdit) return
+            setTitle('')
+            setDescription('')
+            setCategoryId('')
+            setCategoryName('')
+            setShowCategoryPicker(false)
+            setDeadline(null)
+            setShowDatePicker(false)
+            setPriority('medium')
+            setAssignedWorkers([])
+            setErrors({})
+        }, [isEdit])
+    )
 
     const priorityColors = {
         low: { bg: Colors.surfaceElevated, border: Colors.textSecondary, text: Colors.textPrimary },
