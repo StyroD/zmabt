@@ -43,6 +43,7 @@ CREATE TABLE users (
     password_hash VARCHAR,
     google_id VARCHAR,
     role VARCHAR CHECK (role IN ('manager', 'worker')),
+    manager_id UUID REFERENCES users(id),
     avatar_url VARCHAR,
     fcm_token VARCHAR,
     -- compensation
@@ -193,7 +194,7 @@ CREATE TABLE messages (
 CREATE TABLE notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id),
-    type VARCHAR CHECK (type IN ('task_assigned', 'task_done', 'certificate_submitted', 'certificate_reviewed')),
+    type VARCHAR CHECK (type IN ('task_assigned', 'task_done', 'certificate_submitted', 'certificate_reviewed', 'worker_assigned', 'worker_removed')),
     title VARCHAR,
     body TEXT,
     reference_id UUID,
