@@ -14,6 +14,7 @@ import { getSocket } from "@/api/socket"
 import * as SecureStore from "expo-secure-store"
 import type { Socket } from "socket.io-client"
 import { unreadSignal } from "@/utils/unreadSignal"
+
 import { activeChatSignal } from "@/utils/activeChatSignal"
 
 type Conversation = {
@@ -23,6 +24,8 @@ type Conversation = {
   timestamp: string
   sender_id: string
 }
+
+
 
 type User = {
   id: string
