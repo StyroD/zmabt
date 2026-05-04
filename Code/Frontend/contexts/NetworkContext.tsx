@@ -3,10 +3,12 @@ import NetInfo from '@react-native-community/netinfo'
 import { getQueue, removeFromQueue, incrementRetries, QueuedOperation } from '@/utils/offlineQueue'
 import { createTask, updateTaskStatus, deleteTask, assignWorkersToTask } from '@/api/endpoints/tasks'
 import { createProject } from '@/api/endpoints/projects'
+import { toastSignal } from '@/utils/toastSignal'
 
 interface NetworkContextValue {
   isOnline: boolean
   pendingCount: number
+  refreshCount: number
   syncQueue: () => Promise<void>
 }
 
@@ -15,6 +17,7 @@ interface NetworkContextValue {
 const NetworkContext = createContext<NetworkContextValue>({
   isOnline: true,
   pendingCount: 0,
+  refreshCount: 0,
   syncQueue: async () => {},
 })
 
@@ -52,6 +55,7 @@ async function executeOperation(op: QueuedOperation): Promise<void> {
 export function NetworkProvider({ children }: { children: React.ReactNode }) {
   const [isOnline, setIsOnline] = useState(true)
   const [pendingCount, setPendingCount] = useState(0)
+  const [refreshCount, setRefreshCount] = useState(0)
   const isSyncing = useRef(false)
 
   const refreshPendingCount = useCallback(async () => {
@@ -74,7 +78,6 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
           await removeFromQueue(op.id)
         } catch (err: any) {
           const status = err?.response?.status
-          console.warn(`[Queue] ${op.type} failed (${status ?? 'network'}):`, err?.response?.data?.error ?? err?.message)
           if (status === 404 || status === 409 || status === 400) {
             await removeFromQueue(op.id)
           } else {
@@ -90,19 +93,48 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     refreshPendingCount()
+
     const unsubscribe = NetInfo.addEventListener(state => {
       const online = !!state.isConnected && state.isInternetReachable !== false
-      setIsOnline(online)
+
+      setIsOnline(prev => {
+        if (prev === online) return prev
+
+        if (prev && !online) {
+          toastSignal.show({
+            title: 'No connection',
+            body: 'Showing cached data',
+            data: { type: 'connectivity' },
+          })
+        }
+
+        if (!prev && online) {
+          toastSignal.show({
+            title: 'Back online',
+            body: 'Reloading data...',
+            data: { type: 'connectivity' },
+          })
+          setRefreshCount(c => c + 1)
+        }
+
+        return online
+      })
     })
+
     return unsubscribe
   }, [])
 
   useEffect(() => {
-    if (isOnline) syncQueue()
-  }, [isOnline, syncQueue])
+    if (!isOnline) return
+    const run = async () => {
+      await syncQueue()
+      await refreshPendingCount()
+    }
+    run()
+  }, [isOnline]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <NetworkContext.Provider value={{ isOnline, pendingCount, syncQueue }}>
+    <NetworkContext.Provider value={{ isOnline, pendingCount, refreshCount, syncQueue }}>
       {children}
     </NetworkContext.Provider>
   )

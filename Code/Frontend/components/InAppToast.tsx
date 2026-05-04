@@ -75,7 +75,9 @@ export function InAppToast() {
                 onPress={() => {
                     if (timerRef.current) clearTimeout(timerRef.current);
                     dismiss(translateY);
-                    router.push(getRouteFromData(toast.data) as any);
+                    if (toast.data?.type !== 'connectivity') {
+                        router.push(getRouteFromData(toast.data) as any);
+                    }
                 }}
             >
                 <View style={[styles.accent, { backgroundColor: Colors.primary }]} />

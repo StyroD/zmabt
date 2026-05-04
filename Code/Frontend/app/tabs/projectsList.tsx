@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, RefreshControl } from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { router } from 'expo-router'
 import { ProjectBox } from '@/components/Projects/ProjectBox'
@@ -27,40 +27,62 @@ export default function Projects() {
   const insets = useSafeAreaInsets()
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [activeFilter, setActiveFilter] = useState<string>('All')
   const [isManager, setIsManager] = useState(true)
-  const { pendingCount } = useNetwork()
+  const [currentUser, setCurrentUser] = useState<any>(null)
+  const { pendingCount, refreshCount, syncQueue } = useNetwork()
+
+  const fetchProjects = useCallback(async (user: any) => {
+    const manager = user.role === 'manager'
+    const queue = await getQueue()
+    const pending = queue
+      .filter(op => op.type === 'PROJECT_CREATE')
+      .map(op => ({ ...op.payload, id: op.id, _pending: true }))
+    try {
+      const res = manager
+        ? await getProjectByManagerId(user.id)
+        : await getProjectsByWorkerId(user.id)
+      setProjects([...res.data, ...pending])
+      await cacheProjects(res.data)
+    } catch {
+      const cached = await getCachedProjects()
+      setProjects([...cached, ...pending])
+    }
+  }, [])
 
   useFocusEffect(
     useCallback(() => {
       let active = true
       const load = async () => {
-        const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
+        const raw = await SecureStore.getItemAsync('user') ?? '{}'
+        const user = JSON.parse(raw)
         const manager = user.role === 'manager'
-        setIsManager(manager)
-        const queue = await getQueue()
-        const pending = queue
-            .filter(op => op.type === 'PROJECT_CREATE')
-            .map(op => ({ ...op.payload, id: op.id, _pending: true }))
-        try {
-            const res = manager
-                ? await getProjectByManagerId(user.id)
-                : await getProjectsByWorkerId(user.id)
-            if (active) {
-                setProjects([...res.data, ...pending])
-                await cacheProjects(res.data)
-            }
-        } catch {
-            const cached = await getCachedProjects()
-            if (active) setProjects([...cached, ...pending])
-        } finally {
-            if (active) setLoading(false)
+        if (active) {
+          setIsManager(manager)
+          setCurrentUser(user)
         }
-    }
+        try {
+          await fetchProjects(user)
+        } finally {
+          if (active) setLoading(false)
+        }
+      }
       load()
       return () => { active = false }
-    }, [pendingCount])
+    }, [pendingCount, refreshCount, fetchProjects])
   )
+
+  const onRefresh = useCallback(async () => {
+    if (!currentUser) return
+    setRefreshing(true)
+    try {
+      await syncQueue()
+      await fetchProjects(currentUser)
+    } finally {
+      setRefreshing(false)
+    }
+  }, [currentUser, fetchProjects, syncQueue])
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '—'
@@ -152,7 +174,17 @@ export default function Projects() {
         ))}
       </ScrollView>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
+        }
+      >
         {filtered.length === 0 ? (
           <Text style={styles.emptyText}>No projects found</Text>
         ) : (

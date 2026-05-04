@@ -11,6 +11,7 @@ import { generateInvite } from '@/api/endpoints/invite'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { cacheWorkers, getCachedWorkers } from '@/utils/db'
 import * as SecureStore from 'expo-secure-store'
+import { useNetwork } from '@/contexts/NetworkContext'
 
 export default function Workers() {
   const Colors = useColors()
@@ -22,6 +23,7 @@ export default function Workers() {
   const [isFocused, setIsFocused] = useState(false)
   const [isManager, setIsManager] = useState(false)
   const [inviting, setInviting] = useState(false)
+  const { refreshCount } = useNetwork()
 
   useFocusEffect(useCallback(() => {
     const load = async () => {
@@ -45,7 +47,7 @@ export default function Workers() {
       }
     }
     load()
-  }, []))
+  }, [refreshCount]))
 
   const getDisplayName = (w: any) =>
     w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username
