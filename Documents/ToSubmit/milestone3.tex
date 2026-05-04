@@ -1,0 +1,985 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{titlesec}
+\usepackage{amssymb}
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{fancyhdr}
+\usepackage{mdframed}
+\usepackage{tikz}
+
+\definecolor{uatgreen}{RGB}{198, 224, 180}
+\definecolor{headerblue}{RGB}{31, 73, 125}
+\definecolor{lightgray}{RGB}{242, 242, 242}
+\definecolor{accentblue}{RGB}{70, 130, 180}
+\geometry{margin=2.5cm, headheight=14pt}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=headerblue,
+    urlcolor=accentblue
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{headerblue}{WorkFlow --- Final Presentation}}
+\fancyhead[R]{\small\textcolor{headerblue}{Milestone 3}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\titleformat{\section}{\large\bfseries\color{headerblue}}{\thesection.}{0.5em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\begin{document}
+
+%--------------------------------------------------------------
+% Title page
+%--------------------------------------------------------------
+\begin{titlepage}
+\begin{center}
+    \textbf{\large FAKULTA INFORMATIKY A INFORMAČNÝCH TECHNOLÓGIÍ}\\[0.2cm]
+    \textit{Slovenská Technická Univerzita v Bratislave}\\[3cm]
+
+    \begin{tikzpicture}
+      \draw[headerblue, line width=2pt] (0,0) rectangle (12,3.5);
+      \node[align=center] at (6,1.9) {\LARGE\bfseries\color{headerblue} MILESTONE 3};
+      \node[align=center] at (6,0.9) {\large Final Presentation --- Complete Project Documentation};
+    \end{tikzpicture}\\[3cm]
+
+    \begin{tabular}{ll}
+        \textbf{Application:} & WorkFlow --- Field Team Coordination \\[0.3cm]
+        \textbf{Subject:}     & ZMABT\_B \\[0.3cm]
+        \textbf{Instructor:}  & Ing. Dominik Šalgovič \\[0.3cm]
+        \textbf{Authors:}     & Adam Strelec, Damián Štyrák \\[0.3cm]
+        \textbf{Field of study:} & Computer Science \\[0.3cm]
+        \textbf{Academic year:} & 2025/26 \\[0.3cm]
+        \textbf{Repository:}  & \url{https://github.com/StyroD/zmabt} \\
+    \end{tabular}
+\end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+%--------------------------------------------------------------
+\section{Application Overview}
+%--------------------------------------------------------------
+
+\textbf{WorkFlow} is a cross-platform mobile application (iOS/Android) designed for coordinating field work teams in the construction and maintenance industry. It replaces inefficient phone- or email-based communication by giving managers an instant, real-time overview of task progress and team locations.
+
+The application allows a manager to create projects and assign tasks within them to workers based on their skill certificates. Workers receive push notifications about new assignments, can update task statuses, upload photo documentation directly from the field, and communicate with the manager via a built-in chat. The manager tracks live worker locations on a map and views worker qualifications through submitted certificates.
+
+\subsection*{Key Features}
+\begin{itemize}[noitemsep]
+    \item \textbf{Project \& Task Management} --- Create, edit, delete projects and tasks with priorities and deadlines
+    \item \textbf{Certificate-Based Assignment} --- Workers assigned only to tasks matching their verified qualifications
+    \item \textbf{Real-Time Location Tracking} --- Live GPS map of all workers on a project
+    \item \textbf{Offline Mode} --- Task status updates survive without internet; auto-sync on reconnect
+    \item \textbf{Built-in Chat} --- Real-time WebSocket messaging between manager and workers
+    \item \textbf{Push Notifications} --- Expo Push delivery for assignments and task completions (background + deep-link tap)
+    \item \textbf{Audit Logging} --- Immutable record of all actions for accountability
+    \item \textbf{Dashboard} --- Role-specific statistics overview
+\end{itemize}
+
+\subsection*{Wireframes and Prototype}
+\begin{sloppypar}
+Interactive prototype available at: \url{https://www.figma.com/design/5Mkvlexdcuru8Y7Si9LxXP/}
+\end{sloppypar}
+
+%--------------------------------------------------------------
+\section{Technology Stack}
+%--------------------------------------------------------------
+
+\subsection{Complete Stack Overview}
+
+\begin{tabular}{lll}
+\toprule
+\textbf{Layer} & \textbf{Technology} & \textbf{Version / Notes} \\
+\midrule
+Frontend (Mobile) & React Native with Expo & SDK 54, React 19 \\
+Routing           & Expo Router           & v6 (file-system based) \\
+HTTP Client       & Axios                 & v1.13 \\
+Real-time Client  & Socket.IO Client      & v4.8 \\
+Maps              & react-native-maps     & v1.20 (Google Maps / Apple Maps) \\
+Local Storage     & expo-sqlite           & v16 \\
+Push Notifications & expo-notifications   & v0.32 (device token) \\
+Accessibility     & React Native Accessibility API & Built-in (AccessibilityInfo, accessibilityLabel) \\
+Navigation        & React Navigation      & Bottom Tabs v7 \\
+\midrule
+Backend           & Node.js + Express     & Express v5, Node v25 \\
+Language          & TypeScript            & v6 \\
+Database          & PostgreSQL            & via \texttt{pg} library, no ORM \\
+Authentication    & JWT + Google OAuth 2.0 & jsonwebtoken v9, Passport.js \\
+Real-time Server  & Socket.IO             & v4.8 \\
+File Uploads      & Multer                & v2.1 \\
+Push (Server)     & Expo Server SDK       & v6.1 \\
+Password Hashing  & bcrypt                & v6 \\
+API Documentation & Swagger UI            & /api-docs \\
+\midrule
+Infrastructure    & PostgreSQL            & Hosted database \\
+\bottomrule
+\end{tabular}
+
+\subsection{Mandatory Optional Requirements (PVP)}
+
+In accordance with the project specification, the following three PVPs are implemented:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{PVP2} --- Accessibility support: screen reader compatibility (\texttt{accessibilityLabel}, \texttt{accessibilityHint}), full gesture navigation, and WCAG-compliant colour contrast across all screens (iOS VoiceOver + Android TalkBack)
+    \item \textbf{PVP4} --- SSO authentication support (Google Sign-In via Passport.js OAuth 2.0)
+    \item \textbf{PVP6} --- Location-based service (GPS worker tracking every 10 seconds, map visualisation)
+\end{itemize}
+
+\subsection{Technology Choice Rationale}
+
+React Native with Expo was chosen as the frontend framework after evaluating React Native, Flutter, and Kotlin Multiplatform:
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Shared Socket.IO library} --- identical \texttt{socket.io-client} on frontend and \texttt{socket.io} on backend simplifies real-time debugging
+    \item \textbf{Node.js backend synergy} --- TypeScript across the full stack reduces context-switching
+    \item \textbf{Expo ecosystem} --- camera, location, notifications, and document picker available as turnkey Expo modules
+    \item \textbf{Cross-platform} --- single codebase targets both iOS (15+) and Android (10+)
+\end{itemize}
+
+%--------------------------------------------------------------
+\section{User Roles}
+%--------------------------------------------------------------
+
+The application defines two user roles with distinct permissions.
+
+\subsection{Manager}
+
+The Manager has full administrative control over projects, tasks, and the team:
+
+\begin{itemize}[noitemsep]
+    \item Creates, edits, and deletes projects (title, description, GPS, deadline, client info)
+    \item Creates, edits, and deletes tasks within projects (title, description, category, priority, deadline)
+    \item Assigns tasks to workers based on their verified skill certificates
+    \item Views live worker positions and task-site pins on the project map
+    \item Has a full overview of all tasks and their current statuses with progress indicators
+    \item Invites new workers to the application via a unique numeric code sent by SMS or email
+    \item Communicates with workers via the built-in real-time chat
+    \item Receives a push notification when a worker marks a task as \textit{Done}
+    \item Views audit logs of all actions in the system
+    \item Monitors dashboard statistics (project count, task breakdown, worker count)
+\end{itemize}
+
+\subsection{Worker}
+
+The Worker has restricted access --- only to tasks and projects assigned to them:
+
+\begin{itemize}[noitemsep]
+    \item Views the list of assigned tasks within projects
+    \item Opens task detail: description, category, assigned person, deadline, photos, and status
+    \item Changes the task status to \textit{In Progress} or \textit{Done}
+    \item Uploads photo documentation from the camera or gallery
+    \item Uploads skill certificates (visible to the manager in the Workers screen)
+    \item Shares GPS location with the manager (every 10 seconds via WebSocket)
+    \item Communicates with the manager and other workers via chat
+    \item Receives a push notification when a new task is assigned
+    \item Can update task status offline; the change syncs automatically after reconnection
+    \item Manages profile: name, date of birth, hourly rate, bank information, profile photo
+\end{itemize}
+
+%--------------------------------------------------------------
+\section{Use Cases}
+%--------------------------------------------------------------
+
+\subsection{Manager Use Cases}
+
+\textbf{UCM1 --- Login:} The Manager logs into the application using Google SSO or email and password. Upon successful authentication a JWT token is issued and stored securely on the device.
+
+\textbf{UCM2 --- Create, edit, delete a project:} The Manager creates a new project by filling in the project title, description, deadline, construction site address, GPS coordinates, and client information (name, phone, email). Existing projects can be edited or permanently deleted. Deleting a project removes all associated tasks and assignments.
+
+\textbf{UCM3 --- Create, edit, delete a task:} Within a project the Manager creates tasks by specifying a title, description, category (e.g.\ Electrical, Heating), priority (Low / Medium / High), and deadline. Tasks can be edited or deleted at any time. Only workers with a verified certificate matching the task category are eligible for assignment.
+
+\textbf{UCM4 --- Assign a task to a worker:} The Manager assigns a task to one or more workers. The assignment screen displays available workers filtered by their verified skill certificates and flags workers missing the required qualification as ineligible. Upon assignment the worker receives a push notification.
+
+\textbf{UCM5 --- View all tasks and their statuses:} The Manager sees a full list of tasks within a project with their current statuses (Pending, In Progress, Done) and an overall progress indicator showing how many tasks have been completed.
+
+\textbf{UCM6 --- Team map:} The Manager opens a project-specific map showing the live GPS positions of all workers assigned to that project, updated every 10 seconds via WebSocket. Workers are shown with an online/offline indicator.
+
+\textbf{UCM7 --- Chat with a worker:} The Manager initiates or continues a real-time conversation with any worker via the built-in chat. Messages are delivered instantly over a WebSocket connection.
+
+\textbf{UCM8 --- Invite a new worker:} The Manager generates a unique numeric registration code from the Worker List screen. The code is sent to the prospective worker via SMS or email. The worker enters the code in the registration screen to join the Manager's team.
+
+\textbf{UCM9 --- Receive notification when a task is completed:} When a worker marks a task as Done, the Manager receives a background push notification. Tapping the notification navigates directly to the relevant task detail.
+
+\subsection{Worker Use Cases}
+
+\textbf{UCW1 --- Login:} The Worker logs into the application using Google SSO or email and password.
+
+\textbf{UCW2 --- View list of assigned tasks:} The Worker sees only the projects and tasks assigned to them. Each task card shows the title, category, deadline, and current status.
+
+\textbf{UCW3 --- Open task detail:} The Worker opens a task to view the full description, category, assigned person, deadline, priority, and any previously uploaded photos.
+
+\textbf{UCW4 --- Update task status:} The Worker changes the task status to \textit{In Progress} or \textit{Done} directly from the task card. The change is reflected in real time on the Manager's view.
+
+\textbf{UCW5 --- Upload a photo to a task:} The Worker attaches photo documentation to a task by taking a photo with the camera or selecting one from the gallery. Multiple photos can be uploaded per task.
+
+\textbf{UCW6 --- Upload skill certificates:} The Worker submits a certificate of qualification for a specific skill category by uploading a photo of the document. The certificate becomes visible to the Manager in the Workers screen and determines which task categories the Worker is eligible for.
+
+\textbf{UCW7 --- Offline task status update:} When the device has no internet connection the Worker can still change a task status. The change is saved locally with a pending sync flag and automatically synchronised with the server once connectivity is restored. Conflicts are resolved with a server-wins policy.
+
+\textbf{UCW8 --- Chat with the manager:} The Worker sends and receives real-time messages with the Manager. If the device is offline the chat is unavailable and an informative banner is shown.
+
+\textbf{UCW9 --- Receive notification about a new task assignment:} When the Manager assigns a task to the Worker, a background push notification is delivered to the Worker's device. Tapping the notification navigates directly to the task detail.
+
+%--------------------------------------------------------------
+\section{System Architecture}
+%--------------------------------------------------------------
+
+\subsection{Architecture Overview}
+
+The system consists of three main components:
+
+\begin{enumerate}[noitemsep]
+    \item \textbf{Mobile application (React Native + Expo)} --- cross-platform client for iOS and Android
+    \item \textbf{Backend server (Node.js / Express)} --- REST API + Socket.IO WebSocket server
+    \item \textbf{Database (PostgreSQL)} --- persistent relational data store
+\end{enumerate}
+
+\begin{mdframed}[backgroundcolor=lightgray, linecolor=headerblue, linewidth=1pt]
+\begin{center}
+\textbf{Communication Architecture}\\[0.5em]
+\begin{tabular}{lcl}
+Mobile App & $\longleftrightarrow$ & Backend: \textbf{HTTPS REST API} (standard CRUD operations) \\[0.3em]
+Mobile App & $\longleftrightarrow$ & Backend: \textbf{WebSocket (Socket.IO)} (chat + location updates) \\[0.3em]
+Backend    & $\longrightarrow$    & Mobile App: \textbf{Expo Push Notifications} (FCM/APNs abstraction) \\
+\end{tabular}
+\end{center}
+\end{mdframed}
+
+\subsection{Backend Architecture}
+
+The backend follows a layered REST architecture running on \texttt{http://localhost:3000}. All protected endpoints require a Bearer JWT token in the \texttt{Authorization} header.
+
+\begin{tabular}{lp{0.65\textwidth}}
+\toprule
+\textbf{Layer} & \textbf{Responsibility} \\
+\midrule
+\textbf{Routes} & Define HTTP method, path, and optional file-upload middleware; delegate to query handlers \\
+\textbf{Queries} & Contain business logic and execute direct SQL via \texttt{pg} Pool \\
+\textbf{Middleware} & JWT authentication guard applied globally (except \texttt{/api/auth} and \texttt{/api/invite}) \\
+\textbf{Socket} & Socket.IO server authenticated via JWT handshake; each user joins a private room \texttt{user:\{id\}} for targeted message delivery \\
+\textbf{Services} & Expo Push helper for task assignment and status-change notifications; audit log writer \\
+\bottomrule
+\end{tabular}
+
+\subsection{Backend Route Modules}
+
+\begin{tabular}{ll}
+\toprule
+\textbf{Module} & \textbf{Base Path} \\
+\midrule
+\texttt{auth}          & \texttt{/api/auth} \\
+\texttt{invite}        & \texttt{/api/invite} \\
+\texttt{users}         & \texttt{/api/users} \\
+\texttt{projects}      & \texttt{/api/projects} \\
+\texttt{workers}       & \texttt{/api/workers} \\
+\texttt{tasks}         & \texttt{/api/tasks} \\
+\texttt{uploads}       & \texttt{/api/uploads} \\
+\texttt{locations}     & \texttt{/api/locations} \\
+\texttt{messages}      & \texttt{/api/messages} \\
+\texttt{notifications} & \texttt{/api/notifications} \\
+\texttt{categories}    & \texttt{/api/categories} \\
+\texttt{dashboard}     & \texttt{/api/dashboard} \\
+\texttt{audit-logs}    & \texttt{/api/audit-logs} \\
+\bottomrule
+\end{tabular}
+
+\subsection{Frontend Architecture}
+
+The React Native (Expo) application uses a file-system based routing approach via \textbf{Expo Router}:
+
+\begin{tabular}{lp{0.62\textwidth}}
+\toprule
+\textbf{Directory} & \textbf{Purpose} \\
+\midrule
+\texttt{app/}             & Expo Router screens (file = route) \\
+\texttt{app/auth/}        & Login, registration, and sign screens \\
+\texttt{app/tabs/}        & Tab-based screens (dashboard, projects, chat, map, profile, workers) \\
+\texttt{api/}             & Axios HTTP client, Socket.IO client, endpoint modules per resource \\
+\texttt{api/endpoints/}   & Per-resource typed API calls (projects, tasks, users, messages, etc.) \\
+\bottomrule
+\end{tabular}
+
+\subsection{Real-Time Communication}
+
+The server exposes a Socket.IO endpoint authenticated via JWT handshake. Upon connection each client joins a private room \texttt{user:\{id\}}. The REST \texttt{POST /api/messages} route saves the message to the database and then calls \texttt{emitNewMessage(receiverId, message)} to push the message instantly to the recipient's socket room without polling.
+
+Worker location updates are sent from the mobile client every 10 seconds and broadcast to the manager's room via \texttt{emitLocationUpdate()}.
+
+\subsection{Security}
+
+\begin{itemize}[noitemsep]
+    \item Passwords are stored as \textbf{bcrypt} hashes (v6, cost factor 12)
+    \item All state-changing endpoints are protected by the JWT middleware (verified against \texttt{JWT\_SECRET})
+    \item Google OAuth is handled server-side via \textbf{Passport.js}; no client secret is exposed to the frontend
+    \item File uploads are handled in-memory by \textbf{Multer} and stored as binary in the database (\texttt{bytea}), avoiding unauthenticated public file URLs
+    \item JWT tokens stored on the device using \textbf{expo-secure-store} (iOS Keychain / Android Keystore)
+    \item Role-based access control (RBAC) enforced at the query layer --- workers cannot access manager-only endpoints
+\end{itemize}
+
+%--------------------------------------------------------------
+\section{Database Schema}
+%--------------------------------------------------------------
+
+\subsection{Overview}
+
+The PostgreSQL database uses \textbf{UUIDs} as primary keys throughout. The schema is created by a dedicated migration script (\texttt{src/config/migrate.ts}).
+
+\begin{tabular}{lp{0.62\textwidth}}
+\toprule
+\textbf{Table} & \textbf{Purpose} \\
+\midrule
+\texttt{users}              & Both managers and workers; \texttt{role} field distinguishes them \\
+\texttt{invite\_links}      & One-time tokens generated by managers for worker registration \\
+\texttt{projects}           & Construction projects owned by a manager \\
+\texttt{project\_workers}   & Many-to-many: workers assigned to projects \\
+\texttt{project\_photos}    & Photos attached to a project (also used for task photos via \texttt{task\_id} FK) \\
+\texttt{skill\_categories}  & Certificate/task skill categories (e.g.\ Electrical, Plumbing, Heating) \\
+\texttt{certificates}       & Worker skill certificates submitted for manager review \\
+\texttt{tasks}              & Tasks within a project; linked to a skill category \\
+\texttt{task\_assignments}  & Many-to-many: workers assigned to tasks \\
+\texttt{task\_status\_sync} & Offline status changes queued for sync on reconnect \\
+\texttt{worker\_locations}  & Latest GPS coordinates per worker per project \\
+\texttt{messages}           & Chat messages between two users \\
+\texttt{notifications}      & In-app notifications with read status \\
+\texttt{audit\_logs}        & Immutable record of actions for auditing \\
+\bottomrule
+\end{tabular}
+
+\subsection{Key Table Descriptions}
+
+\subsubsection{users}
+
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Column} & \textbf{Type} & \textbf{Description} \\
+\midrule
+id            & UUID (PK)     & Primary key \\
+email         & VARCHAR(255)  & Unique user email \\
+password\_hash & VARCHAR(255) & Bcrypt hash (null for SSO-only users) \\
+name          & VARCHAR(100)  & Display name \\
+role          & ENUM          & \texttt{manager} or \texttt{worker} \\
+expo\_push\_token & TEXT      & Expo device token for push notifications \\
+avatar        & BYTEA         & Profile photo stored as binary \\
+date\_of\_birth & DATE        & Worker date of birth \\
+hourly\_rate  & NUMERIC       & Worker hourly rate \\
+bank\_info    & TEXT          & Worker bank account info \\
+created\_at   & TIMESTAMP     & Record creation time \\
+\bottomrule
+\end{tabularx}
+
+\subsubsection{projects}
+
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Column} & \textbf{Type} & \textbf{Description} \\
+\midrule
+id           & UUID (PK)    & Primary key \\
+manager\_id  & UUID (FK)    & Reference to \texttt{users.id} \\
+title        & VARCHAR(200) & Project title \\
+description  & TEXT         & Project description \\
+status       & VARCHAR(50)  & \texttt{pending}, \texttt{in\_progress}, \texttt{done} \\
+deadline     & DATE         & Project deadline \\
+address      & TEXT         & Construction site address \\
+lat, lng     & FLOAT        & GPS coordinates of the site \\
+client\_name & VARCHAR(100) & Client name \\
+client\_phone & VARCHAR(30) & Client phone \\
+client\_email & VARCHAR(100)& Client email \\
+created\_at  & TIMESTAMP    & Record creation time \\
+\bottomrule
+\end{tabularx}
+
+\subsubsection{tasks}
+
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Column} & \textbf{Type} & \textbf{Description} \\
+\midrule
+id           & UUID (PK)    & Primary key \\
+project\_id  & UUID (FK)    & Reference to \texttt{projects.id} \\
+title        & VARCHAR(200) & Task title \\
+description  & TEXT         & Task description \\
+category\_id & UUID (FK)    & Reference to \texttt{skill\_categories.id} \\
+priority     & VARCHAR(20)  & \texttt{low}, \texttt{medium}, \texttt{high} \\
+status       & VARCHAR(50)  & \texttt{pending}, \texttt{in\_progress}, \texttt{done} \\
+deadline     & DATE         & Task deadline \\
+lat, lng     & FLOAT        & GPS coordinates of the task site \\
+created\_at  & TIMESTAMP    & Record creation time \\
+\bottomrule
+\end{tabularx}
+
+\subsubsection{Other Key Tables}
+
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Table} & \textbf{Key Columns} \\
+\midrule
+\texttt{task\_assignments}  & \texttt{task\_id} (FK), \texttt{worker\_id} (FK), \texttt{assigned\_at} \\
+\texttt{worker\_locations}  & \texttt{worker\_id} (FK), \texttt{project\_id} (FK), \texttt{lat}, \texttt{lng}, \texttt{recorded\_at} \\
+\texttt{messages}           & \texttt{sender\_id} (FK), \texttt{receiver\_id} (FK), \texttt{content}, \texttt{created\_at} \\
+\texttt{certificates}       & \texttt{worker\_id} (FK), \texttt{category\_id} (FK), \texttt{file\_data} (BYTEA), \texttt{status} (\texttt{pending}/\texttt{accepted}/\texttt{rejected}) \\
+\texttt{notifications}      & \texttt{user\_id} (FK), \texttt{title}, \texttt{body}, \texttt{is\_read}, \texttt{created\_at} \\
+\texttt{audit\_logs}        & \texttt{user\_id} (FK), \texttt{action}, \texttt{entity\_type}, \texttt{entity\_id}, \texttt{created\_at} \\
+\texttt{task\_status\_sync} & \texttt{task\_id} (FK), \texttt{worker\_id} (FK), \texttt{new\_status}, \texttt{synced\_at} \\
+\texttt{invite\_links}      & \texttt{manager\_id} (FK), \texttt{token} (unique), \texttt{used} (BOOLEAN), \texttt{created\_at} \\
+\bottomrule
+\end{tabularx}
+
+%--------------------------------------------------------------
+\section{API Endpoints}
+%--------------------------------------------------------------
+
+The full interactive API reference is available via Swagger UI at \texttt{/api-docs}. All endpoints except \texttt{/api/auth/*} and \texttt{/api/invite/register} require a Bearer JWT token in the \texttt{Authorization} header.
+
+\begin{longtable}{lll}
+\toprule
+\textbf{Method} & \textbf{Endpoint} & \textbf{Description} \\
+\midrule
+\endhead
+\multicolumn{3}{l}{\textit{Authentication}} \\
+POST   & \texttt{/api/auth/login}                         & Login with email and password \\
+POST   & \texttt{/api/auth/register}                     & Register new manager \\
+GET    & \texttt{/api/auth/google}                       & Google OAuth2 initiate \\
+GET    & \texttt{/api/auth/google/callback}              & Google OAuth2 callback \\
+\midrule
+\multicolumn{3}{l}{\textit{Invite}} \\
+POST   & \texttt{/api/invite/generate}                   & Manager generates numeric registration code \\
+POST   & \texttt{/api/invite/register}                   & Worker registers via invite token \\
+\midrule
+\multicolumn{3}{l}{\textit{Users}} \\
+GET    & \texttt{/api/users/\{id\}}                      & Get user by ID \\
+PUT    & \texttt{/api/users/\{id\}}                      & Update user profile \\
+\midrule
+\multicolumn{3}{l}{\textit{Projects}} \\
+POST   & \texttt{/api/projects}                          & Create a project \\
+GET    & \texttt{/api/projects/\{id\}}                   & Get project by ID \\
+PUT    & \texttt{/api/projects/\{id\}}                   & Update project \\
+DELETE & \texttt{/api/projects/\{id\}}                   & Delete project \\
+GET    & \texttt{/api/projects/manager/\{managerId\}}    & Get all projects by manager \\
+GET    & \texttt{/api/projects/\{id\}/workers}           & Get workers assigned to project \\
+POST   & \texttt{/api/projects/\{id\}/workers}           & Assign worker to project \\
+DELETE & \texttt{/api/projects/\{id\}/workers/\{wId\}}  & Remove worker from project \\
+\midrule
+\multicolumn{3}{l}{\textit{Tasks}} \\
+POST   & \texttt{/api/tasks}                             & Create a task \\
+GET    & \texttt{/api/tasks/\{id\}}                      & Get task by ID \\
+PUT    & \texttt{/api/tasks/\{id\}}                      & Update task \\
+DELETE & \texttt{/api/tasks/\{id\}}                      & Delete task \\
+PATCH  & \texttt{/api/tasks/\{id\}/status}               & Update task status \\
+GET    & \texttt{/api/tasks/project/\{id\}}              & Get tasks by project \\
+GET    & \texttt{/api/tasks/worker/\{workerId\}}         & Get tasks assigned to worker \\
+\midrule
+\multicolumn{3}{l}{\textit{Workers \& Locations}} \\
+GET    & \texttt{/api/workers/\{projectId\}}             & Get workers by project \\
+POST   & \texttt{/api/locations}                         & Update worker location \\
+GET    & \texttt{/api/locations/\{projectId\}}           & Get all worker locations for project \\
+\midrule
+\multicolumn{3}{l}{\textit{Uploads}} \\
+POST   & \texttt{/api/uploads/certificate}               & Upload a certificate (multipart) \\
+GET    & \texttt{/api/uploads/certificate/\{id\}}        & Download certificate binary \\
+POST   & \texttt{/api/uploads/photo}                     & Upload a project/task photo \\
+\midrule
+\multicolumn{3}{l}{\textit{Messages}} \\
+POST   & \texttt{/api/messages}                          & Send a message (triggers WebSocket) \\
+GET    & \texttt{/api/messages/\{userId1\}/\{userId2\}}  & Get conversation history \\
+\midrule
+\multicolumn{3}{l}{\textit{Notifications}} \\
+GET    & \texttt{/api/notifications/user/\{userId\}}     & Get user notifications \\
+PATCH  & \texttt{/api/notifications/\{id\}/read}         & Mark notification as read \\
+\midrule
+\multicolumn{3}{l}{\textit{Dashboard}} \\
+GET    & \texttt{/api/dashboard/manager/\{id\}}          & Manager statistics \\
+GET    & \texttt{/api/dashboard/worker/\{id\}}           & Worker statistics \\
+\midrule
+\multicolumn{3}{l}{\textit{Categories \& Audit}} \\
+GET    & \texttt{/api/categories}                        & List all skill categories \\
+GET    & \texttt{/api/audit-logs}                        & Get audit log entries \\
+\bottomrule
+\end{longtable}
+
+%--------------------------------------------------------------
+\section{Acceptance Tests (UAT)}
+%--------------------------------------------------------------
+
+\subsection*{Positive Tests}
+
+% ---------- UAT 1+ ----------
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 1+: Assign Task to Worker}} \\
+\hline
+Test Case ID        & UAT-01+ \\
+\hline
+Description         & The manager assigns a task to a worker. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item Manager must be logged in
+    \item Manager must have at least one project with at least one task and one worker
+    \item Internet connection is available
+\end{itemize} \\
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item Manager opens the Project List and taps on an existing project.
+    \item Project details are displayed.
+    \item Manager taps the \textbf{Add Task} button and creates a task.
+    \item In Task Detail, manager taps \textbf{Assign Worker}.
+    \item A screen with available workers filtered by skill certificate is shown.
+    \item Manager selects an eligible worker and confirms.
+    \item The assigned worker's name appears in the Task Detail screen.
+    \item Worker receives a push notification about the new assignment.
+\end{enumerate} \\
+\hline
+Output Conditions   & The worker is successfully assigned to the task; their name appears in Task Detail and they receive a push notification. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ---------- UAT 2+ ----------
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 2+: Manager Creates a New Project}} \\
+\hline
+Test Case ID        & UAT-02+ \\
+\hline
+Description         & The manager creates a new project. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item Manager is logged in
+    \item Internet connection is available
+\end{itemize} \\
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item The manager opens the application and navigates to the project list.
+    \item The manager taps \emph{``Add project +''}.
+    \item A form appears with fields for project parameters.
+    \item The manager fills in: title, description, deadline, address, GPS, and client info.
+    \item The manager confirms the creation.
+    \item The new project appears in the project list.
+    \item The manager taps the project to verify all details are correctly saved.
+\end{enumerate} \\
+\hline
+Output Conditions   & The project is successfully created and is visible in the project list with all entered data. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ---------- UAT 3+ ----------
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 3+: Create New Task}} \\
+\hline
+Test Case ID        & UAT-03+ \\
+\hline
+Description         & The manager creates a new task within an existing project. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item Manager is logged in
+    \item Internet connection is available
+    \item The project in which the task will be created already exists
+\end{itemize} \\
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item The manager opens the application and navigates to the project list.
+    \item The manager selects the project in which they want to create the task.
+    \item The manager taps \emph{``Add task''}.
+    \item The manager fills in the task name, description, category, priority, and deadline.
+    \item The manager confirms the creation.
+    \item The task appears in the task list of the project with status \textit{Pending}.
+\end{enumerate} \\
+\hline
+Output Conditions   & The task is successfully created and appears in the task list of the project. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ---------- UAT 4+ ----------
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 4+: The Manager Inspects Workers on the Map}} \\
+\hline
+Test Case ID        & UAT-04+ \\
+\hline
+Description         & The manager inspects the live location of a worker assigned to a project. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item Manager is logged in
+    \item Internet connection is available
+    \item The project to which the worker is assigned already exists
+    \item The inspected worker is online and has location sharing enabled
+\end{itemize} \\
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item The manager opens the application and navigates to the project list.
+    \item The manager selects the project to which the worker is assigned.
+    \item The manager taps the \emph{``View Map''} button.
+    \item The system displays the full-screen map.
+    \item The worker's marker is visible on the map with an online indicator.
+    \item The manager taps on the worker's marker to see name and status.
+    \item After the worker moves, the marker updates to the new position within 15 seconds.
+\end{enumerate} \\
+\hline
+Output Conditions   & The worker's live location is displayed and updates in real time on the map. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ---------- UAT 5+ ----------
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 5+: Real-Time Chat Between Manager and Worker}} \\
+\hline
+Test Case ID        & UAT-05+ \\
+\hline
+Description         & The worker sends a message to the manager in real time. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item Both Manager and Worker are logged in
+    \item Internet connection is available on both devices
+\end{itemize} \\
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item The worker opens the application and taps the message icon in the navigation bar.
+    \item The worker locates the chat with the manager in the chat list and taps on it.
+    \item The worker writes a message and taps the send icon.
+    \item The message appears instantly on the manager's device without refreshing.
+    \item The manager replies; the reply appears instantly on the worker's device.
+    \item Both devices show the full message history in chronological order.
+\end{enumerate} \\
+\hline
+Output Conditions   & Messages are delivered in real time on both sides; full history is preserved. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ---------- UAT 6+ ----------
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 6+: The Worker Uploads a Skill Certificate}} \\
+\hline
+Test Case ID        & UAT-06+ \\
+\hline
+Description         & The worker uploads a plumber certificate so the manager can see their area of expertise. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item Worker is logged in
+    \item Internet connection is available
+\end{itemize} \\
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item The worker opens the application and taps the profile icon in the navigation bar.
+    \item The worker taps the \emph{Edit Profile} button.
+    \item The worker locates the relevant skill category (e.g.\ Plumbing) and taps \emph{Upload}.
+    \item The worker selects the certificate file from the gallery and confirms.
+    \item The worker taps \emph{Save} to save the profile changes.
+    \item The certificate appears in the worker's profile with status \textit{Submitted}.
+    \item The manager can see the certificate in the Workers screen under the worker's card.
+\end{enumerate} \\
+\hline
+Output Conditions   & The certificate is uploaded, visible in the worker's profile, and visible to the manager. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ---------- UAT 7+ ----------
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 7+: The Manager Invites a New Worker via Registration Code}} \\
+\hline
+Test Case ID        & UAT-07+ \\
+\hline
+Description         & The manager generates a numeric registration code and sends it to a prospective worker via SMS or email. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item Manager is logged in
+    \item Internet connection is available
+\end{itemize} \\
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item The manager opens the application and navigates to the Workers section.
+    \item The manager taps the \emph{Invite Worker} button.
+    \item A unique numeric registration code is generated and displayed.
+    \item The manager sends the code to the prospective worker via SMS or email.
+\end{enumerate} \\
+\hline
+Output Conditions   & The numeric code is generated and sent\\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
+\end{tabularx}
+\end{table}
+
+
+\clearpage
+\subsection*{Negative Tests}
+
+% ---------- UAT 1- ----------
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 1-: Manager Tries to Create a Project with a Duplicate Name}} \\
+\hline
+Test Case ID        & UAT-N01 \\
+\hline
+Description         & The system prevents the manager from creating a project with a name already in use. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item Manager is logged in
+    \item Internet connection is available
+    \item A project with the same name already exists
+\end{itemize} \\
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item The manager opens the application and navigates to the project list.
+    \item The manager taps \emph{``Add project''}.
+    \item A form appears with default project parameters.
+    \item The manager enters a name that is already in use.
+    \item The manager confirms the creation.
+    \item An error message appears indicating a duplicate name.
+    \item The manager enters a unique name and confirms successfully.
+\end{enumerate} \\
+\hline
+Output Conditions   & The manager is notified of the duplicate name and successfully creates the project with a unique name. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ---------- UAT 2- ----------
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 2-: Worker Tries to Send a Chat Message Without Internet}} \\
+\hline
+Test Case ID        & UAT-N02 \\
+\hline
+Description         & The system prevents the worker from sending a message when there is no internet connection. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item Worker is logged in
+    \item Internet connection is unavailable (airplane mode on)
+    \item A chat conversation with the manager already exists
+\end{itemize} \\
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item The worker opens the application and taps the message icon.
+    \item The worker locates the chat with the manager and taps on it.
+    \item A banner \emph{``You are offline. Chat is unavailable.''} is displayed.
+    \item The worker attempts to write and send a message.
+    \item The send action fails; an error message is displayed.
+    \item The worker disables airplane mode; the banner disappears and chat resumes.
+\end{enumerate} \\
+\hline
+Output Conditions   & The message is not sent; an offline banner is displayed. Chat resumes when online. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
+\end{tabularx}
+\end{table}
+
+% ---------- UAT 3- ----------
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{|>{\bfseries}l|X|}
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{UAT 3-: Manager Tries to Create a Task Without a Name}} \\
+\hline
+Test Case ID        & UAT-N03 \\
+\hline
+Description         & The system prevents the manager from creating a task without entering a name. \\
+\hline
+Preconditions       &
+\begin{itemize}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item Manager is logged in
+    \item Internet connection is available
+    \item The project in which the task will be created already exists
+\end{itemize} \\
+\hline
+Test Scenario       &
+\begin{enumerate}[noitemsep, topsep=2pt, partopsep=0pt]
+    \item The manager opens the project list and selects a project.
+    \item The manager taps \emph{``Add task''}.
+    \item The manager leaves the task name field empty.
+    \item The manager taps the confirm / save button.
+    \item An error message appears below the name input field.
+    \item The task is not created.
+\end{enumerate} \\
+\hline
+Output Conditions   & The task is not created and an error message is displayed. \\
+\hline
+\multicolumn{2}{|l|}{\cellcolor{uatgreen}\textbf{Result: PASS / FAIL}} \\
+\hline
+\end{tabularx}
+\end{table}
+
+
+%--------------------------------------------------------------
+\section{Changes from Original Design}
+%--------------------------------------------------------------
+
+The following changes were made from the original specification (Milestone 1) during implementation:
+
+\begin{tabularx}{\textwidth}{|l|X|X|}
+\hline
+\textbf{Area} & \textbf{Original Design} & \textbf{Implemented} \\
+\hline
+File storage & External cloud bucket (S3 / Cloudinary) & Binary stored directly in PostgreSQL (\texttt{bytea}); eliminates external dependency and simplifies auth \\
+\hline
+Task photos & Separate \texttt{task\_photos} table & \texttt{task\_id} FK added to \texttt{project\_photos}; unified photos table reduces query complexity \\
+\hline
+Push notifications & FCM + APNs (separate credentials) & Expo Push SDK (\texttt{expo-server-sdk}); single token per device, abstracts FCM/APNs automatically \\
+\hline
+Frontend state & Redux Toolkit + WatermelonDB & AsyncStorage + expo-sqlite for simpler offline sync; appropriate for current app scale \\
+\hline
+Offline sync & WatermelonDB reactive sync & \texttt{task\_status\_sync} table with server-wins conflict resolution; simpler and sufficient for the task-status use case \\
+\hline
+PVP choice & PVP5 --- Firebase Analytics + Crashlytics & \textbf{PVP2 --- Accessibility} (screen reader labels, gesture navigation, WCAG colour contrast); Firebase dependencies removed from project \\
+\hline
+Certificate flow & Manager manually accepts or rejects each certificate & Certificate is uploaded by the worker and immediately visible to the manager; no explicit accept/reject step --- the manager uses certificate presence to decide assignment eligibility \\
+\hline
+Worker invite & Unique URL invite link copied and shared & Unique multi-digit numeric code generated by the server and sent to the worker via SMS or email; worker enters the code during registration \\
+\hline
+Platform target & iOS 17+ and Android 10+ & \textbf{iOS 15+ and Android 10+}; Expo SDK 54 and React Native 0.81 support iOS 15 and Android API level 29 (10) as minimum targets \\
+\hline
+\end{tabularx}
+
+%--------------------------------------------------------------
+\section{Mandatory Requirements Coverage}
+%--------------------------------------------------------------
+
+The project specification defines a set of mandatory features that every submission must contain. The table below confirms that WorkFlow implements each requirement in full.
+
+\begin{tabularx}{\textwidth}{|p{0.32\textwidth}|X|p{0.12\textwidth}|}
+\hline
+\textbf{Requirement} & \textbf{Implementation in WorkFlow} & \textbf{Status} \\
+\hline
+\textbf{User management} --- persistent authentication; at least two roles with different permissions &
+JWT token stored in \texttt{expo-secure-store} (iOS Keychain / Android Keystore); token is refreshed on every launch. Two roles: \textbf{Manager} (full control) and \textbf{Worker} (own tasks only). Role enforced both in the UI and at the API layer (403 returned for role violations). &
+\checkmark\ Done \\
+\hline
+\textbf{Offline mode} --- create, edit, and delete a data entity without internet; change applied in the background on reconnect; conflict handling &
+Workers can update task status while offline. Changes are written to the local \texttt{task\_status\_sync} table. On reconnect, \texttt{@react-native-community/netinfo} detects connectivity and the sync job flushes the queue to the server. Conflicts are resolved with a server-wins policy. &
+\checkmark\ Done \\
+\hline
+\textbf{Real-time WebSocket communication} --- interactive, bidirectional &
+Socket.IO (v4.8) is used for: (1) bidirectional chat between manager and workers; (2) live GPS location updates sent by workers every 10 s and rendered on the manager's map in real time. Each client authenticates via JWT on the Socket.IO handshake. &
+\checkmark\ Done \\
+\hline
+\textbf{Dark mode support} &
+The application respects the system colour scheme via React Native's \texttt{useColorScheme} hook. All screens, components, and navigation elements switch between light and dark themes automatically. &
+\checkmark\ Done \\
+\hline
+\textbf{Push notifications} --- triggered by the app and by the server; at least one notification deep-links to relevant content; works while the app is in the background &
+Notifications are sent by the server (Expo Push SDK) when: a task is assigned to a worker, and when a worker marks a task as Done. Both notifications carry a deep link payload; tapping them navigates directly to the relevant task detail screen. Delivery works while the app is backgrounded or closed. &
+\checkmark\ Done \\
+\hline
+\textbf{Permission handling} --- the app requests access to system resources (gallery, camera, microphone, files, location, ...) &
+The app requests permissions at the point of use via Expo APIs: \texttt{expo-image-picker} (camera + gallery), \texttt{expo-location} (foreground GPS), \texttt{expo-notifications} (push), \texttt{expo-document-picker} (certificate files). Permission denial is handled gracefully with user-facing explanations. &
+\checkmark\ Done \\
+\hline
+\end{tabularx}
+
+%--------------------------------------------------------------
+\section{Project Summary}
+%--------------------------------------------------------------
+
+\subsection{Deliverables}
+
+\begin{tabular}{ll}
+\toprule
+\textbf{Item} & \textbf{Status} \\
+\midrule
+React Native / Expo Frontend (iOS 15+ / Android 10+) & \checkmark\ Complete \\
+Node.js / Express Backend (REST + Socket.IO)          & \checkmark\ Complete \\
+PostgreSQL Database with migration script             & \checkmark\ Complete \\
+Authentication (JWT + Google SSO)                     & \checkmark\ Complete \\
+Real-time Chat (WebSocket)                            & \checkmark\ Complete \\
+Live Location Tracking (GPS map)                      & \checkmark\ Complete \\
+Push Notifications (Expo Push, deep link)             & \checkmark\ Complete \\
+Certificate Upload                                    & \checkmark\ Complete \\
+Offline Task Status Sync + Conflict Resolution        & \checkmark\ Complete \\
+Audit Logging                                         & \checkmark\ Complete \\
+Swagger API Documentation                             & \checkmark\ Complete \\
+Dark Mode                                             & \checkmark\ Complete \\
+Accessibility (PVP2 --- VoiceOver / TalkBack)         & \checkmark\ Complete \\
+Google SSO (PVP4)                                     & \checkmark\ Complete \\
+GPS Location Service (PVP6)                           & \checkmark\ Complete \\
+\bottomrule
+\end{tabular}
+
+\subsection{Repository}
+
+\begin{tabular}{ll}
+\toprule
+\textbf{Item} & \textbf{Value} \\
+\midrule
+GitHub repository & \url{https://github.com/StyroD/zmabt} \\
+Submission commit hash & \texttt{5ea53f4a} \\
+Branch & \texttt{adam} \\
+\bottomrule
+\end{tabular}
+
+\end{document}
