@@ -6,7 +6,7 @@ import { disconnectSocket } from './socket'
 
 //export const BASE_URL = 'http://10.0.2.2:3000/api';  // Android emulator
  //export const BASE_URL = 'http://localhost:3000/api'// iOS simulator
-export const BASE_URL = 'http://10.30.15.65:3000/api' // Physical device
+export const BASE_URL = 'http://172.20.10.8:3000/api' // Physical device
 
 const client = axios.create({
   baseURL: BASE_URL,

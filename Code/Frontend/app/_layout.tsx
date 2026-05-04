@@ -235,6 +235,7 @@ export default function RootLayout() {
                 <SafeAreaProvider>
                     <NetworkProvider>
                         <AppContent />
+                        <InAppToast />
                     </NetworkProvider>
                 </SafeAreaProvider>
             </ThemeProvider>

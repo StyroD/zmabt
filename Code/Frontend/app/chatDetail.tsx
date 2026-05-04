@@ -15,6 +15,7 @@ import { cacheMessages, getCachedMessages, appendMessage } from '@/utils/db'
 import { unreadSignal } from "@/utils/unreadSignal"
 import { activeChatSignal } from "@/utils/activeChatSignal"
 import NetInfo from "@react-native-community/netinfo"
+import { toastSignal } from '@/utils/toastSignal'
 
 type Message = {
   id: string
@@ -52,57 +53,72 @@ export default function ChatDetail() {
     return () => unsubscribe()
   }, [])
 
-  useEffect(() => {
-    let mounted = true
+ useEffect(() => {
+  let mounted = true
 
-    const handleNewMessage = (msg: Message) => {
-      if (!mounted) return
-      if (msg.sender_id === currentUserIdRef.current) return
-      if (msg.sender_id !== userId) return
-      appendMessage(msg)
-      setMessages(prev => [...prev, msg])
+  const handleNewMessage = (msg: any) => {
+    if (!mounted) return
+
+    const uid = currentUserIdRef.current
+    const otherUserId =
+      msg.sender_id === uid ? msg.receiver_id : msg.sender_id
+
+    if (
+      msg.sender_id !== uid &&
+      msg.sender_id !== activeChatSignal.get()
+    ) {
+      toastSignal.show({
+        title: msg.sender_name || 'New message',
+        body: msg.content,
+        data: {
+          type: 'message',
+          senderId: otherUserId,
+          senderName: msg.sender_name,
+        },
+      })
     }
+  }
 
-    const setup = async () => {
+  const setup = async () => {
+    try {
+      const [uid, socket] = await Promise.all([
+        SecureStore.getItemAsync('userId'),
+        getSocket(),
+      ])
+
+      if (!mounted) return
+
+      currentUserIdRef.current = uid ?? ''
+      setCurrentUserId(uid ?? '')
+      socketRef.current = socket
+
+      socket.on('new_message', handleNewMessage)
+
       try {
-        const [uid, socket] = await Promise.all([
-          SecureStore.getItemAsync('userId'),
-          getSocket(),
-        ])
-
+        const res = await getMessages(userId)
         if (!mounted) return
-
-        currentUserIdRef.current = uid ?? ''
-        setCurrentUserId(uid ?? '')
-        socketRef.current = socket
-
-        socket.on('new_message', handleNewMessage)
-
-        try {
-          const res = await getMessages(userId)
-          if (!mounted) return
-          setMessages(res.data)
-          await cacheMessages(uid ?? '', userId, res.data)
-        } catch {
-          const cached = await getCachedMessages(uid ?? '', userId)
-          if (!mounted) return
-          setMessages(cached)
-        } finally {
-          if (mounted) setLoading(false)
-        }
-      } catch (err) {
-        console.error(err)
+        setMessages(res.data)
+        await cacheMessages(uid ?? '', userId, res.data)
+      } catch {
+        const cached = await getCachedMessages(uid ?? '', userId)
+        if (!mounted) return
+        setMessages(cached)
+      } finally {
         if (mounted) setLoading(false)
       }
+    } catch (err) {
+      console.error(err)
+      if (mounted) setLoading(false)
     }
+  }
 
-    setup()
+  setup()
 
-    return () => {
-      mounted = false
-      socketRef.current?.off('new_message', handleNewMessage)
-    }
-  }, [userId])
+  return () => {
+    mounted = false
+    socketRef.current?.off('new_message', handleNewMessage)
+  }
+}, [userId])
 
   const showSendError = () => {
     const errMsg: Message = {
