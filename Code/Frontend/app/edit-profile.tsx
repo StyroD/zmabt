@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useColors, useTheme } from '@/contexts/ThemeContext'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
-import { updateProfileWithAvatar, updateProfile, getUserById, getAvatarUrl } from '@/api/endpoints/users'
+import { updateProfileWithAvatar, updateProfile, getUserById } from '@/api/endpoints/users'
 import { getCategories } from '@/api/endpoints/categories'
 import * as SecureStore from 'expo-secure-store'
 import { saveUser } from '@/utils/secureUser'
@@ -17,18 +17,22 @@ export default function EditProfile() {
 
     const [userId, setUserId] = useState<string | null>(null)
     const [role, setRole] = useState<string | null>(null)
-    const [title, setTitle] = useState('')
-    const [firstName, setFirstName] = useState('')
-    const [lastName, setLastName] = useState('')
-    const [hourlyRate, setHourlyRate] = useState('')
     const [avatarUri, setAvatarUri] = useState<string | null>(null)
-    const [savedAvatarUri, setSavedAvatarUri] = useState<string | null>(null)
     const [categories, setCategories] = useState<any[]>([])
     const [errors, setErrors] = useState<Record<string, string>>({})
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+
+    // Basic
+    const [firstName, setFirstName] = useState('')
+    const [lastName, setLastName] = useState('')
+    const [hourlyRate, setHourlyRate] = useState('')
+
+    // Contact
     const [phone, setPhone] = useState('')
     const [address, setAddress] = useState('')
+
+    // Emergency
     const [emergencyName, setEmergencyName] = useState('')
     const [emergencyPhone, setEmergencyPhone] = useState('')
     const [iban, setIban] = useState('')
@@ -44,13 +48,13 @@ export default function EditProfile() {
 
                 setUserId(id)
                 setRole(storedUser.role ?? null)
+                console.log('edit-profile: id=', id, 'role=', storedUser.role)
 
                 const [userRes, catRes] = await Promise.all([
                     getUserById(id),
                     getCategories(),
                 ])
                 const user = userRes.data
-                setTitle(user.title ?? '')
                 setFirstName(user.first_name ?? '')
                 setLastName(user.last_name ?? '')
                 setHourlyRate(user.hourly_rate?.toString() ?? '')
@@ -60,9 +64,6 @@ export default function EditProfile() {
                 setEmergencyPhone(user.emergency_contact_phone ?? '')
                 setIban(user.iban ?? '')
                 setNotes(user.notes ?? '')
-                if (user.has_avatar) {
-                    setSavedAvatarUri(getAvatarUrl(id))
-                }
                 setCategories(catRes.data)
             } catch (err) {
                 console.error(err)
@@ -100,40 +101,40 @@ export default function EditProfile() {
     }
 
     const handleSave = async () => {
-        if (!validate()) return
-        if (!userId) { Alert.alert('Error', 'User ID not found'); return }
-        setSaving(true)
-        try {
-            const data = {
-                title: title.trim() || null,
-                first_name: firstName.trim() || null,
-                last_name: lastName.trim() || null,
-                phone: phone.trim() || null,
-                address: address.trim() || null,
-                hourly_rate: hourlyRate ? Number(hourlyRate) : null,
-                emergency_contact_name: emergencyName.trim() || null,
-                emergency_contact_phone: emergencyPhone.trim() || null,
-                iban: iban.trim() || null,
-                notes: notes.trim() || null,
-            }
-
-            if (avatarUri) {
-                await updateProfileWithAvatar(userId, data, avatarUri)
-            } else {
-                await updateProfile(userId, data)
-            }
-
-            const freshRes = await getUserById(userId)
-            const stored = await SecureStore.getItemAsync('user')
-            const localUser = stored ? JSON.parse(stored) : {}
-            await saveUser({ ...localUser, ...freshRes.data })
-            router.back()
-        } catch (e: any) {
-            Alert.alert('Error', e?.response?.data?.error ?? e?.message ?? 'Could not save profile')
-        } finally {
-            setSaving(false)
+    if (!validate()) return
+    if (!userId) { Alert.alert('Error', 'User ID not found'); return }
+    setSaving(true)
+    try {
+        const data = {
+            first_name: firstName.trim() || null,
+            last_name: lastName.trim() || null,
+            phone: phone.trim() || null,
+            address: address.trim() || null,
+            hourly_rate: hourlyRate ? Number(hourlyRate) : null,
+            emergency_contact_name: emergencyName.trim() || null,
+            emergency_contact_phone: emergencyPhone.trim() || null,
+            iban: iban.trim() || null,
+            notes: notes.trim() || null,
         }
+
+        if (avatarUri) {
+            await updateProfileWithAvatar(userId, data, avatarUri)
+        } else {
+            await updateProfile(userId, data)
+        }
+
+        const freshRes = await getUserById(userId)
+        console.log('fresh user has_avatar=', freshRes.data.has_avatar)
+        const stored = await SecureStore.getItemAsync('user')
+        const localUser = stored ? JSON.parse(stored) : {}
+        await saveUser({ ...localUser, ...freshRes.data })
+        router.back()
+    } catch (e: any) {
+        Alert.alert('Error', e?.response?.data?.error ?? e?.message ?? 'Could not save profile')
+    } finally {
+        setSaving(false)
     }
+}
 
     const handleLogout = async () => {
         await SecureStore.deleteItemAsync('token')
@@ -160,8 +161,6 @@ export default function EditProfile() {
                 <View style={styles.avatarSection}>
                     {avatarUri
                         ? <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-                        : savedAvatarUri
-                        ? <Image source={{ uri: savedAvatarUri }} style={styles.avatarImage} />
                         : <Ionicons name="person-circle" size={90} color={Colors.border} />
                     }
                     <TouchableOpacity style={styles.changePhotoBtn} onPress={handlePickAvatar}>
@@ -172,7 +171,6 @@ export default function EditProfile() {
 
                 {/* Basic info */}
                 <Text style={styles.sectionLabel}>Basic info</Text>
-                <Field label="Title" value={title} onChangeText={setTitle} colors={Colors} />
                 <Field label="First name" value={firstName} onChangeText={t => { setFirstName(t); setErrors(e => ({ ...e, firstName: '' })) }} error={errors.firstName} colors={Colors} />
                 <Field label="Last name" value={lastName} onChangeText={t => { setLastName(t); setErrors(e => ({ ...e, lastName: '' })) }} error={errors.lastName} colors={Colors} />
                 {!isManager && (
@@ -185,7 +183,6 @@ export default function EditProfile() {
                 <Field label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" colors={Colors} />
                 <Field label="Address" value={address} onChangeText={setAddress} colors={Colors} />
 
-                {!isManager && (
                     <>
                         <View style={styles.sectionDivider} />
                         <Text style={styles.sectionLabel}>Emergency contact</Text>
@@ -196,7 +193,11 @@ export default function EditProfile() {
                         <Text style={styles.sectionLabel}>Employment</Text>
                         <Field label="IBAN" value={iban} onChangeText={setIban} colors={Colors} />
                         <Field label="Notes" value={notes} onChangeText={setNotes} multiline colors={Colors} />
+                    </>
 
+                {/* Certificates — workers only */}
+                {!isManager && (
+                    <>
                         <View style={styles.sectionDivider} />
                         <Text style={styles.sectionLabel}>Certificates</Text>
                         <View style={styles.certContainer}>
@@ -218,7 +219,6 @@ export default function EditProfile() {
                         </View>
                     </>
                 )}
-
                 {/* Appearance */}
                 <View style={styles.sectionDivider} />
                 <Text style={styles.sectionLabel}>Appearance</Text>

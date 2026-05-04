@@ -49,6 +49,8 @@ function getRouteFromNotificationData(data: Record<string, any>): string {
             return projectId
                 ? `/tabs/projectDetail_worker?id=${projectId}`
                 : '/tabs/projectsList'
+        case 'worker_removed':
+            return '/tabs/projectsList'
         case 'message':
             return senderId
                 ? `/chatDetail?userId=${senderId}&name=${encodeURIComponent(senderName ?? '')}`
@@ -90,7 +92,7 @@ async function registerPushToken() {
         Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId
     const tokenData = await Notifications.getExpoPushTokenAsync(
         projectId ? { projectId } : undefined
-    ).catch(() => null)
+    ).catch((err) => { console.error('[Push] getExpoPushTokenAsync failed:', err); return null })
     if (!tokenData) return
     await updatePushToken(userId, tokenData.data).catch(() => {})
 }
@@ -201,7 +203,6 @@ function AppContent() {
     useEffect(() => {
         if (!isLoggedIn) return;
 
-        Notifications.requestPermissionsAsync().catch(() => {})
         registerPushToken()
 
         let socketRef: any = null;

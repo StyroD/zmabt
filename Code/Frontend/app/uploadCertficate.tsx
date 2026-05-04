@@ -85,7 +85,6 @@ export default function UploadCertificate() {
             })
 
             logCertificateUploaded().catch(() => {})
-            Alert.alert('Success', 'Certificate submitted for review')
             router.back()
         } catch (err: any) {
             recordError(err instanceof Error ? err : new Error(String(err)), 'confirmUpload').catch(() => {})

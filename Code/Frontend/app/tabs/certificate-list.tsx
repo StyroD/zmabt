@@ -59,9 +59,9 @@ export default function CertificateList() {
       fontWeight: '700',
       color: Colors.textPrimary,
     },
-    pdfLink: {
+    showLink: {
       fontSize: 14,
-      color: Colors.textPrimary,
+      color: Colors.primary,
       textDecorationLine: 'underline',
     },
     empty: {
@@ -84,7 +84,7 @@ export default function CertificateList() {
               <View key={cert.id} style={styles.row}>
                 <Text style={styles.certName}>{cert.name}</Text>
                 <TouchableOpacity onPress={() => openFile(cert)}>
-                  <Text style={styles.pdfLink}>Show</Text>
+                  <Text style={styles.showLink}>Show</Text>
                 </TouchableOpacity>
               </View>
             ))

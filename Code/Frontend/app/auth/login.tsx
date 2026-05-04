@@ -156,8 +156,8 @@ export default function Login() {
                 <LogBox placeholder="Enter your email" label="Email" value={email} onChangeText={setEmail} />
                 <LogBox placeholder="Enter your password" label="Password" value={password} onChangeText={setPassword} secureTextEntry={true} icon="eye-off" />
                 <View style={{ flexDirection: 'row', gap: 16 }}>
-                    <TouchableOpacity onPress={() => router.push('/auth/sign')}>
-                        <Text style={styles.link}>Don't have an account?</Text>
+                    <TouchableOpacity onPress={() => router.push('/auth/register-invite' as any)}>
+                        <Text style={styles.link}>Register with invite code</Text>
                     </TouchableOpacity>
                 </View>
                 <TouchableOpacity style={styles.button} onPress={handleLogin}>

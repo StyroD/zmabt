@@ -1,12 +1,13 @@
 import {
-  View, Text,StyleSheet,ScrollView,TouchableOpacity,TextInput, ActivityIndicator, Keyboard,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Keyboard, Share, Alert,
 } from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
-import { useEffect, useState, useMemo } from 'react'
+import { useCallback, useState, useMemo } from 'react'
 import { Ionicons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { router, useFocusEffect } from 'expo-router'
 import { getAllWorkers } from '@/api/endpoints/workers'
+import { generateInvite } from '@/api/endpoints/invite'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { cacheWorkers, getCachedWorkers } from '@/utils/db'
 import * as SecureStore from 'expo-secure-store'
@@ -19,12 +20,15 @@ export default function Workers() {
   const [error, setError] = useState(false)
   const [search, setSearch] = useState('')
   const [isFocused, setIsFocused] = useState(false)
+  const [isManager, setIsManager] = useState(false)
+  const [inviting, setInviting] = useState(false)
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     const load = async () => {
       try {
         const userRaw = await SecureStore.getItemAsync('user')
         const user = userRaw ? JSON.parse(userRaw) : null
+        if (user?.role === 'manager') setIsManager(true)
         const res = await getAllWorkers(user?.role === 'manager' ? user.id : undefined)
         setWorkers(res.data)
         setError(false)
@@ -41,7 +45,7 @@ export default function Workers() {
       }
     }
     load()
-  }, [])
+  }, []))
 
   const getDisplayName = (w: any) =>
     w.first_name && w.last_name ? `${w.first_name} ${w.last_name}` : w.username
@@ -181,7 +185,37 @@ export default function Workers() {
       color: Colors.textSecondary,
       marginTop: 40,
     },
+    inviteBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: Colors.primary,
+      borderRadius: 10,
+      paddingVertical: 12,
+      marginBottom: 12,
+    },
+    inviteBtnText: {
+      color: '#fff',
+      fontWeight: '600',
+      fontSize: 15,
+    },
   })
+
+  const handleInvite = async () => {
+    setInviting(true)
+    try {
+      const res = await generateInvite()
+      const { token } = res.data
+      await Share.share({
+        message: `You've been invited to join the team. Use this code to register in the app:\n\n${token}`,
+      })
+    } catch {
+      Alert.alert('Error', 'Could not generate invite link')
+    } finally {
+      setInviting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -193,6 +227,12 @@ export default function Workers() {
 
   return (
     <ScreenWrapper title="Workers" backRoute="/tabs/dashboard">
+      {isManager && (
+        <TouchableOpacity style={[styles.inviteBtn, inviting && { opacity: 0.6 }]} onPress={handleInvite} disabled={inviting}>
+          <Ionicons name="person-add-outline" size={18} color="#fff" />
+          <Text style={styles.inviteBtnText}>{inviting ? 'Generating…' : 'Invite Worker'}</Text>
+        </TouchableOpacity>
+      )}
       <View style={styles.searchContainer}>
         <View style={[styles.searchRow, showDropdown && styles.searchRowOpen]}>
           <Ionicons name="search-outline" size={16} color={Colors.textSecondary} />
