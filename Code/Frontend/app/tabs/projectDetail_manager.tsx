@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal as RNModal } from 'react-native'
 import { Colors } from '../../constants/color'
 import { Modal, TextInput, Alert, ActivityIndicator } from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
@@ -41,6 +41,7 @@ export default function ProjectDetail() {
   const [certFilter, setCertFilter] = useState<string | null>(null)
   const [assigning, setAssigning] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [selectedPhoto, setSelectedPhoto] = useState<any>(null)
   const scrollRef = useRef<ScrollView>(null)
 
  const handleDeleteProject = () => {
@@ -166,7 +167,6 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
       .then(res => {
         setProject(res.data)
         setLoading(false)
-        // fetch photos here using the freshly loaded project id
         getProjectPhotos(res.data.id)
           .then(r => setPhotos(r.data))
           .catch(err => console.error(err))
@@ -483,6 +483,27 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
       fontSize: 15,
       fontWeight: '600',
     },
+    photoViewerOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.92)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    photoViewerClose: {
+      position: 'absolute',
+      top: Math.max(insets.top, 20) + 8,
+      right: 20,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    photoViewerImage: {
+      width: '100%',
+      aspectRatio: 1,
+    },
   })
 
   if (loading) {
@@ -593,7 +614,14 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
         <Text style={styles.sectionLabel}>Photo documentation</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
           {photos.map(photo => (
-            <View key={photo.id} style={styles.photoBox}>
+            <TouchableOpacity
+              key={photo.id}
+              style={styles.photoBox}
+              onPress={() => photo.file_data && setSelectedPhoto(photo)}
+              accessibilityRole="button"
+              accessibilityLabel="View photo"
+              activeOpacity={photo.file_data ? 0.7 : 1}
+            >
               {photo.file_data ? (
                 <Image
                   source={{ uri: `data:${photo.mime_type ?? 'image/jpeg'};base64,${photo.file_data}` }}
@@ -604,7 +632,7 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
               ) : (
                 <Ionicons name="image-outline" size={28} color={Colors.textSecondary} accessible={false} />
               )}
-            </View>
+            </TouchableOpacity>
           ))}
           <TouchableOpacity
             style={[styles.photoBox, styles.addPhotoBox, uploadingPhoto && { opacity: 0.5 }]}
@@ -667,6 +695,35 @@ const handleUploadPhoto = async (asset: ImagePicker.ImagePickerAsset) => {
         <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
       </ScrollView>
 
+      {/* Photo viewer */}
+      <RNModal
+        visible={!!selectedPhoto}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedPhoto(null)}
+        statusBarTranslucent
+      >
+        <View style={styles.photoViewerOverlay}>
+          {selectedPhoto?.file_data && (
+            <Image
+              source={{ uri: `data:${selectedPhoto.mime_type ?? 'image/jpeg'};base64,${selectedPhoto.file_data}` }}
+              style={styles.photoViewerImage}
+              resizeMode="contain"
+              accessibilityLabel="Enlarged project photo"
+            />
+          )}
+          <TouchableOpacity
+            style={styles.photoViewerClose}
+            onPress={() => setSelectedPhoto(null)}
+            accessibilityRole="button"
+            accessibilityLabel="Close photo"
+          >
+            <AntDesign name="close" size={18} color="#fff" accessible={false} />
+          </TouchableOpacity>
+        </View>
+      </RNModal>
+
+      {/* Assign workers modal */}
       <Modal visible={assignModalVisible} animationType="slide" transparent onRequestClose={() => setAssignModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet} accessibilityViewIsModal={true}>
