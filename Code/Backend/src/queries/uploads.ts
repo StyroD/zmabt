@@ -1,6 +1,5 @@
 import { Request, Response } from 'express'
 import pool from '../config/db'
-import { sendNotification } from '../utils/notifications'
 
 export const uploadCertificate = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -21,32 +20,10 @@ export const uploadCertificate = async (req: Request, res: Response): Promise<vo
 
     const result = await pool.query(
       `INSERT INTO certificates (worker_id, category_id, name, file_data, file_url, status, submitted_at)
-       VALUES ($1, $2, $3, $4, $5, 'pending', NOW()) RETURNING id, worker_id, category_id, name, file_url, status, reviewed_by, reviewed_at, submitted_at`,
+       VALUES ($1, $2, $3, $4, $5, 'accepted', NOW()) RETURNING id, worker_id, category_id, name, file_url, status, reviewed_by, reviewed_at, submitted_at`,
       [worker_id, category_id, name, fileData, mimeType]
     )
     const cert = result.rows[0]
-
-    // Notify the worker's manager
-    const managerResult = await pool.query(
-      `SELECT p.manager_id FROM project_workers pw
-       JOIN projects p ON p.id = pw.project_id
-       WHERE pw.worker_id = $1
-       LIMIT 1`,
-      [worker_id]
-    )
-    const managerId = managerResult.rows[0]?.manager_id
-
-    if (managerId) {
-      await sendNotification({
-        userId: managerId,
-        type: 'certificate_submitted',
-        title: 'Certificate submitted',
-        body: `A worker submitted a certificate: ${name}`,
-        referenceId: cert.id,
-        referenceType: 'certificate',
-      })
-    }
-
     res.json(cert)
   } catch (err: any) {
     res.status(500).json({ error: err.message })
@@ -91,41 +68,6 @@ export const getCertificatesByWorker = async (req: Request, res: Response): Prom
   }
 }
 
-export const updateCertificateStatus = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params
-    const { status, reviewed_by } = req.body
-    if (!['pending', 'accepted', 'rejected'].includes(status)) {
-      res.status(400).json({ error: 'Invalid status' })
-      return
-    }
-    const result = await pool.query(
-      `UPDATE certificates 
-       SET status = $1, reviewed_by = $2, reviewed_at = NOW()
-       WHERE id = $3 RETURNING *`,
-      [status, reviewed_by, id]
-    )
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Certificate not found' })
-      return
-    }
-    const cert = result.rows[0]
-
-    // Notify the worker about the review result
-    await sendNotification({
-      userId: cert.worker_id,
-      type: 'certificate_reviewed',
-      title: status === 'accepted' ? 'Certificate accepted' : 'Certificate rejected',
-      body: `Your certificate "${cert.name}" has been ${status}`,
-      referenceId: cert.id,
-      referenceType: 'certificate',
-    })
-
-    res.json(cert)
-  } catch (err: any) {
-    res.status(500).json({ error: err.message })
-  }
-}
 export const uploadProjectPhoto = async (req: Request, res: Response): Promise<void> => {
   try {
     const { project_id, task_id } = req.body

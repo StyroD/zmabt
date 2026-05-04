@@ -201,6 +201,10 @@ async function migrate(): Promise<void> {
     `)
 
     await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS manager_id uuid REFERENCES users(id);
+    `)
+
+    await pool.query(`
       ALTER TABLE tasks ADD CONSTRAINT tasks_project_title_unique UNIQUE (project_id, title);
     `)
 

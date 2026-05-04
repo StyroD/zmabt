@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 import { Pool } from "pg";
 import bcrypt from "bcrypt";
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
 
@@ -89,7 +91,6 @@ async function seed(): Promise<void> {
     ('c1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000008', NOW()),
     ('c1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000004', NOW()),
     ('c1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000009', NOW()),
-    ('c1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000005', NOW()),
     ('c1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000010', NOW()),
     ('c1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000006', NOW()),
     ('c1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000007', NOW()),
@@ -138,23 +139,37 @@ async function seed(): Promise<void> {
     console.log("✅ Task assignments seeded");
 
     // Certificates
-    await pool.query(`
-    INSERT INTO certificates (id, worker_id, category_id, name, status, submitted_at) VALUES
-    ('e1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000004', 'b1000000-0000-0000-0000-000000000001', 'Elektrikar - osvedcenie', 'accepted', NOW()),
-    ('e1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000004', 'b1000000-0000-0000-0000-000000000002', 'Instalater - osvedcenie', 'accepted', NOW()),
-    ('e1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000005', 'b1000000-0000-0000-0000-000000000002', 'Instalater - osvedcenie', 'accepted', NOW()),
-    ('e1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000005', 'b1000000-0000-0000-0000-000000000003', 'Kurenie - osvedcenie', 'accepted', NOW()),
-    ('e1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000006', 'b1000000-0000-0000-0000-000000000003', 'Kurenie - osvedcenie', 'accepted', NOW()),
-    ('e1000000-0000-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000006', 'b1000000-0000-0000-0000-000000000001', 'Elektrikar - osvedcenie', 'accepted', NOW()),
-    ('e1000000-0000-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000007', 'b1000000-0000-0000-0000-000000000004', 'Plynar - osvedcenie', 'accepted', NOW()),
-    ('e1000000-0000-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000007', 'b1000000-0000-0000-0000-000000000001', 'Elektrikar - osvedcenie', 'accepted', NOW()),
-    ('e1000000-0000-0000-0000-000000000009', 'a1000000-0000-0000-0000-000000000008', 'b1000000-0000-0000-0000-000000000003', 'Kurenie - osvedcenie', 'accepted', NOW()),
-    ('e1000000-0000-0000-0000-000000000010', 'a1000000-0000-0000-0000-000000000008', 'b1000000-0000-0000-0000-000000000004', 'Plynar - osvedcenie', 'pending', NOW()),
-    ('e1000000-0000-0000-0000-000000000011', 'a1000000-0000-0000-0000-000000000009', 'b1000000-0000-0000-0000-000000000001', 'Elektrikar - osvedcenie', 'accepted', NOW()),
-    ('e1000000-0000-0000-0000-000000000012', 'a1000000-0000-0000-0000-000000000010', 'b1000000-0000-0000-0000-000000000002', 'Instalater - osvedcenie', 'accepted', NOW()),
-    ('e1000000-0000-0000-0000-000000000013', 'a1000000-0000-0000-0000-000000000010', 'b1000000-0000-0000-0000-000000000004', 'Plynar - osvedcenie', 'accepted', NOW())
-    ON CONFLICT DO NOTHING;
-  `);
+    const foteckyDir = path.join(__dirname, "../../../../fotecky");
+    const certPhotos = [
+      "100.jpg", "101.jpg", "102.jpg", "103.jpg",
+      "200.jpg", "201.jpg", "202.jpg", "203.jpg",
+      "204.jpg", "205.jpg", "206.jpg", "207.jpg", "208.jpg",
+    ];
+    const certData = [
+      { id: 'e1000000-0000-0000-0000-000000000001', worker_id: 'a1000000-0000-0000-0000-000000000004', category_id: 'b1000000-0000-0000-0000-000000000001', name: 'Elektrikar - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000002', worker_id: 'a1000000-0000-0000-0000-000000000004', category_id: 'b1000000-0000-0000-0000-000000000002', name: 'Instalater - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000003', worker_id: 'a1000000-0000-0000-0000-000000000005', category_id: 'b1000000-0000-0000-0000-000000000002', name: 'Instalater - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000004', worker_id: 'a1000000-0000-0000-0000-000000000005', category_id: 'b1000000-0000-0000-0000-000000000003', name: 'Kurenie - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000005', worker_id: 'a1000000-0000-0000-0000-000000000006', category_id: 'b1000000-0000-0000-0000-000000000003', name: 'Kurenie - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000006', worker_id: 'a1000000-0000-0000-0000-000000000006', category_id: 'b1000000-0000-0000-0000-000000000001', name: 'Elektrikar - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000007', worker_id: 'a1000000-0000-0000-0000-000000000007', category_id: 'b1000000-0000-0000-0000-000000000004', name: 'Plynar - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000008', worker_id: 'a1000000-0000-0000-0000-000000000007', category_id: 'b1000000-0000-0000-0000-000000000001', name: 'Elektrikar - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000009', worker_id: 'a1000000-0000-0000-0000-000000000008', category_id: 'b1000000-0000-0000-0000-000000000003', name: 'Kurenie - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000010', worker_id: 'a1000000-0000-0000-0000-000000000008', category_id: 'b1000000-0000-0000-0000-000000000004', name: 'Plynar - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000011', worker_id: 'a1000000-0000-0000-0000-000000000009', category_id: 'b1000000-0000-0000-0000-000000000001', name: 'Elektrikar - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000012', worker_id: 'a1000000-0000-0000-0000-000000000010', category_id: 'b1000000-0000-0000-0000-000000000002', name: 'Instalater - osvedcenie', status: 'accepted' },
+      { id: 'e1000000-0000-0000-0000-000000000013', worker_id: 'a1000000-0000-0000-0000-000000000010', category_id: 'b1000000-0000-0000-0000-000000000004', name: 'Plynar - osvedcenie', status: 'accepted' },
+    ];
+    for (let i = 0; i < certData.length; i++) {
+      const cert = certData[i];
+      const fileData = fs.readFileSync(path.join(foteckyDir, certPhotos[i]));
+      await pool.query(
+        `INSERT INTO certificates (id, worker_id, category_id, name, file_data, file_url, status, submitted_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+         ON CONFLICT DO NOTHING`,
+        [cert.id, cert.worker_id, cert.category_id, cert.name, fileData, 'image/jpeg', cert.status]
+      );
+    }
     console.log("✅ Certificates seeded");
 
     // Messages

@@ -1,6 +1,5 @@
 import { Request, Response } from 'express'
 import pool from '../config/db'
-import { emitWorkerLocation } from '../socket'
 
 export const updateWorkerLocation = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -22,29 +21,21 @@ export const updateWorkerLocation = async (req: Request, res: Response): Promise
       return
     }
 
+    if (is_online ?? true) {
+      await pool.query(
+        `UPDATE worker_locations SET is_online = false WHERE worker_id = $1 AND project_id != $2`,
+        [worker_id, project_id]
+      )
+    }
+
     const result = await pool.query(
       `INSERT INTO worker_locations (worker_id, project_id, lat, lng, is_online, recorded_at)
        VALUES ($1, $2, $3, $4, $5, NOW())
-       ON CONFLICT (worker_id, project_id) 
+       ON CONFLICT (worker_id, project_id)
        DO UPDATE SET lat = $3, lng = $4, is_online = $5, recorded_at = NOW()
        RETURNING *`,
       [worker_id, project_id, lat, lng, is_online ?? true]
     )
-    const managerRow = await pool.query(
-      'SELECT manager_id FROM projects WHERE id = $1',
-      [project_id]
-    )
-    const managerId = managerRow.rows[0]?.manager_id
-    if (managerId) {
-      const withUser = await pool.query(
-        `SELECT wl.*, u.first_name, u.last_name
-         FROM worker_locations wl JOIN users u ON u.id = wl.worker_id
-         WHERE wl.worker_id = $1 AND wl.project_id = $2`,
-        [worker_id, project_id]
-      )
-      emitWorkerLocation(managerId, withUser.rows[0])
-    }
-
     res.json(result.rows[0])
   } catch (err: any) {
     res.status(500).json({ error: err.message })
