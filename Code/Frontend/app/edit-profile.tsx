@@ -7,6 +7,7 @@ import { router } from 'expo-router'
 import { updateProfileWithAvatar, updateProfile, getUserById } from '@/api/endpoints/users'
 import { getCategories } from '@/api/endpoints/categories'
 import * as SecureStore from 'expo-secure-store'
+import { disconnectSocket } from '@/api/socket'
 import { saveUser } from '@/utils/secureUser'
 import * as ImagePicker from 'expo-image-picker'
 
@@ -137,6 +138,7 @@ export default function EditProfile() {
 }
 
     const handleLogout = async () => {
+        disconnectSocket()
         await SecureStore.deleteItemAsync('token')
         await SecureStore.deleteItemAsync('userId')
         await SecureStore.deleteItemAsync('user')

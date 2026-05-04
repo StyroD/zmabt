@@ -1,13 +1,11 @@
 import { Stack, router } from 'expo-router'
 import { useState, useEffect, useRef } from 'react'
-import { View, ActivityIndicator, Text, StyleSheet, Platform, Animated } from 'react-native'
+import { View, ActivityIndicator, Text, StyleSheet, Platform, Animated, AppState } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { NetworkProvider, useNetwork } from '@/contexts/NetworkContext'
 import * as Notifications from 'expo-notifications'
-import Constants from 'expo-constants'
-import { updatePushToken } from '@/api/endpoints/users'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { setCrashlyticsUser } from '@/utils/firebase'
 import { initDb } from '@/utils/db'
@@ -16,6 +14,8 @@ import { getConversations } from "@/api/endpoints/messages"
 import { getSocket } from "@/api/socket"
 import { unreadSignal } from '@/utils/unreadSignal'
 import { activeChatSignal } from '@/utils/activeChatSignal'
+import { toastSignal } from '@/utils/toastSignal'
+import { InAppToast } from '@/components/InAppToast'
 
 try {
     Notifications.setNotificationHandler({
@@ -61,6 +61,10 @@ function getRouteFromNotificationData(data: Record<string, any>): string {
 }
 
 async function scheduleLocalNotification(title: string, body: string, data: Record<string, any>) {
+    if (AppState.currentState === 'active') {
+        toastSignal.show({ title, body, data });
+        return;
+    }
     try {
         await Notifications.scheduleNotificationAsync({
             content: { title, body, data },
@@ -69,33 +73,6 @@ async function scheduleLocalNotification(title: string, body: string, data: Reco
     } catch { /* not supported in Expo Go */ }
 }
 
-async function registerPushToken() {
-    const userId = await SecureStore.getItemAsync('userId')
-    if (!userId) return
-
-    if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-            name: 'Default',
-            importance: Notifications.AndroidImportance.MAX,
-            vibrationPattern: [0, 250, 250, 250],
-        })
-    }
-
-    const { status: existing } = await Notifications.getPermissionsAsync()
-    const { status } = existing === 'granted'
-        ? { status: existing }
-        : await Notifications.requestPermissionsAsync()
-
-    if (status !== 'granted') return
-
-    const projectId =
-        Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId
-    const tokenData = await Notifications.getExpoPushTokenAsync(
-        projectId ? { projectId } : undefined
-    ).catch((err) => { console.error('[Push] getExpoPushTokenAsync failed:', err); return null })
-    if (!tokenData) return
-    await updatePushToken(userId, tokenData.data).catch(() => {})
-}
 
 function OfflineBanner() {
     const { isOnline, pendingCount } = useNetwork()
@@ -203,7 +180,14 @@ function AppContent() {
     useEffect(() => {
         if (!isLoggedIn) return;
 
-        registerPushToken()
+        Notifications.requestPermissionsAsync().catch(() => {})
+        if (Platform.OS === 'android') {
+            Notifications.setNotificationChannelAsync('default', {
+                name: 'Default',
+                importance: Notifications.AndroidImportance.MAX,
+                vibrationPattern: [0, 250, 250, 250],
+            }).catch(() => {})
+        }
 
         let socketRef: any = null;
         let isMounted = true;
@@ -275,6 +259,7 @@ function AppContent() {
         <>
             <OfflineBanner />
             <Stack screenOptions={{ headerShown: false }} />
+            <InAppToast />
         </>
     )
 }

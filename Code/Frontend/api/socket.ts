@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client'
 import * as SecureStore from 'expo-secure-store'
-import { BASE_URL } from './client'
+import { BASE_URL } from './config'
 
 const SOCKET_URL = BASE_URL.replace('/api', '')
 

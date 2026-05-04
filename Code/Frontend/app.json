@@ -75,8 +75,6 @@
           "iosDisplayInForeground": true
         }
       ],
-      "@react-native-firebase/app",
-      "@react-native-firebase/crashlytics",
       "expo-sqlite"
     ],
     "extra": {
