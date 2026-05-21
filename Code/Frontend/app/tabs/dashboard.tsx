@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity, RefreshControl } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useColors } from '@/contexts/ThemeContext'
 import { Ionicons } from '@expo/vector-icons'
@@ -10,43 +10,59 @@ import * as SecureStore from 'expo-secure-store'
 import { getSocket } from '@/api/socket'
 import { logScreenView } from '@/utils/firebase'
 import { useFocusEffect } from 'expo-router'
-
 import { statsRefreshSignal } from '@/utils/statsRefreshSignal'
+import { useNetwork } from '@/contexts/NetworkContext'
 
 export default function Dashboard() {
   const Colors = useColors()
+  const { syncQueue } = useNetwork()
   const [currentUser, setCurrentUser] = useState<any>(null)
   const currentUserRef = useRef<any>(null)
   const [stats, setStats] = useState<any>(null)
   const [notifications, setNotifications] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const fetchDashboard = useCallback(async (user: any) => {
+    const dashFn = user.role === 'manager' ? getManagerDashboard : getWorkerDashboard
+    const [dashRes, notifRes] = await Promise.all([
+      dashFn(user.id),
+      getNotifications(user.id),
+    ])
+    setStats(dashRes.data)
+    setNotifications(notifRes.data.slice(0, 5))
+  }, [])
 
   useFocusEffect(
-  useCallback(() => {
-    const load = async () => {
-      setLoading(true)
-      try {
-        const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
-        currentUserRef.current = user
-        setCurrentUser(user)
-
-        const dashFn = user.role === 'manager' ? getManagerDashboard : getWorkerDashboard
-        const [dashRes, notifRes] = await Promise.all([
-          dashFn(user.id),
-          getNotifications(user.id),
-        ])
-
-        setStats(dashRes.data)
-        setNotifications(notifRes.data.slice(0, 5))
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
+    useCallback(() => {
+      const load = async () => {
+        setLoading(true)
+        try {
+          const user = JSON.parse(await SecureStore.getItemAsync('user') ?? '{}')
+          currentUserRef.current = user
+          setCurrentUser(user)
+          await fetchDashboard(user)
+        } catch (err) {
+          console.error(err)
+        } finally {
+          setLoading(false)
+        }
       }
+      load()
+    }, [fetchDashboard])
+  )
+
+  const onRefresh = useCallback(async () => {
+    const user = currentUserRef.current
+    if (!user?.id) return
+    setRefreshing(true)
+    try {
+      await syncQueue()
+      await fetchDashboard(user)
+    } finally {
+      setRefreshing(false)
     }
-    load()
-  }, [])
-)
+  }, [fetchDashboard, syncQueue])
 
   useEffect(() => {
     if (!currentUser?.id) return
@@ -70,7 +86,7 @@ export default function Dashboard() {
         }
       }
       socket.on('notification', handler)
-    })
+    }).catch(() => {})
 
     return () => {
       mounted = false
@@ -90,7 +106,9 @@ export default function Dashboard() {
   }, [])
 
   const handleMarkRead = (id: string) => {
-    markNotificationAsRead(id).catch(err => console.error(err))
+    markNotificationAsRead(id).catch(err => {
+      if (!err._silent) console.error(err)
+    })
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
   }
 
@@ -104,11 +122,10 @@ export default function Dashboard() {
       backgroundColor: Colors.background,
     },
     container: {
-      flex: 1,
-      backgroundColor: Colors.background,
-      padding: 16,
-      paddingTop: Math.max(insets.top, 16) + 8,
-    },
+  backgroundColor: Colors.background,
+  padding: 16,
+  paddingTop: Math.max(insets.top, 16) + 8,
+},
     title: {
       fontSize: 30,
       fontWeight: '500',
@@ -303,7 +320,19 @@ export default function Dashboard() {
   const statTiles = isManager ? managerStats : workerStats
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+  <ScrollView
+    style={{ flex: 1, backgroundColor: Colors.background }}
+    showsVerticalScrollIndicator={false}
+    refreshControl={
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        tintColor={Colors.primary}
+        colors={[Colors.primary]}
+      />
+    }
+  >
+    <View style={styles.container}>
       <Text style={styles.title}>Dashboard</Text>
       <View style={styles.divider} />
 
@@ -386,6 +415,7 @@ export default function Dashboard() {
       </View>
 
       <View style={{ height: Math.max(insets.bottom, 16) + 16 }} />
+      </View>
     </ScrollView>
   )
 }

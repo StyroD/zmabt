@@ -1,10 +1,10 @@
-
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import { router } from 'expo-router'
+import { disconnectSocket } from './socket'
+import { BASE_URL } from './config'
 
-//export const BASE_URL = 'http://10.0.2.2:3000/api';  // Android emulator
- //export const BASE_URL = 'http://localhost:3000/api'// iOS simulator
-export const BASE_URL = 'http://10.30.15.65:3000/api' // Physical device
+export { BASE_URL } from './config'
 
 const client = axios.create({
   baseURL: BASE_URL,
@@ -21,9 +21,7 @@ client.interceptors.request.use(async (config) => {
   return config;
 });
 
-import { router } from 'expo-router'
-
-let isLoggingOut = false 
+let isLoggingOut = false
 
 client.interceptors.response.use(
   res => res,
@@ -31,12 +29,14 @@ client.interceptors.response.use(
     if (err.response?.status === 401 && !isLoggingOut) {
       isLoggingOut = true
 
+      disconnectSocket()
       try {
         await SecureStore.deleteItemAsync('token')
         await SecureStore.deleteItemAsync('userId')
       } catch {}
 
       router.replace('/auth/login')
+      isLoggingOut = false
     }
 
     return Promise.reject(err)

@@ -1,17 +1,16 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native'
 import { useColors } from '@/contexts/ThemeContext'
 import { ScreenWrapper } from '@/components/ScreenWrapper'
-import { useState, useMemo } from 'react'
-import { router, useLocalSearchParams } from 'expo-router'
+import { useState, useMemo, useCallback } from 'react'
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { useFocusEffect } from 'expo-router'
-import { useCallback } from 'react'
 import AntDesign from '@expo/vector-icons/AntDesign'
 import { getTasksByProjectId } from '@/api/endpoints/tasks'
 import { TaskBox } from '@/components/TaskBox'
 import { logScreenView } from '@/utils/firebase'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { cacheTasks, getCachedTasks } from '@/utils/db'
+import { useNetwork } from '@/contexts/NetworkContext'
 
 
 const STATUSES = ['all', 'pending', 'in_progress', 'done']
@@ -36,8 +35,10 @@ export default function TaskList() {
   const insets = useSafeAreaInsets()
   const { projectId, projectTitle } = useLocalSearchParams()
 
+  const { refreshCount, syncQueue } = useNetwork()
   const [tasks, setTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [statusFilter, setStatusFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [showStatusPicker, setShowStatusPicker] = useState(false)
@@ -53,22 +54,35 @@ export default function TaskList() {
 
   const activeFilterCount = [statusFilter, priorityFilter].filter(f => f !== 'all').length
 
+  const fetchTasks = useCallback(async () => {
+    try {
+      const res = await getTasksByProjectId(projectId as string)
+      setTasks(res.data)
+      await cacheTasks(projectId as string, res.data)
+    } catch {
+      const cached = await getCachedTasks(projectId as string)
+      setTasks(cached)
+    }
+  }, [projectId])
+
   useFocusEffect(
     useCallback(() => {
-        logScreenView('TaskList').catch(() => {})
-        setLoading(true)
-        getTasksByProjectId(projectId as string)
-            .then(async res => {
-                setTasks(res.data)
-                await cacheTasks(projectId as string, res.data)
-            })
-            .catch(async () => {
-                const cached = await getCachedTasks(projectId as string)
-                setTasks(cached)
-            })
-            .finally(() => setLoading(false))
-    }, [projectId])
-)
+      void refreshCount
+      logScreenView('TaskList').catch(() => {})
+      setLoading(true)
+      fetchTasks().finally(() => setLoading(false))
+    }, [projectId, refreshCount, fetchTasks])
+  )
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    try {
+      await syncQueue()
+      await fetchTasks()
+    } finally {
+      setRefreshing(false)
+    }
+  }, [fetchTasks, syncQueue])
 
   const styles = StyleSheet.create({
     center: {
@@ -244,7 +258,17 @@ export default function TaskList() {
         </View>
       )}
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
+          />
+        }
+      >
         {filteredTasks.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="search-outline" size={40} color={Colors.textSecondary} accessible={false} />

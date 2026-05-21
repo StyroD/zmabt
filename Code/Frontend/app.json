@@ -12,6 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.zmabt.frontend",
       "deploymentTarget": "15.0",
+      "config": {
+        "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+      },
       "infoPlist": {
         "UIBackgroundModes": [
           "remote-notification"

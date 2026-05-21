@@ -9,6 +9,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { CertificateRow } from '@/components/Profile/CertificateRow'
 import { getUserById } from '@/api/endpoints/users'
 import * as SecureStore from 'expo-secure-store'
+import { disconnectSocket } from '@/api/socket'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { getAvatarUrl } from '@/api/endpoints/users'
 
@@ -61,6 +62,7 @@ export default function Profile() {
     }, [paramUserId]))
 
     const handleLogout = async () => {
+        disconnectSocket()
         await SecureStore.deleteItemAsync('token')
         await SecureStore.deleteItemAsync('userId')
         await SecureStore.deleteItemAsync('user')
