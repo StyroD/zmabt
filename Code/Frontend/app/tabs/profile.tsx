@@ -236,7 +236,7 @@ export default function Profile() {
                 {isOwn && (
                     <>
                         <View style={styles.sectionDivider} />
-                        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                        <TouchableOpacity testID="logout-button" style={styles.logoutBtn} onPress={handleLogout}>
                             <Ionicons name="log-out-outline" size={18} color={Colors.danger} />
                             <Text style={styles.logoutText}>Log out</Text>
                         </TouchableOpacity>

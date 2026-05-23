@@ -365,6 +365,7 @@ export default function ChatDetail() {
 
         <View style={styles.inputRow}>
           <TextInput
+            testID="message-input"
             style={[styles.input, !isOnline && styles.inputDisabled]}
             value={input}
             onChangeText={setInput}
@@ -375,6 +376,7 @@ export default function ChatDetail() {
             editable={isOnline}
           />
           <TouchableOpacity
+            testID="send-button"
             style={[styles.sendButton, !isOnline && styles.sendButtonDisabled]}
             onPress={sendMessage}
             disabled={!isOnline}

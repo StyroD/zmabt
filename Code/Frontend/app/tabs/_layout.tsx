@@ -45,7 +45,7 @@ export default function TabsLayout() {
           tabBarBadgeStyle: { backgroundColor: Colors.primary }
         }} 
       />
-      <Tabs.Screen name="profile" options={{ title: 'Profile', href: { pathname: '/tabs/profile', params: { mode: 'own' } }, tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile', href: { pathname: '/tabs/profile', params: { mode: 'own' } }, tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />, }} />
       <Tabs.Screen name="projectDetail_manager" options={{ title: 'Project Detail Manager', href: null }} />
       <Tabs.Screen name="create-project" options={{ title: 'Create project', href: null }} />
       <Tabs.Screen name="task-list" options={{ title: 'Task list', href: null }} />

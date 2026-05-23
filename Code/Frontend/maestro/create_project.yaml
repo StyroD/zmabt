@@ -1,0 +1,116 @@
+appId: host.exp.Exponent
+name: "UI Test - Create Project Screen"
+---
+- launchApp:
+    clearKeychain: true
+- tapOn: "Frontend"
+- openLink: "exp://192.168.0.106:8081"
+- waitForAnimationToEnd
+
+# Login first
+- extendedWaitUntil:
+    visible: "Login"
+    timeout: 15000
+- tapOn:
+    text: "Enter your email"
+- inputText: "peter@workflow.com"
+- tapOn:
+    text: "Enter your password"
+- inputText: "password123"
+- tapOn:
+    id: "login-button"
+- tapOn:
+    text: "Not Now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Dashboard"
+    timeout: 10000
+
+# Pre-cleanup: delete any leftover UI Test Project from a previous run
+- openLink: "exp://192.168.0.106:8081/--/tabs/projectsList"
+- waitForAnimationToEnd
+- assertVisible: "Projects"
+- runFlow:
+    when:
+      visible: "UI Test Project"
+    commands:
+      - tapOn:
+          text: "UI Test Project"
+      - extendedWaitUntil:
+          visible: "Project detail"
+          timeout: 5000
+      - scrollUntilVisible:
+          element:
+            text: "Delete project"
+      - tapOn: "Delete project"
+      - tapOn:
+          text: "Delete"
+      - extendedWaitUntil:
+          visible: "Projects"
+          timeout: 5000
+
+# Open create project screen
+- openLink: "exp://192.168.0.106:8081/--/tabs/create-project"
+- waitForAnimationToEnd
+- assertVisible: "New project"
+
+# Fill in the form
+- tapOn:
+    text: "Office building renovation"
+- inputText: "UI Test Project"
+
+- tapOn: "Select deadline date"
+- extendedWaitUntil:
+    visible: "Confirm date"
+    timeout: 3000
+- tapOn: "Confirm date"
+
+- tapOn:
+    text: "Hlavna 12, Bratislava"
+- inputText: "Ab"
+- hideKeyboard
+
+- scrollUntilVisible:
+    element:
+      id: "client-name-input"
+- tapOn:
+    id: "client-name-input"
+- inputText: "Jan Novak"
+- hideKeyboard
+
+# Submit and verify
+- scrollUntilVisible:
+    element:
+      id: "submit-project-button"
+    speed: 15
+    visibilityPercentage: 80
+    timeout: 15000
+- tapOn:
+    id: "submit-project-button"
+- extendedWaitUntil:
+    visible: "UI Test Project"
+    timeout: 10000
+
+# Cleanup: delete the created project so next run can recreate it
+- scrollUntilVisible:
+    element:
+      text: "Delete project"
+    speed: 15
+    visibilityPercentage: 80
+    timeout: 15000
+- tapOn: "Delete project"
+- tapOn:
+    text: "Delete"
+- extendedWaitUntil:
+    visible: "Projects"
+    timeout: 5000
+
+# Logout
+- openLink: "exp://192.168.0.106:8081/--/tabs/profile?mode=own"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "logout-button"
+- tapOn:
+    id: "logout-button"
+- assertVisible: "Login"

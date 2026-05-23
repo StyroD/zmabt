@@ -1,0 +1,136 @@
+appId: host.exp.Exponent
+name: "E2E - Manager Creates Project and Verifies in List"
+---
+- launchApp:
+    clearKeychain: true
+- tapOn: "Frontend"
+- openLink: "exp://192.168.0.106:8081"
+- waitForAnimationToEnd
+
+# Step 1 - Login as manager
+- extendedWaitUntil:
+    visible: "Login"
+    timeout: 15000
+- tapOn:
+    text: "Enter your email"
+- inputText: "peter@workflow.com"
+- tapOn:
+    text: "Enter your password"
+- inputText: "password123"
+- tapOn:
+    id: "login-button"
+- tapOn:
+    text: "Not Now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Dashboard"
+    timeout: 10000
+
+# Pre-cleanup: delete any leftover E2E Test Project from a previous run
+- openLink: "exp://192.168.0.106:8081/--/tabs/projectsList"
+- waitForAnimationToEnd
+- assertVisible: "Projects"
+- runFlow:
+    when:
+      visible: "E2E Test Project"
+    commands:
+      - tapOn:
+          text: "E2E Test Project"
+      - extendedWaitUntil:
+          visible: "Project detail"
+          timeout: 5000
+      - scrollUntilVisible:
+          element:
+            text: "Delete project"
+      - tapOn: "Delete project"
+      - tapOn:
+          text: "Delete"
+      - extendedWaitUntil:
+          visible: "Projects"
+          timeout: 5000
+
+# Step 2 - Navigate to projects list (already there after pre-cleanup)
+- assertVisible: "Projects"
+
+# Step 3 - Open create project screen
+- openLink: "exp://192.168.0.106:8081/--/tabs/create-project"
+- waitForAnimationToEnd
+- assertVisible: "New project"
+
+# Step 4 - Fill in all required fields
+- tapOn:
+    text: "Office building renovation"
+- inputText: "E2E Test Project"
+
+- tapOn: "Select deadline date"
+- extendedWaitUntil:
+    visible: "Confirm date"
+    timeout: 3000
+- tapOn: "Confirm date"
+
+- tapOn:
+    text: "Hlavna 12, Bratislava"
+- inputText: "Hlavna 1, Bratislava"
+- hideKeyboard
+
+- scrollUntilVisible:
+    element:
+      id: "client-name-input"
+- tapOn:
+    id: "client-name-input"
+- inputText: "Test Client"
+- hideKeyboard
+
+- scrollUntilVisible:
+    element:
+      id: "client-phone-input"
+- tapOn:
+    id: "client-phone-input"
+- inputText: "+421900000000"
+- tapOn:
+    text: "Phone"
+
+# Step 5 - Submit
+- scrollUntilVisible:
+    element:
+      id: "submit-project-button"
+- tapOn:
+    id: "submit-project-button"
+
+# Step 6 - Verify project appears in project detail
+- extendedWaitUntil:
+    visible: "E2E Test Project"
+    timeout: 10000
+
+# Step 7 - Go back to projects list and verify it's there
+- openLink: "exp://192.168.0.106:8081/--/tabs/projectsList"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "E2E Test Project"
+    timeout: 10000
+
+# Step 8 - Delete project for cleanup (so test can run again)
+- tapOn:
+    text: "E2E Test Project"
+- extendedWaitUntil:
+    visible: "Project detail"
+    timeout: 5000
+- scrollUntilVisible:
+    element:
+      text: "Delete project"
+- tapOn: "Delete project"
+- tapOn:
+    text: "Delete"
+- extendedWaitUntil:
+    visible: "Projects"
+    timeout: 5000
+
+# Step 9 - Logout
+- openLink: "exp://192.168.0.106:8081/--/tabs/profile?mode=own"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "logout-button"
+- tapOn:
+    id: "logout-button"
+- assertVisible: "Login"

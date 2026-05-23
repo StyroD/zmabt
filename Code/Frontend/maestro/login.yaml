@@ -1,0 +1,45 @@
+appId: host.exp.Exponent
+name: "UI Test - Login Screen"
+---
+- launchApp:
+    clearKeychain: true
+- tapOn: "Frontend"
+- openLink: "exp://192.168.0.106:8081"
+- waitForAnimationToEnd
+
+# Wait for login screen to fully load
+- extendedWaitUntil:
+    visible: "Login"
+    timeout: 15000
+
+# Verify login screen elements are visible
+- assertVisible: "Email"
+- assertVisible: "Password"
+- assertVisible: "Register with invite code"
+
+
+# Test successful login
+- tapOn:
+    text: "Enter your email"
+- inputText: "peter@workflow.com"
+- tapOn:
+    text: "Enter your password"
+- inputText: "password123"
+- tapOn:
+    id: "login-button"
+- tapOn:
+    text: "Not Now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Dashboard"
+    timeout: 10000
+
+# Logout to clean up for next run
+- openLink: "exp://192.168.0.106:8081/--/tabs/profile?mode=own"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "logout-button"
+- tapOn:
+    id: "logout-button"
+- assertVisible: "Login"

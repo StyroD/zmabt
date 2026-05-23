@@ -26,7 +26,8 @@ let isLoggingOut = false
 client.interceptors.response.use(
   res => res,
   async err => {
-    if (err.response?.status === 401 && !isLoggingOut) {
+    const isAuthRoute = err.config?.url?.includes('/auth/')
+    if (err.response?.status === 401 && !isLoggingOut && !isAuthRoute) {
       isLoggingOut = true
 
       disconnectSocket()

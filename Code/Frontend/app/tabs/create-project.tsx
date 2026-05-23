@@ -144,6 +144,7 @@ export default function CreateProject() {
     }
 
     const handleSubmit = async () => {
+        Keyboard.dismiss()
         if (!validate()) return
         setSubmitting(true)
         try {
@@ -320,7 +321,7 @@ export default function CreateProject() {
                 <Text style={styles.fieldLabel}>Deadline <Text style={styles.required}>*</Text></Text>
                 <TouchableOpacity
                     style={[styles.input, styles.row, errors.deadline && styles.inputError]}
-                    onPress={() => { Keyboard.dismiss(); setShowDatePicker(true) }}
+                    onPress={() => { Keyboard.dismiss(); if (!deadline) setDeadline(new Date()); setShowDatePicker(true) }}
                     accessibilityRole="button"
                     accessibilityLabel={deadline ? `Deadline: ${formatDate(deadline)}` : 'Select deadline date'}
                 >
@@ -424,7 +425,9 @@ export default function CreateProject() {
                 {showMap && (
                     <MapView
                         style={styles.map}
-                        initialRegion={{
+                        scrollEnabled={false}
+                        zoomEnabled={false}
+                        region={{
                             latitude: lat ?? 48.1486,
                             longitude: lng ?? 17.1077,
                             latitudeDelta: 0.05,
@@ -481,11 +484,13 @@ export default function CreateProject() {
 
                 <Text style={styles.fieldLabel}>Name <Text style={styles.required}>*</Text></Text>
                 <TextInput
+                    testID="client-name-input"
                     style={[styles.input, errors.clientName && styles.inputError]}
                     placeholder="Client name"
                     placeholderTextColor={Colors.textSecondary}
                     value={clientName}
                     onChangeText={t => { setClientName(t); setErrors(e => ({ ...e, clientName: '' })) }}
+                    autoCorrect={false}
                 />
                 {errors.clientName && <Text style={styles.errorText}>{errors.clientName}</Text>}
 
@@ -493,6 +498,7 @@ export default function CreateProject() {
                     <View style={styles.half}>
                         <Text style={styles.fieldLabel}>Phone</Text>
                         <TextInput
+                            testID="client-phone-input"
                             style={styles.input}
                             placeholder="+421..."
                             placeholderTextColor={Colors.textSecondary}
@@ -519,6 +525,7 @@ export default function CreateProject() {
                 <View style={styles.sectionDivider} />
 
                 <TouchableOpacity
+                    testID="submit-project-button"
                     style={[styles.submitButton, submitting && { opacity: 0.6 }]}
                     onPress={handleSubmit}
                     disabled={submitting}
