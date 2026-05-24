@@ -4,7 +4,7 @@ name: "UI Test - Login Screen"
 - launchApp:
     clearKeychain: true
 - tapOn: "Frontend"
-- openLink: "exp://192.168.0.106:8081"
+- openLink: "exp://${APP_HOST}:${APP_PORT}"
 - waitForAnimationToEnd
 
 # Wait for login screen to fully load
@@ -35,7 +35,7 @@ name: "UI Test - Login Screen"
     timeout: 10000
 
 # Logout to clean up for next run
-- openLink: "exp://192.168.0.106:8081/--/tabs/profile?mode=own"
+- openLink: "exp://${APP_HOST}:${APP_PORT}/--/tabs/profile?mode=own"
 - waitForAnimationToEnd
 - scrollUntilVisible:
     element:

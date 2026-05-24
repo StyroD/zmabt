@@ -4,10 +4,10 @@ name: "UI Test - Chat Screen"
 - launchApp:
     clearKeychain: true
 - tapOn: "Frontend"
-- openLink: "exp://192.168.0.106:8081"
+- openLink: "exp://${APP_HOST}:${APP_PORT}"
 - waitForAnimationToEnd
 
-# Login first
+# Login firstx
 - extendedWaitUntil:
     visible: "Login"
     timeout: 15000
@@ -27,7 +27,7 @@ name: "UI Test - Chat Screen"
     timeout: 10000
 
 # Navigate to chat
-- openLink: "exp://192.168.0.106:8081/--/tabs/chat"
+- openLink: "exp://${APP_HOST}:${APP_PORT}/--/tabs/chat"
 - waitForAnimationToEnd
 - extendedWaitUntil:
     visible: "Messages"
@@ -50,7 +50,7 @@ name: "UI Test - Chat Screen"
 - assertVisible: "Hello from Maestro test"
 
 # Logout
-- openLink: "exp://192.168.0.106:8081/--/tabs/profile?mode=own"
+- openLink: "exp://${APP_HOST}:${APP_PORT}/--/tabs/profile?mode=own"
 - waitForAnimationToEnd
 - scrollUntilVisible:
     element:

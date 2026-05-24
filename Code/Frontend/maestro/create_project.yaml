@@ -4,7 +4,7 @@ name: "UI Test - Create Project Screen"
 - launchApp:
     clearKeychain: true
 - tapOn: "Frontend"
-- openLink: "exp://192.168.0.106:8081"
+- openLink: "exp://${APP_HOST}:${APP_PORT}"
 - waitForAnimationToEnd
 
 # Login first
@@ -27,7 +27,7 @@ name: "UI Test - Create Project Screen"
     timeout: 10000
 
 # Pre-cleanup: delete any leftover UI Test Project from a previous run
-- openLink: "exp://192.168.0.106:8081/--/tabs/projectsList"
+- openLink: "exp://${APP_HOST}:${APP_PORT}/--/tabs/projectsList"
 - waitForAnimationToEnd
 - assertVisible: "Projects"
 - runFlow:
@@ -50,7 +50,7 @@ name: "UI Test - Create Project Screen"
           timeout: 5000
 
 # Open create project screen
-- openLink: "exp://192.168.0.106:8081/--/tabs/create-project"
+- openLink: "exp://${APP_HOST}:${APP_PORT}/--/tabs/create-project"
 - waitForAnimationToEnd
 - assertVisible: "New project"
 
@@ -106,7 +106,7 @@ name: "UI Test - Create Project Screen"
     timeout: 5000
 
 # Logout
-- openLink: "exp://192.168.0.106:8081/--/tabs/profile?mode=own"
+- openLink: "exp://${APP_HOST}:${APP_PORT}/--/tabs/profile?mode=own"
 - waitForAnimationToEnd
 - scrollUntilVisible:
     element:

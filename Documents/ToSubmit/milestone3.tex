@@ -1045,16 +1045,23 @@ if (err.response?.status === 401 && !isLoggingOut && !isAuthRoute) {
 \end{verbatim}
 
 %--------------------------------------------------------------
-\section{Unit Testing}
+\section{Bonuses}
 %--------------------------------------------------------------
 
-\subsection{Framework: Jest}
+%--------------------------------------------------------------
+\subsection{Testing}
+%--------------------------------------------------------------
+
+\subsubsection{Unit Testing}
 
 Unit tests are written using \textbf{Jest} with the \texttt{jest-expo} preset. All external dependencies --- AsyncStorage, Expo SecureStore, and the Axios HTTP client --- are replaced with Jest mocks so tests run in isolation without a simulator, device, or network connection.
 
-\subsection{Test Suite}
+Run with:
+\begin{verbatim}
+cd Code/Frontend && npx jest
+\end{verbatim}
 
-The test file \texttt{\_\_tests\_\_/unit.test.ts} contains 23 tests across 5 groups:
+The test file \texttt{\_\_tests\_\_/unit.test.ts} contains \textbf{23 tests} across 5 groups:
 
 \begin{tabularx}{\textwidth}{|l|c|X|}
 \hline
@@ -1067,7 +1074,7 @@ Date formatting & 2 &
   The \texttt{formatDate()} helper is tested against the \texttt{sk-SK} locale. A mid-year date and the first day of the year are both asserted to contain the correct day, month, and year components in the formatted output. \\
 \hline
 Offline queue & 5 &
-  The five exported functions of \texttt{utils/offlineQueue.ts} are each tested in isolation with a mocked AsyncStorage. \texttt{getQueue} returns an empty array on a cold start; \texttt{addToQueue} produces an entry with the correct type, payload, zero retries, and generated id and timestamp; \texttt{removeFromQueue} removes only the targeted entry by id; \texttt{incrementRetries} increases the retry counter by exactly one; \texttt{clearQueue} calls \texttt{AsyncStorage.removeItem} with the correct storage key. \\
+  The five exported functions of \texttt{utils/offlineQueue.ts} are each tested in isolation with a mocked AsyncStorage. \texttt{getQueue} returns an empty array on a cold start; \texttt{addToQueue} produces an entry with the correct type, payload, zero retries, and a generated id and timestamp; \texttt{removeFromQueue} removes only the targeted entry by id; \texttt{incrementRetries} increases the retry counter by exactly one; \texttt{clearQueue} calls \texttt{AsyncStorage.removeItem} with the correct storage key. \\
 \hline
 Auth & 3 &
   The \texttt{login()} and \texttt{logout()} functions from \texttt{api/auth.ts} are tested against a mocked Axios client. A successful login call stores the returned token and userId in SecureStore and returns the full response payload. A logout call deletes both SecureStore keys. \\
@@ -1077,46 +1084,91 @@ SecureUser & 3 &
 \hline
 \end{tabularx}
 
-\subsection{Running the Tests}
+\subsubsection{Automated UI Testing}
 
+Automated UI tests are written using \textbf{Maestro}, a mobile UI testing framework that drives the application through a real iOS simulator via XCTest. Tests are defined in YAML files and execute gestures, taps, and text input against a live Expo Go session (\texttt{host.exp.Exponent}), asserting on visible UI elements --- no mocking, no stubs.
+
+Run with:
 \begin{verbatim}
-cd Code/Frontend
-npx jest
+cd Code/Frontend/maestro && maestro test <flow>.yaml
 \end{verbatim}
 
-All 23 tests pass with no network or simulator required.
+Three flows verify that core screens render correctly and respond to user interaction:
 
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{File} & \textbf{Coverage} \\
+\hline
+\texttt{login.yaml} &
+  Asserts Login screen elements are visible (email field, password field, login button, Google sign-in); manager logs in with valid credentials; Dashboard is asserted; manager logs out and Login screen is re-asserted. \\
+\hline
+\texttt{create\_project.yaml} &
+  Asserts the Create Project screen renders with all required fields (project title, deadline date picker, address autocomplete, client name); verifies the submit button is present and tappable. \\
+\hline
+\texttt{chat.yaml} &
+  Asserts the Messages screen is visible; opens a conversation; asserts the message input and send button are present; types a message and asserts it appears in the conversation. \\
+\hline
+\end{tabularx}
 
-%--------------------------------------------------------------
-\section{Third-Party API Integration: Address Autocomplete}
-%--------------------------------------------------------------
+\subsubsection{End-to-End Testing}
 
-\subsection{Provider: Nominatim (OpenStreetMap)}
+One flow exercises the full stack from UI through network to the database and back:
 
-Address autocomplete in the Create Project screen is powered by \textbf{Nominatim}, the geocoding API of the OpenStreetMap project. Nominatim was chosen over Google Places API because it requires no billing account, no API key, and has no per-request cost --- important constraints for a school project running in a development environment.
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{File} & \textbf{Scenario} \\
+\hline
+\texttt{e2e\_create\_project.yaml} &
+  Manager authenticates against the live backend; any leftover test record from a previous run is deleted via a conditional \texttt{runFlow} block (idempotent pre-cleanup); navigates to the Create Project screen; fills in project title, deadline, address, and client name; submits the form; asserts the new project appears in the project list confirming the API call and database write succeeded; deletes the project as post-cleanup so the test is repeatable without accumulating server state; logs out. \\
+\hline
+\end{tabularx}
 
-The integration is implemented entirely in \texttt{app/tabs/create-project.tsx}.
+\paragraph{Testability Adaptations}
 
-\subsection{How It Works}
+\texttt{testID} props were added to the following components to make them reliably addressable by Maestro:
 
-When a manager types in the address field, the \texttt{searchAddress()} function fires with a 400\,ms debounce to avoid sending a request on every keystroke. Once the input reaches at least three characters, a \texttt{GET} request is sent to the Nominatim search endpoint:
+\begin{tabular}{lll}
+\toprule
+\textbf{testID} & \textbf{Component} & \textbf{File} \\
+\midrule
+\texttt{login-button}          & Login submit button     & \texttt{app/auth/login.tsx} \\
+\texttt{logout-button}         & Logout button           & \texttt{app/tabs/profile.tsx} \\
+\texttt{client-name-input}     & Client name text field  & \texttt{app/tabs/create-project.tsx} \\
+\texttt{client-phone-input}    & Client phone text field & \texttt{app/tabs/create-project.tsx} \\
+\texttt{submit-project-button} & Project form submit     & \texttt{app/tabs/create-project.tsx} \\
+\texttt{conversation-item}     & Chat conversation row   & \texttt{app/tabs/chat.tsx} \\
+\texttt{message-input}         & Chat message text input & \texttt{app/chatDetail.tsx} \\
+\texttt{send-button}           & Chat send button        & \texttt{app/chatDetail.tsx} \\
+\bottomrule
+\end{tabular}
+
+\paragraph{Bug Discovered During Testing}
+
+During test authoring, a bug was found in \texttt{api/client.ts}: the global 401 response interceptor was triggering on failed login attempts, redirecting the user to the Login screen before the form could display the \textit{``Incorrect credentials''} error. The fix guards the redirect so it only fires on non-auth routes:
 
 \begin{verbatim}
-https://nominatim.openstreetmap.org/search
-  ?q=<encoded query>
-  &format=json
-  &addressdetails=1
-  &limit=5
-  &countrycodes=sk
+const isAuthRoute = err.config?.url?.includes('/auth/')
+if (err.response?.status === 401 && !isLoggingOut && !isAuthRoute) {
+    // redirect to login screen
+}
 \end{verbatim}
 
-The \texttt{countrycodes=sk} parameter restricts results to Slovakia. Results are rendered as an absolute-positioned dropdown below the address input. Selecting a suggestion calls \texttt{selectSuggestion()}, which sets the address text, parses the returned latitude and longitude as floats, dismisses the keyboard, and opens the map view so the manager can confirm the pin location.
+%--------------------------------------------------------------
+\subsection{Third-Party API Integrations}
+%--------------------------------------------------------------
 
-\subsection{Fallback: Map Tap with Reverse Geocoding}
+\subsubsection{Address Autocomplete: Nominatim}
 
-If a manager taps directly on the map instead of using the autocomplete, the coordinates from the tap event are passed to \texttt{expo-location}'s \texttt{reverseGeocodeAsync()} function, which resolves the street, street number, and city from the device's on-device geocoder and fills the address field automatically. This means the address field is always populated regardless of how the location was selected.
+Address autocomplete is powered by \textbf{Nominatim} (OpenStreetMap). It was chosen over Google Places API because it requires no billing account, no API key, and has no per-request cost.
 
-\subsection{Integration Summary}
+The integration is used in two screens:
+
+\begin{itemize}
+    \item \textbf{Create Project} (\texttt{app/tabs/create-project.tsx}) --- autocomplete fills the address field and sets lat/lng coordinates; selecting a result opens the map view to confirm the pin. Tapping directly on the map triggers reverse geocoding via \texttt{expo-location}'s \texttt{reverseGeocodeAsync()}, resolving coordinates back to a street address automatically.
+    \item \textbf{Map screen} (\texttt{app/tabs/map.tsx}) --- autocomplete pans and zooms the map to the selected location via \texttt{animateToRegion()}.
+\end{itemize}
+
+Both screens share the same pattern: a 400\,ms debounced \texttt{fetch} fires once the query reaches three characters, results are rendered in an absolute-positioned dropdown, and \texttt{countrycodes=sk} restricts results to Slovakia.
 
 \begin{tabular}{ll}
 \toprule
@@ -1128,20 +1180,45 @@ Cost              & Free \\
 Debounce delay    & 400\,ms \\
 Result limit      & 5 suggestions \\
 Country filter    & Slovakia (\texttt{sk}) \\
-Reverse geocoding & \texttt{expo-location} (on-device) \\
-Offline behaviour & Address field editable manually; map tap unavailable without network \\
+Reverse geocoding & \texttt{expo-location} (on-device, Create Project only) \\
 \bottomrule
 \end{tabular}
 
+\subsubsection{Maps: react-native-maps}
+
+The Map screen is built on \textbf{react-native-maps}, rendering a native MapKit view on iOS. Behaviour differs by role:
+
+\textbf{Manager} --- projects are shown as a chip selector; selecting one animates the map to the project pin. Worker locations are fetched from \texttt{GET /api/locations/project/:projectId} every 10 seconds and rendered as colour-coded dot markers (green = online, grey = offline). Tapping a marker shows the worker's name, status, and last-seen timestamp.
+
+\textbf{Worker} --- the device's live GPS position is shown via the native blue dot. Coordinates are uploaded to \texttt{POST /api/locations} on focus and every 30 seconds thereafter. A manual \textit{Check in} button triggers an immediate upload.
+
+Both roles can deep-link to the Map screen with \texttt{lat}, \texttt{lng}, and \texttt{title} query parameters, causing the map to animate to that location on load.
+
+\begin{tabular}{ll}
+\toprule
+\textbf{Property} & \textbf{Value} \\
+\midrule
+Map renderer          & react-native-maps (MapKit on iOS) \\
+Worker location API   & \texttt{POST /api/locations} \\
+Manager refresh rate  & Every 10 seconds \\
+Worker upload rate    & Every 30 seconds + manual check-in \\
+Address search        & Nominatim (see above) \\
+Deep link params      & \texttt{lat}, \texttt{lng}, \texttt{title} \\
+Permission required   & Foreground location \\
+\bottomrule
+\end{tabular}
+
+%--------------------------------------------------------------
 \subsection{Repository}
+%--------------------------------------------------------------
 
 \begin{tabular}{ll}
 \toprule
 \textbf{Item} & \textbf{Value} \\
 \midrule
-GitHub repository & \url{https://github.com/StyroD/zmabt} \\
+GitHub repository      & \url{https://github.com/StyroD/zmabt} \\
 Submission commit hash & \texttt{5ea53f4a} \\
-Branch & \texttt{adam} \\
+Branch                 & \texttt{adam} \\
 \bottomrule
 \end{tabular}
 
