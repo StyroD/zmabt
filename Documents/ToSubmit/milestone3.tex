@@ -876,6 +876,8 @@ Output Conditions   & The task is not created and an error message is displayed.
 \end{table}
 
 
+
+
 %--------------------------------------------------------------
 \section{Changes from Original Design}
 %--------------------------------------------------------------
@@ -970,15 +972,253 @@ GPS Location Service (PVP6)                           & \checkmark\ Complete \\
 \bottomrule
 \end{tabular}
 
+%--------------------------------------------------------------
+\section{Automated UI and End-to-End Testing}
+%--------------------------------------------------------------
+
+\subsection{Framework: Maestro}
+
+Automated UI and end-to-end tests were written using \textbf{Maestro}, a mobile UI testing framework that drives the application through a real iOS simulator via XCTest. Tests are defined in YAML files and execute gestures, taps, and text input against a live Expo Go session, asserting on visible UI elements --- no mocking, no stubs.
+
+Maestro was chosen because it integrates directly with Expo Go without requiring a native build and produces deterministic results against a running backend.
+
+\subsection{UI Test Suite}
+
+Three automated UI flows verify that core screens render correctly and respond to user interaction:
+
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Test file} & \textbf{Coverage} \\
+\hline
+\texttt{login.yaml} &
+  Asserts Login screen elements are visible (email field, password field, login button, Google sign-in); manager logs in with valid credentials; Dashboard screen is asserted; manager logs out and Login screen is re-asserted. \\
+\hline
+\texttt{create\_project.yaml} &
+  Asserts the Create Project screen renders with all required fields (project title, deadline date picker, address autocomplete, client name); verifies the submit button is present and tappable. \\
+\hline
+\texttt{chat.yaml} &
+  Asserts the Messages screen is visible; opens a conversation; asserts the message input field and send button are present; types a message and asserts it appears in the conversation. \\
+\hline
+\end{tabularx}
+
+\subsection{End-to-End Test Scenario}
+
+One end-to-end flow exercises the full stack from UI through network to the database and back:
+
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{Test file} & \textbf{Scenario} \\
+\hline
+\texttt{create\_project.yaml} &
+  Manager authenticates against the live backend; any leftover test record from a previous run is deleted via a conditional \texttt{runFlow} block (idempotent pre-cleanup); navigates to the Create Project screen; fills in project title, deadline, address, and client name; submits the form; asserts the new project appears in the project list (confirming the API call and database write succeeded); deletes the project as post-cleanup so the test is repeatable without accumulating server state; logs out. \\
+\hline
+\end{tabularx}
+
+\subsection{Testability Adaptations}
+
+To make UI elements reliably addressable by Maestro, \texttt{testID} props were added to the following React Native components:
+
+\begin{tabular}{lll}
+\toprule
+\textbf{testID} & \textbf{Component} & \textbf{File} \\
+\midrule
+\texttt{login-button}          & Login submit button     & \texttt{app/auth/login.tsx} \\
+\texttt{logout-button}         & Logout button           & \texttt{app/tabs/profile.tsx} \\
+\texttt{client-name-input}     & Client name text field  & \texttt{app/tabs/create-project.tsx} \\
+\texttt{client-phone-input}    & Client phone text field & \texttt{app/tabs/create-project.tsx} \\
+\texttt{submit-project-button} & Project form submit     & \texttt{app/tabs/create-project.tsx} \\
+\texttt{conversation-item}     & Chat conversation row   & \texttt{app/tabs/chat.tsx} \\
+\texttt{message-input}         & Chat message text input & \texttt{app/chatDetail.tsx} \\
+\texttt{send-button}           & Chat send button        & \texttt{app/chatDetail.tsx} \\
+\bottomrule
+\end{tabular}
+
+\subsection{Bug Discovered During Testing}
+
+During test authoring, a bug was found in the Axios HTTP client interceptor (\texttt{api/client.ts}): the global 401 response interceptor was triggering on failed login attempts, redirecting the user back to the Login screen before the login form could display the \textit{``Incorrect credentials''} error. The fix guards the redirect so it only fires on non-auth routes:
+
+\begin{verbatim}
+const isAuthRoute = err.config?.url?.includes('/auth/')
+if (err.response?.status === 401 && !isLoggingOut && !isAuthRoute) {
+    // redirect to login screen
+}
+\end{verbatim}
+
+%--------------------------------------------------------------
+\section{Bonuses}
+%--------------------------------------------------------------
+
+%--------------------------------------------------------------
+\subsection{Testing}
+%--------------------------------------------------------------
+
+\subsubsection{Unit Testing}
+
+Unit tests are written using \textbf{Jest} with the \texttt{jest-expo} preset. All external dependencies --- AsyncStorage, Expo SecureStore, and the Axios HTTP client --- are replaced with Jest mocks so tests run in isolation without a simulator, device, or network connection.
+
+Run with:
+\begin{verbatim}
+cd Code/Frontend && npx jest
+\end{verbatim}
+
+The test file \texttt{\_\_tests\_\_/unit.test.ts} contains \textbf{23 tests} across 5 groups:
+
+\begin{tabularx}{\textwidth}{|l|c|X|}
+\hline
+\textbf{Group} & \textbf{Tests} & \textbf{What is verified} \\
+\hline
+Project form validation & 8 &
+  The \texttt{validate()} helper extracted from \texttt{create-project.tsx} is tested for all required fields. Passing all valid fields produces no errors. Each required field --- title, deadline, address, client name --- is individually omitted and the correct error message is asserted. An invalid client email format is rejected while an empty client email is accepted. Multiple missing fields at once produce the correct number of errors. \\
+\hline
+Date formatting & 2 &
+  The \texttt{formatDate()} helper is tested against the \texttt{sk-SK} locale. A mid-year date and the first day of the year are both asserted to contain the correct day, month, and year components in the formatted output. \\
+\hline
+Offline queue & 5 &
+  The five exported functions of \texttt{utils/offlineQueue.ts} are each tested in isolation with a mocked AsyncStorage. \texttt{getQueue} returns an empty array on a cold start; \texttt{addToQueue} produces an entry with the correct type, payload, zero retries, and a generated id and timestamp; \texttt{removeFromQueue} removes only the targeted entry by id; \texttt{incrementRetries} increases the retry counter by exactly one; \texttt{clearQueue} calls \texttt{AsyncStorage.removeItem} with the correct storage key. \\
+\hline
+Auth & 3 &
+  The \texttt{login()} and \texttt{logout()} functions from \texttt{api/auth.ts} are tested against a mocked Axios client. A successful login call stores the returned token and userId in SecureStore and returns the full response payload. A logout call deletes both SecureStore keys. \\
+\hline
+SecureUser & 3 &
+  The \texttt{stripUser()} and \texttt{saveUser()} utilities are tested. \texttt{stripUser} removes sensitive fields (\texttt{avatar}, \texttt{avatar\_mime\_type}, \texttt{password\_hash}, \texttt{google\_id}) while preserving non-sensitive fields such as id, name, and email. \texttt{saveUser} calls SecureStore with a JSON string that does not contain sensitive fields. \\
+\hline
+\end{tabularx}
+
+\subsubsection{Automated UI Testing}
+
+Automated UI tests are written using \textbf{Maestro}, a mobile UI testing framework that drives the application through a real iOS simulator via XCTest. Tests are defined in YAML files and execute gestures, taps, and text input against a live Expo Go session (\texttt{host.exp.Exponent}), asserting on visible UI elements --- no mocking, no stubs.
+
+Run with:
+\begin{verbatim}
+cd Code/Frontend/maestro && maestro test <flow>.yaml
+\end{verbatim}
+
+Three flows verify that core screens render correctly and respond to user interaction:
+
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{File} & \textbf{Coverage} \\
+\hline
+\texttt{login.yaml} &
+  Asserts Login screen elements are visible (email field, password field, login button, Google sign-in); manager logs in with valid credentials; Dashboard is asserted; manager logs out and Login screen is re-asserted. \\
+\hline
+\texttt{create\_project.yaml} &
+  Asserts the Create Project screen renders with all required fields (project title, deadline date picker, address autocomplete, client name); verifies the submit button is present and tappable. \\
+\hline
+\texttt{chat.yaml} &
+  Asserts the Messages screen is visible; opens a conversation; asserts the message input and send button are present; types a message and asserts it appears in the conversation. \\
+\hline
+\end{tabularx}
+
+\subsubsection{End-to-End Testing}
+
+One flow exercises the full stack from UI through network to the database and back:
+
+\begin{tabularx}{\textwidth}{|l|X|}
+\hline
+\textbf{File} & \textbf{Scenario} \\
+\hline
+\texttt{e2e\_create\_project.yaml} &
+  Manager authenticates against the live backend; any leftover test record from a previous run is deleted via a conditional \texttt{runFlow} block (idempotent pre-cleanup); navigates to the Create Project screen; fills in project title, deadline, address, and client name; submits the form; asserts the new project appears in the project list confirming the API call and database write succeeded; deletes the project as post-cleanup so the test is repeatable without accumulating server state; logs out. \\
+\hline
+\end{tabularx}
+
+\paragraph{Testability Adaptations}
+
+\texttt{testID} props were added to the following components to make them reliably addressable by Maestro:
+
+\begin{tabular}{lll}
+\toprule
+\textbf{testID} & \textbf{Component} & \textbf{File} \\
+\midrule
+\texttt{login-button}          & Login submit button     & \texttt{app/auth/login.tsx} \\
+\texttt{logout-button}         & Logout button           & \texttt{app/tabs/profile.tsx} \\
+\texttt{client-name-input}     & Client name text field  & \texttt{app/tabs/create-project.tsx} \\
+\texttt{client-phone-input}    & Client phone text field & \texttt{app/tabs/create-project.tsx} \\
+\texttt{submit-project-button} & Project form submit     & \texttt{app/tabs/create-project.tsx} \\
+\texttt{conversation-item}     & Chat conversation row   & \texttt{app/tabs/chat.tsx} \\
+\texttt{message-input}         & Chat message text input & \texttt{app/chatDetail.tsx} \\
+\texttt{send-button}           & Chat send button        & \texttt{app/chatDetail.tsx} \\
+\bottomrule
+\end{tabular}
+
+\paragraph{Bug Discovered During Testing}
+
+During test authoring, a bug was found in \texttt{api/client.ts}: the global 401 response interceptor was triggering on failed login attempts, redirecting the user to the Login screen before the form could display the \textit{``Incorrect credentials''} error. The fix guards the redirect so it only fires on non-auth routes:
+
+\begin{verbatim}
+const isAuthRoute = err.config?.url?.includes('/auth/')
+if (err.response?.status === 401 && !isLoggingOut && !isAuthRoute) {
+    // redirect to login screen
+}
+\end{verbatim}
+
+%--------------------------------------------------------------
+\subsection{Third-Party API Integrations}
+%--------------------------------------------------------------
+
+\subsubsection{Address Autocomplete: Nominatim}
+
+Address autocomplete is powered by \textbf{Nominatim} (OpenStreetMap). It was chosen over Google Places API because it requires no billing account, no API key, and has no per-request cost.
+
+The integration is used in two screens:
+
+\begin{itemize}
+    \item \textbf{Create Project} (\texttt{app/tabs/create-project.tsx}) --- autocomplete fills the address field and sets lat/lng coordinates; selecting a result opens the map view to confirm the pin. Tapping directly on the map triggers reverse geocoding via \texttt{expo-location}'s \texttt{reverseGeocodeAsync()}, resolving coordinates back to a street address automatically.
+    \item \textbf{Map screen} (\texttt{app/tabs/map.tsx}) --- autocomplete pans and zooms the map to the selected location via \texttt{animateToRegion()}.
+\end{itemize}
+
+Both screens share the same pattern: a 400\,ms debounced \texttt{fetch} fires once the query reaches three characters, results are rendered in an absolute-positioned dropdown, and \texttt{countrycodes=sk} restricts results to Slovakia.
+
+\begin{tabular}{ll}
+\toprule
+\textbf{Property} & \textbf{Value} \\
+\midrule
+Provider          & Nominatim (OpenStreetMap) \\
+API key required  & No \\
+Cost              & Free \\
+Debounce delay    & 400\,ms \\
+Result limit      & 5 suggestions \\
+Country filter    & Slovakia (\texttt{sk}) \\
+Reverse geocoding & \texttt{expo-location} (on-device, Create Project only) \\
+\bottomrule
+\end{tabular}
+
+\subsubsection{Maps: react-native-maps}
+
+The Map screen is built on \textbf{react-native-maps}, rendering a native MapKit view on iOS. Behaviour differs by role:
+
+\textbf{Manager} --- projects are shown as a chip selector; selecting one animates the map to the project pin. Worker locations are fetched from \texttt{GET /api/locations/project/:projectId} every 10 seconds and rendered as colour-coded dot markers (green = online, grey = offline). Tapping a marker shows the worker's name, status, and last-seen timestamp.
+
+\textbf{Worker} --- the device's live GPS position is shown via the native blue dot. Coordinates are uploaded to \texttt{POST /api/locations} on focus and every 30 seconds thereafter. A manual \textit{Check in} button triggers an immediate upload.
+
+Both roles can deep-link to the Map screen with \texttt{lat}, \texttt{lng}, and \texttt{title} query parameters, causing the map to animate to that location on load.
+
+\begin{tabular}{ll}
+\toprule
+\textbf{Property} & \textbf{Value} \\
+\midrule
+Map renderer          & react-native-maps (MapKit on iOS) \\
+Worker location API   & \texttt{POST /api/locations} \\
+Manager refresh rate  & Every 10 seconds \\
+Worker upload rate    & Every 30 seconds + manual check-in \\
+Address search        & Nominatim (see above) \\
+Deep link params      & \texttt{lat}, \texttt{lng}, \texttt{title} \\
+Permission required   & Foreground location \\
+\bottomrule
+\end{tabular}
+
+%--------------------------------------------------------------
 \subsection{Repository}
+%--------------------------------------------------------------
 
 \begin{tabular}{ll}
 \toprule
 \textbf{Item} & \textbf{Value} \\
 \midrule
-GitHub repository & \url{https://github.com/StyroD/zmabt} \\
+GitHub repository      & \url{https://github.com/StyroD/zmabt} \\
 Submission commit hash & \texttt{5ea53f4a} \\
-Branch & \texttt{adam} \\
+Branch                 & \texttt{adam} \\
 \bottomrule
 \end{tabular}
 

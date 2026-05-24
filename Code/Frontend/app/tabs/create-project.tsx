@@ -14,6 +14,7 @@ import * as Location from 'expo-location'
 import { useNetwork } from '@/contexts/NetworkContext'
 import { addToQueue } from '@/utils/offlineQueue'
 
+
 const STATUSES = ['in_progress', 'pending', 'finished', 'cancelled']
 const statusLabels: Record<string, string> = {
     in_progress: 'In Progress',
@@ -22,12 +23,17 @@ const statusLabels: Record<string, string> = {
     cancelled: 'Cancelled',
 }
 
+
+
 export default function CreateProject() {
     const Colors = useColors()
     const insets = useSafeAreaInsets()
     const { projectId } = useLocalSearchParams<{ projectId?: string }>()
     const isEdit = !!projectId
 
+    const [suggestions, setSuggestions] = useState<{ display_name: string, lat: string, lon: string }[]>([])
+    const [showSuggestions, setShowSuggestions] = useState(false)
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const scrollRef = useRef<ScrollView>(null)
     const [loading, setLoading] = useState(isEdit)
     const [title, setTitle] = useState('')
@@ -61,6 +67,8 @@ export default function CreateProject() {
             setClientPhone('')
             setClientEmail('')
             setErrors({})
+            setSuggestions([])
+            setShowSuggestions(false)
             scrollRef.current?.scrollTo({ y: 0, animated: false })
         }
     }, [isEdit]))
@@ -106,7 +114,37 @@ export default function CreateProject() {
         return Object.keys(newErrors).length === 0
     }
 
+    const searchAddress = (text: string) => {
+        setAddress(text)
+        setErrors(e => ({ ...e, address: '' }))
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+        if (text.length < 3) { setSuggestions([]); setShowSuggestions(false); return }
+        debounceRef.current = setTimeout(async () => {
+            try {
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&format=json&addressdetails=1&limit=5&countrycodes=sk`,
+                    { headers: { 'Accept-Language': 'sk', 'User-Agent': 'ZMABT-App' } }
+                )
+                const data = await res.json()
+                setSuggestions(data)
+                setShowSuggestions(data.length > 0)
+            } catch {}
+        }, 400)
+    }
+
+    const selectSuggestion = (item: { display_name: string, lat: string, lon: string }) => {
+        setAddress(item.display_name)
+        setLat(parseFloat(item.lat))
+        setLng(parseFloat(item.lon))
+        setShowSuggestions(false)
+        setSuggestions([])
+        setShowMap(true)
+        setErrors(e => ({ ...e, address: '' }))
+        Keyboard.dismiss()
+    }
+
     const handleSubmit = async () => {
+        Keyboard.dismiss()
         if (!validate()) return
         setSubmitting(true)
         try {
@@ -283,7 +321,7 @@ export default function CreateProject() {
                 <Text style={styles.fieldLabel}>Deadline <Text style={styles.required}>*</Text></Text>
                 <TouchableOpacity
                     style={[styles.input, styles.row, errors.deadline && styles.inputError]}
-                    onPress={() => { Keyboard.dismiss(); setShowDatePicker(true) }}
+                    onPress={() => { Keyboard.dismiss(); if (!deadline) setDeadline(new Date()); setShowDatePicker(true) }}
                     accessibilityRole="button"
                     accessibilityLabel={deadline ? `Deadline: ${formatDate(deadline)}` : 'Select deadline date'}
                 >
@@ -335,15 +373,46 @@ export default function CreateProject() {
 
                 <Text style={styles.sectionLabel}>Location</Text>
 
-                <Text style={styles.fieldLabel}>Address <Text style={styles.required}>*</Text></Text>
-                <TextInput
-                    style={[styles.input, errors.address && styles.inputError]}
-                    placeholder="Hlavna 12, Bratislava"
-                    placeholderTextColor={Colors.textSecondary}
-                    value={address}
-                    onChangeText={t => { setAddress(t); setErrors(e => ({ ...e, address: '' })) }}
-                />
-                {errors.address && <Text style={styles.errorText}>{errors.address}</Text>}
+               <Text style={styles.fieldLabel}>Address <Text style={styles.required}>*</Text></Text>
+<View style={{ zIndex: 10 }}>
+    <TextInput
+        style={[styles.input, errors.address && styles.inputError]}
+        placeholder="Hlavna 12, Bratislava"
+        placeholderTextColor={Colors.textSecondary}
+        value={address}
+        onChangeText={searchAddress}
+    />
+    {showSuggestions && (
+        <View style={{
+            backgroundColor: Colors.surface,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            borderRadius: 10,
+            marginTop: 2,
+            position: 'absolute',
+            top: 46,
+            left: 0,
+            right: 0,
+            zIndex: 20,
+        }}>
+            {suggestions.map((item, index) => (
+                <TouchableOpacity
+                    key={index}
+                    onPress={() => selectSuggestion(item)}
+                    style={{
+                        paddingVertical: 10,
+                        paddingHorizontal: 12,
+                        borderBottomWidth: index < suggestions.length - 1 ? 1 : 0,
+                        borderBottomColor: Colors.border,
+                    }}
+                >
+                    <Text style={{ fontSize: 13, color: Colors.textPrimary }}>{item.display_name}</Text>
+                </TouchableOpacity>
+            ))}
+        </View>
+    )}
+</View>
+{errors.address && <Text style={styles.errorText}>{errors.address}</Text>}
 
                 <TouchableOpacity style={styles.mapToggle} onPress={() => { Keyboard.dismiss(); setShowMap(!showMap) }} accessibilityRole="button" accessibilityLabel={lat && lng ? `Location set: ${lat.toFixed(4)}, ${lng.toFixed(4)}. Toggle map` : 'Pick location on map'}>
                     <Ionicons name="map-outline" size={16} color={Colors.primary} accessible={false} />
@@ -356,7 +425,9 @@ export default function CreateProject() {
                 {showMap && (
                     <MapView
                         style={styles.map}
-                        initialRegion={{
+                        scrollEnabled={false}
+                        zoomEnabled={false}
+                        region={{
                             latitude: lat ?? 48.1486,
                             longitude: lng ?? 17.1077,
                             latitudeDelta: 0.05,
@@ -366,11 +437,13 @@ export default function CreateProject() {
                             const { latitude, longitude } = e.nativeEvent.coordinate
                             setLat(latitude)
                             setLng(longitude)
+                            
                             try {
                                 const [result] = await Location.reverseGeocodeAsync({ latitude, longitude })
                                 if (result) {
                                     const parts = [result.street, result.streetNumber, result.city].filter(Boolean)
-                                    setAddress(parts.join(', '))
+                                    const reversed = parts.join(', ')
+                                    setAddress(reversed)
                                     setErrors(err => ({ ...err, address: '' }))
                                 }
                             } catch {}
@@ -411,11 +484,13 @@ export default function CreateProject() {
 
                 <Text style={styles.fieldLabel}>Name <Text style={styles.required}>*</Text></Text>
                 <TextInput
+                    testID="client-name-input"
                     style={[styles.input, errors.clientName && styles.inputError]}
                     placeholder="Client name"
                     placeholderTextColor={Colors.textSecondary}
                     value={clientName}
                     onChangeText={t => { setClientName(t); setErrors(e => ({ ...e, clientName: '' })) }}
+                    autoCorrect={false}
                 />
                 {errors.clientName && <Text style={styles.errorText}>{errors.clientName}</Text>}
 
@@ -423,6 +498,7 @@ export default function CreateProject() {
                     <View style={styles.half}>
                         <Text style={styles.fieldLabel}>Phone</Text>
                         <TextInput
+                            testID="client-phone-input"
                             style={styles.input}
                             placeholder="+421..."
                             placeholderTextColor={Colors.textSecondary}
@@ -449,6 +525,7 @@ export default function CreateProject() {
                 <View style={styles.sectionDivider} />
 
                 <TouchableOpacity
+                    testID="submit-project-button"
                     style={[styles.submitButton, submitting && { opacity: 0.6 }]}
                     onPress={handleSubmit}
                     disabled={submitting}

@@ -1,0 +1,60 @@
+appId: host.exp.Exponent
+name: "UI Test - Chat Screen"
+---
+- launchApp:
+    clearKeychain: true
+- tapOn: "Frontend"
+- openLink: "exp://${APP_HOST}:${APP_PORT}"
+- waitForAnimationToEnd
+
+# Login firstx
+- extendedWaitUntil:
+    visible: "Login"
+    timeout: 15000
+- tapOn:
+    text: "Enter your email"
+- inputText: "peter@workflow.com"
+- tapOn:
+    text: "Enter your password"
+- inputText: "password123"
+- tapOn:
+    id: "login-button"
+- tapOn:
+    text: "Not Now"
+    optional: true
+- extendedWaitUntil:
+    visible: "Dashboard"
+    timeout: 10000
+
+# Navigate to chat
+- openLink: "exp://${APP_HOST}:${APP_PORT}/--/tabs/chat"
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Messages"
+    timeout: 5000
+
+# Open first conversation
+- tapOn:
+    id: "conversation-item"
+    index: 0
+
+# Wait for chat detail to load
+- waitForAnimationToEnd
+
+# Type and send a message
+- tapOn:
+    id: "message-input"
+- inputText: "Hello from Maestro test"
+- tapOn:
+    id: "send-button"
+- assertVisible: "Hello from Maestro test"
+
+# Logout
+- openLink: "exp://${APP_HOST}:${APP_PORT}/--/tabs/profile?mode=own"
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element:
+      id: "logout-button"
+- tapOn:
+    id: "logout-button"
+- assertVisible: "Login"

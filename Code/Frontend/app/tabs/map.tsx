@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, TextInput } from 'react-native'
 import MapView, { Marker, Callout, Region } from 'react-native-maps'
 import { useColors } from '@/contexts/ThemeContext'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -37,6 +37,40 @@ export default function MapScreen() {
   }>()
 
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchSuggestions, setSearchSuggestions] = useState<{ display_name: string; lat: string; lon: string }[]>([])
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false)
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const searchAddress = (text: string) => {
+    setSearchQuery(text)
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    if (text.length < 3) { setSearchSuggestions([]); setShowSearchSuggestions(false); return }
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(text)}&format=json&limit=5&countrycodes=sk`,
+          { headers: { 'Accept-Language': 'sk', 'User-Agent': 'ZMABT-App' } }
+        )
+        const data = await res.json()
+        setSearchSuggestions(data)
+        setShowSearchSuggestions(data.length > 0)
+      } catch {}
+    }, 400)
+  }
+
+  const selectSearchSuggestion = (item: { display_name: string; lat: string; lon: string }) => {
+    setSearchQuery(item.display_name)
+    setShowSearchSuggestions(false)
+    setSearchSuggestions([])
+    mapRef.current?.animateToRegion({
+      latitude: parseFloat(item.lat),
+      longitude: parseFloat(item.lon),
+      latitudeDelta: 0.02,
+      longitudeDelta: 0.02,
+    }, 600)
+  }
 
   const startLocationTracking = (projectId: string, userId: string) => {
       if (locationIntervalRef.current) clearInterval(locationIntervalRef.current)
@@ -313,6 +347,39 @@ export default function MapScreen() {
       fontWeight: '500',
       color: '#fff',
     },
+    searchInput: {
+      backgroundColor: Colors.surface,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      fontSize: 14,
+      color: Colors.textPrimary,
+    },
+    suggestionList: {
+      position: 'absolute',
+      top: 44,
+      left: 12,
+      right: 12,
+      backgroundColor: Colors.surface,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: 10,
+      zIndex: 20,
+    },
+    suggestionItem: {
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+    },
+    suggestionItemBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    suggestionText: {
+      fontSize: 13,
+      color: Colors.textPrimary,
+    },
   })
 
   if (loading) {
@@ -345,6 +412,28 @@ export default function MapScreen() {
             ))
           )}
         </ScrollView>
+        <View style={{ zIndex: 10, paddingHorizontal: 12, paddingBottom: 10 }}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search address..."
+            placeholderTextColor={Colors.textSecondary}
+            value={searchQuery}
+            onChangeText={searchAddress}
+          />
+          {showSearchSuggestions && (
+            <View style={styles.suggestionList}>
+              {searchSuggestions.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => selectSearchSuggestion(item)}
+                  style={[styles.suggestionItem, index < searchSuggestions.length - 1 && styles.suggestionItemBorder]}
+                >
+                  <Text style={styles.suggestionText} numberOfLines={2}>{item.display_name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
       </View>
 
       <MapView

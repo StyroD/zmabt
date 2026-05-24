@@ -105,6 +105,7 @@ function ConversationItem({
 
   return (
     <TouchableOpacity
+      testID="conversation-item"
       style={styles.item}
       onPress={() => {
         onOpen(item.other_user_id)
