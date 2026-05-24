@@ -1209,6 +1209,89 @@ Permission required   & Foreground location \\
 \end{tabular}
 
 %--------------------------------------------------------------
+\subsection{Performance Analytics}
+%--------------------------------------------------------------
+
+Performance profiling was conducted using \textbf{Xcode Instruments} against a live Expo Go session (process \texttt{Frontend}, PID 8835) running on an iPhone 17 Pro (iOS 26.3) over a \textbf{1m55s} session covering login, dashboard, project list, project detail, map, and chat screens. Four instruments were active simultaneously: HTTP Traffic, Power Profiler, Allocations, and CPU Profiler.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/instruments_overview.png}
+    \caption{Xcode Instruments session overview: HTTP Traffic, Power Profiler, Allocations, 
+    Points of Interest, and CPU Profiler over a 1m55s session on iPhone 17 Pro (iOS 26.3). 
+    Thermal state transitions from Nominal to Fair at approximately 1:10. Two Points of 
+    Interest are visible at 1:15 and 1:20.}
+    \label{fig:instruments_overview}
+\end{figure}
+
+
+\subsubsection{Network Performance}
+
+\begin{tabular}{ll}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Total HTTP requests      & 52 \\
+Average request duration & 32.28\,ms \\
+Max single request       & 186.01\,ms \\
+Total HTTP time          & 1.68\,s \\
+\bottomrule
+\end{tabular}
+
+\vspace{8pt}
+
+All 52 requests were directed at the local backend (\texttt{172.20.10.8}) with the exception of 2 requests to \texttt{clients3.google.com} (Firebase/Crashlytics telemetry). The slowest individual request was \texttt{/api/auth/login} at 186.01\,ms, attributable to bcrypt password hashing on the backend --- expected and acceptable. The slowest recurring endpoint was \texttt{/api/notifications/user/:id} at 57.27\,ms average, and the fastest was \texttt{/api/categories} at 9.50\,ms. All data endpoints responded under 60\,ms on average.
+
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Endpoint} & \textbf{Count} & \textbf{Avg} & \textbf{Max} \\
+\midrule
+\texttt{/api/auth/login}                  & 1 & 186.01\,ms & 186.01\,ms \\
+\texttt{/api/notifications/user/:id}      & 2 &  57.27\,ms & 105.25\,ms \\
+\texttt{/api/dashboard/manager/:id}       & 2 &  46.29\,ms &  75.41\,ms \\
+\texttt{/api/tasks}                       & 1 &  60.88\,ms &  60.88\,ms \\
+\texttt{/api/projects}                    & 1 &  59.30\,ms &  59.30\,ms \\
+\texttt{/api/uploads/photos/project/:id}  & 4 &  27.90\,ms &  43.85\,ms \\
+\texttt{/api/tasks/project/:id}           & 4 &  24.81\,ms &  40.96\,ms \\
+\texttt{/api/workers/:id}                 & 4 &  15.20\,ms &  20.50\,ms \\
+\texttt{/api/projects/:id/workers}        & 2 &  17.99\,ms &  18.86\,ms \\
+\texttt{/api/categories}                  & 1 &   9.50\,ms &   9.50\,ms \\
+\bottomrule
+\end{tabular}
+
+\subsubsection{Memory}
+
+The Allocations instrument recorded \textbf{178.91\,MiB} of persistent heap allocations across approximately 7.96 million total allocation events. Critically, \textbf{94\,\%} of all allocations were transient --- created and freed correctly within the session. The persistent heap of $\sim$179\,MiB is consistent with normal React Native operation: the Hermes JS engine, navigation state, cached API responses, and an active Socket.io connection all contribute to baseline resident memory. No sawtooth growth pattern indicative of a memory leak was observed in the heap graph.
+
+The dominant allocation categories were small Malloc buckets (32, 16, and 48 bytes) originating from the Hermes runtime, and CFString/NSArray/NSDictionary entries from iOS framework internals --- none attributable to application-level inefficiency.
+
+\subsubsection{CPU}
+
+The CPU Profiler call tree shows no application-level hotspots across the full session. The top three call stacks accounting for 98.5\,\% of all cycles are entirely system-level:
+
+\begin{tabular}{llr}
+\toprule
+\textbf{Symbol} & \textbf{Library} & \textbf{Cycles} \\
+\midrule
+\texttt{start}           & dyld                    & 42.2\,\% \\
+\texttt{start\_wqthread} & libsystem\_pthread.dylib & 33.7\,\% \\
+\texttt{thread\_start}   & libsystem\_pthread.dylib & 22.6\,\% \\
+\bottomrule
+\end{tabular}
+
+\vspace{8pt}
+
+Work was distributed across two performance cores (CPU 4 and CPU 5) and four efficiency cores (CPU 0--3). CPU 5 handled marginally more workqueue activity than CPU 4, consistent with background I/O such as Socket.io and location updates. The efficiency cores remained lightly loaded throughout, indicating the OS correctly scheduled UI and network work on performance cores while keeping the efficiency cores near idle.
+
+\subsubsection{Thermal and Power}
+
+The device thermal state was \textbf{Nominal} for the first $\sim$70 seconds of the session before transitioning to \textbf{Fair} during sustained map and chat usage. It did not reach \textbf{Serious} or \textbf{Critical} at any point. CPU power impact showed brief spikes during screen transitions and network bursts, returning to near-zero during idle. GPU power impact was negligible throughout, consistent with a data-driven application that performs no custom rendering or animations beyond standard React Native transitions.
+
+\subsubsection{Points of Interest}
+
+Two anomaly markers were recorded by Instruments at approximately \textbf{1:15} and \textbf{1:20} into the session. These coincide with navigation to the Map screen, which simultaneously triggers a foreground location permission request, an initial worker location fetch from \texttt{/api/locations/project/:id}, the start of a 10-second polling interval, and the rendering of a react-native-maps view with multiple markers. The concurrent burst of these operations produces a visible CPU and network spike that Instruments flags as a point of interest. No crash, hang, or sustained degradation followed either marker.
+
+%--------------------------------------------------------------
 \subsection{Repository}
 %--------------------------------------------------------------
 

@@ -68,11 +68,14 @@ name: "UI Test - Create Project Screen"
 - tapOn:
     text: "Hlavna 12, Bratislava"
 - inputText: "Ab"
-- hideKeyboard
+- tapOn:
+    id: "section-location"
 
 - scrollUntilVisible:
     element:
       id: "client-name-input"
+    speed: 15
+    visibilityPercentage: 80
 - tapOn:
     id: "client-name-input"
 - inputText: "Jan Novak"

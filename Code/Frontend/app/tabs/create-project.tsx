@@ -371,7 +371,7 @@ export default function CreateProject() {
 
                 <View style={styles.sectionDivider} />
 
-                <Text style={styles.sectionLabel}>Location</Text>
+                <Text testID="section-location" style={styles.sectionLabel}>Location</Text>
 
                <Text style={styles.fieldLabel}>Address <Text style={styles.required}>*</Text></Text>
 <View style={{ zIndex: 10 }}>
